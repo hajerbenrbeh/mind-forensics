@@ -514,34 +514,35 @@ class PsychologicalProfileView extends ConsumerWidget {
       runSpacing: 6,
       children: profile.conditions.map((entry) {
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: isDark ? LabColors.nightSurfaceSubtle : const Color(0xFFE5ECE6),
+            color: isDark ? LabColors.nightSurfaceSubtle : LabColors.daylightSurfaceSubtle,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: isDark ? LabColors.nightBorder : LabColors.daylightBorder),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                strings.conditionName(entry.condition),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? LabColors.warmIvory : LabColors.deepBurgundy,
-                ),
-              ),
-              if (entry.status != DiagnosticStatus.preferNotToSay) ...[
-                const SizedBox(width: 5),
-                Text(
-                  '• ${strings.statusName(entry.status)}',
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: strings.conditionName(entry.condition),
                   style: TextStyle(
-                    fontSize: 9,
-                    color: isDark ? LabColors.champagneGold : Colors.brown,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary,
                   ),
                 ),
+                if (entry.status != DiagnosticStatus.preferNotToSay) ...[
+                  TextSpan(
+                    text: ' • ${strings.statusName(entry.status)}',
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? LabColors.nightAccent : LabColors.daylightAccent,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         );
       }).toList(),

@@ -440,12 +440,14 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                     children: [
                       Icon(Icons.arrow_forward_rounded, size: 12, color: textSecondary),
                       const SizedBox(width: 6),
-                      Text(
-                        starter,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: textPrimary,
+                      Flexible(
+                        child: Text(
+                          starter,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: textPrimary,
+                          ),
                         ),
                       ),
                     ],

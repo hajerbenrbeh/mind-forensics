@@ -138,21 +138,26 @@ class InsightsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.straighten_outlined, size: 16, color: tokens.accent),
-                  const SizedBox(width: 8),
-                  Text(
-                    strings.personalBaselineTitle.toUpperCase(),
-                    style: TextStyle(
-                      color: tokens.textPrimary,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.8,
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.straighten_outlined, size: 16, color: tokens.accent),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        strings.personalBaselineTitle.toUpperCase(),
+                        style: TextStyle(
+                          color: tokens.textPrimary,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               MindBadge(
                 label: baseline.hasSufficientData
                     ? 'Baseline Established (${baseline.totalRecordedDays}d)'
@@ -316,17 +321,19 @@ class InsightsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                strings.weeklySummaryTitle.toUpperCase(),
-                style: TextStyle(
-                  color: tokens.textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.1,
+              Expanded(
+                child: Text(
+                  strings.weeklySummaryTitle.toUpperCase(),
+                  style: TextStyle(
+                    color: tokens.textSecondary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               MindBadge(label: report.weekRange),
             ],
           ),

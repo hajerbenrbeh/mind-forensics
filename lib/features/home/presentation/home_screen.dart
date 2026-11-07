@@ -233,6 +233,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Text(
               'Mind Forensics',
               style: TextStyle(
+                fontFamily: 'Inter',
                 fontSize: 15.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.3,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'lab_colors.dart';
 import 'mind_tokens.dart';
 
@@ -7,7 +6,7 @@ import 'mind_tokens.dart';
 ///
 /// Implements the calm, human, sophisticated, emotionally reassuring identity
 /// using the Earth/Sage palette (Light #F7F8F5, Dark #151B19).
-/// Precision 10px corner radii, subtle 1px hairline borders, balanced typography.
+/// Precision 20px corner radii, subtle 1px hairline borders, balanced typography.
 class LabTheme {
   static TextStyle monoStyle({
     double fontSize = 12,
@@ -15,7 +14,8 @@ class LabTheme {
     Color? color,
     double letterSpacing = -0.2,
   }) {
-    return GoogleFonts.jetBrainsMono(
+    return TextStyle(
+      fontFamily: 'monospace',
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -23,7 +23,7 @@ class LabTheme {
     );
   }
 
-  /// Warm, thoughtful editorial serif for prominent headings and foundational questions.
+  /// Warm, thoughtful editorial style for prominent headings and foundational questions.
   static TextStyle serifStyle({
     double fontSize = 20,
     FontWeight fontWeight = FontWeight.w600,
@@ -31,7 +31,8 @@ class LabTheme {
     double letterSpacing = -0.2,
     double height = 1.3,
   }) {
-    return GoogleFonts.lora(
+    return TextStyle(
+      fontFamily: 'Inter',
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -40,7 +41,7 @@ class LabTheme {
     );
   }
 
-  /// Secondary editorial serif with calm pacing for reflective quotes and insights.
+  /// Secondary editorial style with calm pacing for reflective quotes and insights.
   static TextStyle editorialSerif({
     double fontSize = 14,
     FontWeight fontWeight = FontWeight.w400,
@@ -49,7 +50,8 @@ class LabTheme {
     double height = 1.5,
     FontStyle fontStyle = FontStyle.normal,
   }) {
-    return GoogleFonts.lora(
+    return TextStyle(
+      fontFamily: 'Inter',
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -108,7 +110,12 @@ class LabTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           elevation: 0,
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, letterSpacing: -0.2),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            letterSpacing: -0.2,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -118,7 +125,11 @@ class LabTheme {
           side: const BorderSide(color: LabColors.daylightBorder, width: 1),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -127,6 +138,7 @@ class LabTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
+          fontFamily: 'Inter',
           color: LabColors.daylightTextPrimary,
           fontSize: 16,
           fontWeight: FontWeight.w700,
@@ -135,12 +147,14 @@ class LabTheme {
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
+          fontFamily: 'Inter',
           color: LabColors.daylightTextPrimary,
           fontSize: 22,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
         ),
         bodyMedium: TextStyle(
+          fontFamily: 'Inter',
           color: LabColors.daylightTextSecondary,
           fontSize: 13.5,
           height: 1.45,
@@ -198,7 +212,12 @@ class LabTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           elevation: 0,
-          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: -0.2),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w700,
+            fontSize: 13,
+            letterSpacing: -0.2,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -208,7 +227,11 @@ class LabTheme {
           side: const BorderSide(color: LabColors.nightBorder, width: 1),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -217,6 +240,7 @@ class LabTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
+          fontFamily: 'Inter',
           color: LabColors.nightTextPrimary,
           fontSize: 16,
           fontWeight: FontWeight.w700,
@@ -225,12 +249,14 @@ class LabTheme {
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
+          fontFamily: 'Inter',
           color: LabColors.nightTextPrimary,
           fontSize: 22,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
         ),
         bodyMedium: TextStyle(
+          fontFamily: 'Inter',
           color: LabColors.nightTextSecondary,
           fontSize: 13.5,
           height: 1.45,
