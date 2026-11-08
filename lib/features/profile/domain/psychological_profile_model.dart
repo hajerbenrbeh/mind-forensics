@@ -60,9 +60,19 @@ class PsychologicalProfileModel {
     // Section 1: About Me
     this.preferredName = '',
     this.ageRange = '',
+    this.biologicalSex = '',
     this.preferredLanguage = '',
     this.personalIntroduction = '',
     this.additionalContext = '',
+
+    // Starting Point & Background
+    this.mentalHealthBackground = '',
+
+    // Professional Care
+    this.professionalSupport = '',
+
+    // Onboarding Progress Tracking
+    this.onboardingStep = 0,
 
     // Section 2: Psychological Experiences
     this.conditions = const [],
@@ -106,9 +116,17 @@ class PsychologicalProfileModel {
   // Section 1: About Me
   final String preferredName;
   final String ageRange;
+  final String biologicalSex;
   final String preferredLanguage;
   final String personalIntroduction;
   final String additionalContext;
+
+  // Lived Background & Support
+  final String mentalHealthBackground;
+  final String professionalSupport;
+  final int onboardingStep;
+
+  bool get isMinor => ageRange == 'under_18' || ageRange == '<18';
 
   // Section 2: Psychological Experiences
   final List<UserConditionEntry> conditions;
@@ -220,9 +238,13 @@ class PsychologicalProfileModel {
     String? userId,
     String? preferredName,
     String? ageRange,
+    String? biologicalSex,
     String? preferredLanguage,
     String? personalIntroduction,
     String? additionalContext,
+    String? mentalHealthBackground,
+    String? professionalSupport,
+    int? onboardingStep,
     List<UserConditionEntry>? conditions,
     List<String>? selectedSymptoms,
     String? symptomNotes,
@@ -255,10 +277,14 @@ class PsychologicalProfileModel {
       userId: userId ?? this.userId,
       preferredName: preferredName ?? this.preferredName,
       ageRange: ageRange ?? this.ageRange,
+      biologicalSex: biologicalSex ?? this.biologicalSex,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       personalIntroduction:
           personalIntroduction ?? this.personalIntroduction,
       additionalContext: additionalContext ?? this.additionalContext,
+      mentalHealthBackground: mentalHealthBackground ?? this.mentalHealthBackground,
+      professionalSupport: professionalSupport ?? this.professionalSupport,
+      onboardingStep: onboardingStep ?? this.onboardingStep,
       conditions: conditions ?? this.conditions,
       selectedSymptoms: selectedSymptoms ?? this.selectedSymptoms,
       symptomNotes: symptomNotes ?? this.symptomNotes,
@@ -291,9 +317,13 @@ class PsychologicalProfileModel {
         'userId': userId,
         'preferredName': preferredName,
         'ageRange': ageRange,
+        'biologicalSex': biologicalSex,
         'preferredLanguage': preferredLanguage,
         'personalIntroduction': personalIntroduction,
         'additionalContext': additionalContext,
+        'mentalHealthBackground': mentalHealthBackground,
+        'professionalSupport': professionalSupport,
+        'onboardingStep': onboardingStep,
         'conditions': conditions.map((c) => c.toJson()).toList(),
         'selectedSymptoms': selectedSymptoms,
         'symptomNotes': symptomNotes,
@@ -337,9 +367,13 @@ class PsychologicalProfileModel {
       userId: json['userId'] as String? ?? 'local_user',
       preferredName: json['preferredName'] as String? ?? '',
       ageRange: json['ageRange'] as String? ?? '',
+      biologicalSex: json['biologicalSex'] as String? ?? '',
       preferredLanguage: json['preferredLanguage'] as String? ?? '',
       personalIntroduction: json['personalIntroduction'] as String? ?? '',
       additionalContext: json['additionalContext'] as String? ?? '',
+      mentalHealthBackground: json['mentalHealthBackground'] as String? ?? '',
+      professionalSupport: json['professionalSupport'] as String? ?? '',
+      onboardingStep: (json['onboardingStep'] as num?)?.toInt() ?? 0,
       conditions: (json['conditions'] as List<dynamic>?)
               ?.map((e) => UserConditionEntry.fromJson(e as Map<String, dynamic>))
               .toList() ??

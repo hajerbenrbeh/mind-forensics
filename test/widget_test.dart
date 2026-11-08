@@ -7,7 +7,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      'mf_onboarding_completed': true,
+    });
     GoogleFonts.config.allowRuntimeFetching = false;
   });
 
@@ -25,7 +27,7 @@ void main() {
 
     // 2. Verify all 4 persistent bottom navigation tabs (clean 4-tab bar)
     expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Investigator'), findsOneWidget);
+    expect(find.text('Reflection'), findsOneWidget);
     expect(find.text('Observatory'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
     expect(find.text('Toolkit'), findsNothing);

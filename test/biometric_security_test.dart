@@ -126,8 +126,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should display locked screen
-      expect(find.text('SESSION VAULT LOCKED'), findsOneWidget);
-      expect(find.text('UNLOCK VAULT'), findsOneWidget);
+      expect(find.text('SESSION LOCKED'), findsOneWidget);
+      expect(find.text('UNLOCK'), findsOneWidget);
       expect(find.text('Protected Session Content'), findsNothing);
     });
   });

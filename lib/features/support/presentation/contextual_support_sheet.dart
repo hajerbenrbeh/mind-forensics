@@ -7,10 +7,12 @@ import '../../../app/localization/app_strings.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../core/safety/support_button.dart';
+import '../../profile/controllers/profile_controller.dart';
 import 'widgets/breathing_exercise_card.dart';
 import 'widgets/grounding_exercise_card.dart';
 import 'widgets/micro_action_card.dart';
 import 'widgets/perspective_exploration_card.dart';
+import 'widgets/routine_anchor_card.dart';
 
 enum SupportChoice {
   settle,
@@ -115,7 +117,7 @@ class _ContextualSupportSheetState
                 width: 38,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF333333) : const Color(0xFFDDDDDD),
+                  color: isDark ? LabColors.nightBorder : LabColors.daylightBorder,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -197,6 +199,27 @@ class _ContextualSupportSheetState
     Color surfaceColor,
     Color borderColor,
   ) {
+    final profile = ref.watch(profileControllerProvider).value;
+    final allGoals = [
+      ...?profile?.selectedGoals,
+      if (profile?.personalGoals.isNotEmpty == true) profile!.personalGoals,
+    ].join(' ').toLowerCase();
+    final allSymptoms =
+        (profile?.selectedSymptoms ?? []).join(' ').toLowerCase();
+
+    final suggestSettle = allGoals.contains('anxiety') ||
+        allGoals.contains('somatic') ||
+        allSymptoms.contains('apprehension') ||
+        allSymptoms.contains('surge');
+    final suggestThoughts = allGoals.contains('thought') ||
+        allGoals.contains('pattern') ||
+        allSymptoms.contains('scatter') ||
+        allSymptoms.contains('fog');
+    final suggestAction = allGoals.contains('focus') ||
+        allGoals.contains('inertia') ||
+        allSymptoms.contains('inertia') ||
+        allSymptoms.contains('avoidance');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -227,6 +250,7 @@ class _ContextualSupportSheetState
           subtitle: strings.needSettleDesc,
           icon: Icons.air_rounded,
           accentColor: LabColors.sageGreen,
+          isSuggested: suggestSettle,
           onTap: () => _selectChoice(SupportChoice.settle),
           isDark: isDark,
           textPrimary: textPrimary,
@@ -242,6 +266,7 @@ class _ContextualSupportSheetState
           subtitle: strings.needThoughtsDesc,
           icon: Icons.psychology_outlined,
           accentColor: isDark ? LabColors.warmBeige : LabColors.warmBeigeDark,
+          isSuggested: suggestThoughts,
           onTap: () => _selectChoice(SupportChoice.thoughts),
           isDark: isDark,
           textPrimary: textPrimary,
@@ -257,6 +282,7 @@ class _ContextualSupportSheetState
           subtitle: strings.needActionDesc,
           icon: Icons.play_circle_outline_rounded,
           accentColor: LabColors.champagneGold,
+          isSuggested: suggestAction,
           onTap: () => _selectChoice(SupportChoice.action),
           isDark: isDark,
           textPrimary: textPrimary,
@@ -377,6 +403,7 @@ class _ContextualSupportSheetState
     required Color textSecondary,
     required Color surfaceColor,
     required Color borderColor,
+    bool isSuggested = false,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -408,13 +435,38 @@ class _ContextualSupportSheetState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: textPrimary,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                                color: textPrimary,
+                              ),
+                            ),
+                          ),
+                          if (isSuggested) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                              decoration: BoxDecoration(
+                                color: accentColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                              child: Text(
+                                'SUGGESTED',
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                  color: accentColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -449,8 +501,9 @@ class _ContextualSupportSheetState
       case SupportChoice.thoughts:
         return const PerspectiveExplorationCard();
       case SupportChoice.action:
-      case SupportChoice.routine:
         return const MicroActionCard();
+      case SupportChoice.routine:
+        return const RoutineAnchorCard();
     }
   }
 }

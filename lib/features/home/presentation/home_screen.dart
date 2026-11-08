@@ -274,6 +274,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         color: tokens.textPrimary,
                       ),
                     ),
+                    if (profile?.isMinor == true) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: LabColors.sageGreenGlow.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: LabColors.sageGreenGlow.withValues(alpha: 0.25)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.shield_outlined, size: 12, color: LabColors.sageGreenGlow),
+                            const SizedBox(width: 5),
+                            Text(
+                              strings.isArabic ? 'مساحة استبصار آمنة • خطوط الطوارئ متاحة' : 'Safe reflection space • Helplines available',
+                              style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: LabColors.sageGreenGlow),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (profile != null && (profile.selectedGoals.isNotEmpty || profile.personalGoals.isNotEmpty)) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: tokens.surface,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: tokens.border),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.flag_outlined, size: 12, color: LabColors.champagneGold),
+                                const SizedBox(width: 5),
+                                Text(
+                                  profile.selectedGoals.isNotEmpty
+                                      ? profile.selectedGoals.first
+                                      : profile.personalGoals.split(', ').first,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: tokens.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
 
@@ -357,7 +411,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     InkWell(
-                      onTap: () => context.go('/journal'),
+                      onTap: () => context.push('/investigation'),
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1392,15 +1446,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final actions = [
       (
         title: strings.isArabic ? 'كتابة فكرة' : 'Write a thought',
-        subtitle: strings.isArabic ? 'تفكيك معرفي' : 'Case deconstruction',
+        subtitle: strings.isArabic ? 'استكشاف فكري' : 'Explore a thought',
         icon: Icons.edit_note_rounded,
         onTap: () => context.push('/investigation'),
       ),
       (
-        title: strings.isArabic ? 'محادثة الرفيق' : 'Talk to AI',
-        subtitle: strings.isArabic ? 'حوار استكشافي' : 'Exploration dialogue',
-        icon: Icons.psychology_outlined,
-        onTap: () => context.push('/investigation'),
+        title: strings.isArabic ? 'المرصد الداخلي' : 'Inner Observatory',
+        subtitle: strings.isArabic ? 'الأعراض والتجارب' : 'Symptom exploration',
+        icon: Icons.explore_outlined,
+        onTap: () => context.go('/observatory'),
       ),
       (
         title: strings.isArabic ? 'تتبّع ورصد' : 'Track & Observe',

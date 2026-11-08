@@ -134,13 +134,15 @@ class _BreathingExerciseCardState extends ConsumerState<BreathingExerciseCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                strings.breathingTitle.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                  color: textSecondary,
+              Expanded(
+                child: Text(
+                  strings.breathingTitle.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    color: textSecondary,
+                  ),
                 ),
               ),
               TextButton(

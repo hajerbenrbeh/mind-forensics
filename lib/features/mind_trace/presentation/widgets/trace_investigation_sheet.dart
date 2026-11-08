@@ -89,7 +89,7 @@ class _TraceInvestigationSheetState
           const SnackBar(
             backgroundColor: LabColors.surfaceElevated,
             content: Text(
-              'Thought investigation saved to your record.',
+              'Thought reflection saved to your record.',
               style: TextStyle(color: LabColors.textPrimary, fontSize: 13),
             ),
           ),
@@ -142,10 +142,10 @@ class _TraceInvestigationSheetState
                     children: [
                       Text(
                         strings.isArabic
-                            ? 'فحص وتفكيك الفكرة'
+                            ? 'استكشاف الفكرة'
                             : (strings.isFrench
-                                ? 'INVESTIGATION DE LA PENSÉE'
-                                : 'INVESTIGATE THIS THOUGHT'),
+                                ? 'EXPLORATION DE LA PENSÉE'
+                                : 'EXPLORE THIS THOUGHT'),
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -295,10 +295,10 @@ class _TraceInvestigationSheetState
                       )
                     : Text(
                         strings.isArabic
-                            ? 'حفظ نتائج الفحص'
+                            ? 'حفظ التأمل والتفكيك'
                             : (strings.isFrench
-                                ? 'ENREGISTRER L’INVESTIGATION'
-                                : 'SAVE INVESTIGATION TO TRACE'),
+                                ? 'ENREGISTRER LA RÉFLEXION'
+                                : 'SAVE REFLECTION TO TRACE'),
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,

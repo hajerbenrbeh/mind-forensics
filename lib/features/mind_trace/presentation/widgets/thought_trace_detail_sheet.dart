@@ -242,7 +242,7 @@ class ThoughtTraceDetailSheet extends ConsumerWidget {
                               size: 13, color: LabColors.burgundyRose),
                           const SizedBox(width: 5),
                           Text(
-                            strings.isArabic ? 'تم الفحص' : (strings.isFrench ? 'INVESTIGUÉ' : 'INVESTIGATED'),
+                            strings.isArabic ? 'تم الاستكشاف' : (strings.isFrench ? 'EXPLORÉ' : 'EXPLORED'),
                             style: const TextStyle(
                               fontSize: 9.5,
                               fontWeight: FontWeight.w700,

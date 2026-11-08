@@ -496,15 +496,15 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
       children: [
         // Sub-bar: Status Telemetry & Quick Session Controls
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: surfaceColor,
             border: Border(bottom: BorderSide(color: borderColor, width: 1)),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     width: 7,
@@ -514,20 +514,20 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                       color: isLive ? LabColors.sageGreenGlow : LabColors.warmBeige,
                     ),
                   ),
-                  const SizedBox(width: 7),
+                  const SizedBox(width: 6),
                   Text(
                     isLive ? strings.liveGeminiActiveBadge : strings.offlineMockActiveBadge,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
-                      letterSpacing: 0.4,
+                      letterSpacing: 0.3,
                       color: isLive ? LabColors.sageGreenGlow : LabColors.warmBeige,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(width: 8),
-              Flexible(
+              const SizedBox(width: 6),
+              Expanded(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   reverse: true,
@@ -535,80 +535,80 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (statements.isNotEmpty) ...[
-                    TextButton.icon(
-                      style: TextButton.styleFrom(
-                        foregroundColor: textSecondary,
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      icon: _isSynthesizing
-                          ? const SizedBox(
-                              width: 11,
-                              height: 11,
-                              child: CircularProgressIndicator(strokeWidth: 1.5),
-                            )
-                          : const Icon(Icons.fact_check_outlined, size: 14),
-                      label: Text(
-                        strings.synthesizeCaseBtn,
-                        style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
-                      ),
-                      onPressed: _isSynthesizing ? null : _synthesizeCaseBrief,
-                    ),
-                    const SizedBox(width: 4),
-                  ],
-                  TextButton.icon(
-                    style: TextButton.styleFrom(
-                      foregroundColor: textSecondary,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    icon: const Icon(Icons.refresh_rounded, size: 14),
-                    label: Text(
-                      strings.newSessionBtn,
-                      style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
-                    ),
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      ref
-                          .read(activeCaseControllerProvider.notifier)
-                          .startNewCase('Active Deconstruction');
-                    },
-                  ),
-                  const SizedBox(width: 4),
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final profile = ref.watch(profileControllerProvider).value;
-                      final hasCustom = profile?.customAiDirectives.trim().isNotEmpty == true;
-                      return TextButton.icon(
+                        TextButton.icon(
+                          style: TextButton.styleFrom(
+                            foregroundColor: textSecondary,
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                          icon: _isSynthesizing
+                              ? const SizedBox(
+                                  width: 11,
+                                  height: 11,
+                                  child: CircularProgressIndicator(strokeWidth: 1.5),
+                                )
+                              : const Icon(Icons.fact_check_outlined, size: 14),
+                          label: Text(
+                            strings.synthesizeCaseBtn,
+                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
+                          ),
+                          onPressed: _isSynthesizing ? null : _synthesizeCaseBrief,
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      TextButton.icon(
                         style: TextButton.styleFrom(
-                          foregroundColor: hasCustom ? LabColors.champagneGold : textSecondary,
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          foregroundColor: textSecondary,
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           visualDensity: VisualDensity.compact,
                         ),
-                        icon: Icon(
-                          Icons.tune_rounded,
-                          size: 14,
-                          color: hasCustom ? LabColors.champagneGold : textSecondary,
-                        ),
+                        icon: const Icon(Icons.refresh_rounded, size: 14),
                         label: Text(
-                          strings.isArabic ? 'تعليمات' : 'Instructions',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: hasCustom ? FontWeight.w800 : FontWeight.w600,
-                            color: hasCustom ? LabColors.champagneGold : textSecondary,
-                          ),
+                          strings.newSessionBtn,
+                          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600),
                         ),
-                        onPressed: () => CustomAiInstructionsSheet.show(context),
-                      );
-                    },
+                        onPressed: () {
+                          HapticFeedback.lightImpact();
+                          ref
+                              .read(activeCaseControllerProvider.notifier)
+                              .startNewCase('Active Deconstruction');
+                        },
+                      ),
+                      const SizedBox(width: 4),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final profile = ref.watch(profileControllerProvider).value;
+                          final hasCustom = profile?.customAiDirectives.trim().isNotEmpty == true;
+                          return TextButton.icon(
+                            style: TextButton.styleFrom(
+                              foregroundColor: hasCustom ? LabColors.champagneGold : textSecondary,
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                            icon: Icon(
+                              Icons.tune_rounded,
+                              size: 14,
+                              color: hasCustom ? LabColors.champagneGold : textSecondary,
+                            ),
+                            label: Text(
+                              strings.isArabic ? 'تعليمات' : 'Instructions',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: hasCustom ? FontWeight.w800 : FontWeight.w600,
+                                color: hasCustom ? LabColors.champagneGold : textSecondary,
+                              ),
+                            ),
+                            onPressed: () => CustomAiInstructionsSheet.show(context),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-    ),
+        ),
 
         // Conversation Modes Selector Bar
         _buildConversationModesBar(isDark, borderColor, surfaceColor, textPrimary, textSecondary, strings),

@@ -32,14 +32,18 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final active = ref.read(activeCaseControllerProvider).value;
-      if (active == null || active.isCompleted) {
-        ref
+    _ensureActiveCase();
+  }
+
+  Future<void> _ensureActiveCase() async {
+    final active = await ref.read(activeCaseControllerProvider.notifier).ensureHydrated();
+    if (active == null || active.isCompleted) {
+      if (mounted) {
+        await ref
             .read(activeCaseControllerProvider.notifier)
             .startNewCase('Active Deconstruction');
       }
-    });
+    }
   }
 
   @override
@@ -68,6 +72,7 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
+        titleSpacing: 0,
         leading: _showHubView
             ? (caseModel != null
                 ? IconButton(
@@ -82,17 +87,22 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
                 onPressed: () => setState(() => _showHubView = true),
               ),
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              strings.navInvestigator.toUpperCase(),
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 13.5,
-                letterSpacing: 1.0,
-                color: textPrimary,
+            Flexible(
+              child: Text(
+                strings.navInvestigator.toUpperCase(),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: TextStyle(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13.5,
+                  letterSpacing: 0.6,
+                  color: textPrimary,
+                ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
@@ -103,7 +113,9 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
               child: Text(
                 _showHubView
                     ? 'AI HUB'
-                    : (caseModel?.caseNumber ?? 'SESSION 01'),
+                    : (caseModel != null
+                        ? strings.formatSessionNumber(caseModel.caseNumber)
+                        : 'SESSION 01'),
                 style: TextStyle(
                   fontSize: 9.5,
                   fontWeight: FontWeight.w700,
@@ -131,9 +143,24 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: _showHubView || caseModel == null
+      body: _showHubView
           ? const SafeArea(child: AiCompanionHubView())
-          : SafeArea(child: LiveDialogueView(caseModel: caseModel)),
+          : (caseModel != null
+              ? SafeArea(child: LiveDialogueView(caseModel: caseModel))
+              : SafeArea(
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          isDark ? LabColors.champagneGold : LabColors.deepBurgundy,
+                        ),
+                      ),
+                    ),
+                  ),
+                )),
     );
   }
 }

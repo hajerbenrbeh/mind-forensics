@@ -142,9 +142,33 @@ final investigatorServiceProvider = Provider<InvestigatorService>((ref) {
 
 /// State controller for an active Flash Case / AI Companion session (Riverpod 3 Notifier).
 class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
+  Future<CaseModel?>? _hydrationFuture;
+
   @override
   AsyncValue<CaseModel?> build() {
+    _hydrationFuture = _hydrateActiveCase();
     return const AsyncValue.data(null);
+  }
+
+  Future<CaseModel?> _hydrateActiveCase() async {
+    try {
+      final repo = ref.read(caseRepositoryProvider);
+      final cases = await repo.getAllCases();
+      final activeCases = cases.where((c) => !c.isCompleted).toList();
+      if (activeCases.isNotEmpty && (state.value == null || state.value!.isCompleted)) {
+        state = AsyncValue.data(activeCases.first);
+        return activeCases.first;
+      }
+    } catch (_) {}
+    return state.value;
+  }
+
+  /// Ensures active session hydration is fully resolved before checking if a case exists.
+  Future<CaseModel?> ensureHydrated() async {
+    if (_hydrationFuture != null) {
+      await _hydrationFuture;
+    }
+    return state.value;
   }
 
   /// Sets or resumes an existing case.
@@ -175,7 +199,6 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
     String initialIncident, {
     ConversationMode? mode,
   }) async {
-    state = const AsyncValue.loading();
     try {
       final repo = ref.read(caseRepositoryProvider);
       final caseNumber = await repo.getNextCaseNumber();
@@ -228,8 +251,10 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
         statements: initialStatements,
       );
 
-      await repo.saveCase(newCase);
+      // Immediately present the new session to the UI without blocking for disk write
       state = AsyncValue.data(newCase);
+
+      await repo.saveCase(newCase);
       ref.invalidate(savedCasesProvider);
       return newCase;
     } catch (e, st) {

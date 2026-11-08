@@ -26,7 +26,7 @@ void main() {
       expect(user.email, isNull);
       expect(user.isAnonymous, isTrue);
       expect(user.authType, equals(AuthType.anonymous));
-      expect(user.codename.startsWith('Investigator #'), isTrue);
+      expect(user.codename.startsWith('Observer #'), isTrue);
 
       final current = await service.getCurrentUser();
       expect(current?.id, equals(user.id));
@@ -131,14 +131,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify title and subtitle
-      expect(find.text('Access Your Mental Vault'), findsOneWidget);
+      expect(find.text('Access Your Account'), findsOneWidget);
 
       // Verify tabs & submit button
-      expect(find.text('UNLOCK VAULT'), findsNWidgets(2));
-      expect(find.text('CREATE VAULT'), findsOneWidget);
+      expect(find.text('SIGN IN'), findsNWidgets(2));
+      expect(find.text('CREATE ACCOUNT'), findsOneWidget);
 
       // Verify Anonymous card
-      expect(find.text('Anonymous Sovereign Vault'), findsOneWidget);
+      expect(find.text('Private Local Space'), findsOneWidget);
       expect(find.text('MAXIMUM PRIVACY'), findsOneWidget);
 
       // Verify new investigator link
@@ -156,7 +156,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Every thought leaves a trace.'), findsOneWidget);
-      expect(find.text('Already have a vault?'), findsOneWidget);
+      expect(find.text('Already have an account?'), findsOneWidget);
       expect(find.text('Sign In'), findsOneWidget);
     });
   });

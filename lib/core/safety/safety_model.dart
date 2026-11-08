@@ -41,17 +41,9 @@ class CrisisResource {
   /// Section 6: "Crisis resources depend on country, so a region-aware list is needed."
   static const List<CrisisResource> tunisianResources = [
     CrisisResource(
-      name: 'Numéro Vert d’Aide Psychologique\nالخط الأخضر للمساعدة النفسية',
-      description:
-          'Numéro vert gratuit du Ministère de la Santé pour l’écoute, le soutien et l’orientation psychologique.',
-      phone: '80105050',
-      countryCode: 'TN',
-      isTollFree: true,
-    ),
-    CrisisResource(
       name: 'SAMU - Urgences Médicales\nالإسعاف الطبي الاستعجالي',
       description:
-          'Urgences médicales et psychiatriques 24h/24 et 7j/7 partout en Tunisie.',
+          'Service officiel d’aide médicale urgente (Urgences médicales 24h/24 et 7j/7 en Tunisie).',
       phone: '190',
       countryCode: 'TN',
       isTollFree: false,
@@ -59,23 +51,31 @@ class CrisisResource {
     CrisisResource(
       name: 'Protection Civile\nالحماية المدنية',
       description:
-          'Secours d’urgence, assistance immédiate et intervention de crise 24h/24.',
+          'Secours d’urgence et assistance immédiate 24h/24 et 7j/7.',
       phone: '198',
       countryCode: 'TN',
       isTollFree: false,
     ),
     CrisisResource(
-      name: 'Ligne d’Écoute et de Soutien Social\nخط الإشعار والدعم النفسي',
+      name: 'Ligne Verte d’Écoute (Ministère de la Santé)\nالخط الأخضر للإنصات والدعم',
       description:
-          'Numéro vert gratuit d’écoute, de prise en charge psychologique et d’assistance.',
+          'Numéro vert d’orientation et d’écoute psychologique sous tutelle du Ministère de la Santé.',
+      phone: '80105050',
+      countryCode: 'TN',
+      isTollFree: true,
+    ),
+    CrisisResource(
+      name: 'Ligne d’Écoute et d’Assistance Sociale\nالرقم الأخضر للإشعار والدعم',
+      description:
+          'Numéro vert national pour l’orientation et l’assistance sociale.',
       phone: '1899',
       countryCode: 'TN',
       isTollFree: true,
     ),
     CrisisResource(
-      name: 'Befrienders Worldwide\nالدعم العاطفي الدولي',
+      name: 'Befrienders Worldwide\nشبكة الدعم العاطفي الدولية',
       description:
-          'Réseau international d’écoute bienveillante et confidentielle accessible en ligne.',
+          'Annuaire international de centres d’écoute bénévole et de soutien émotionnel.',
       phone: '',
       website: 'https://www.befrienders.org',
       countryCode: 'GLOBAL',

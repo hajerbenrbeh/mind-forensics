@@ -8,6 +8,7 @@ import 'package:mind_forensics/features/support/presentation/widgets/breathing_e
 import 'package:mind_forensics/features/support/presentation/widgets/grounding_exercise_card.dart';
 import 'package:mind_forensics/features/support/presentation/widgets/micro_action_card.dart';
 import 'package:mind_forensics/features/support/presentation/widgets/perspective_exploration_card.dart';
+import 'package:mind_forensics/features/support/presentation/widgets/routine_anchor_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -146,6 +147,33 @@ void main() {
       expect(find.byType(MicroActionCard), findsOneWidget);
       expect(find.text('2 MINUTES ONLY'), findsOneWidget);
       expect(find.text('Start 2 Minutes'), findsOneWidget);
+    });
+
+    testWidgets('Tapping "I need help with my routine" displays RoutineAnchorCard',
+        (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: ContextualSupportSheet(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('I need help with my routine'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(RoutineAnchorCard), findsOneWidget);
+      expect(find.text('ONE GENTLE ANCHOR'), findsOneWidget);
+      expect(find.text('Daylight & Hydration'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('Emergency crisis card displays verified Tunisian lines',

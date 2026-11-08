@@ -20,7 +20,9 @@ import 'package:mind_forensics/features/progress/domain/progress_analytics_model
 
 void main() {
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      'mf_onboarding_completed': true,
+    });
   });
 
   group('Cross-Feature Multi-User Isolation Tests', () {

@@ -35,6 +35,7 @@ class ProfileNotifier extends AsyncNotifier<PsychologicalProfileModel> {
   Future<void> updateAboutMe({
     String? preferredName,
     String? ageRange,
+    String? biologicalSex,
     String? preferredLanguage,
     String? personalIntroduction,
     String? additionalContext,
@@ -43,9 +44,43 @@ class ProfileNotifier extends AsyncNotifier<PsychologicalProfileModel> {
     final updated = current.copyWith(
       preferredName: preferredName,
       ageRange: ageRange,
+      biologicalSex: biologicalSex,
       preferredLanguage: preferredLanguage,
       personalIntroduction: personalIntroduction,
       additionalContext: additionalContext,
+      updatedAt: DateTime.now(),
+    );
+
+    state = AsyncValue.data(updated);
+    await ref.read(profileRepositoryProvider).saveProfile(updated, userId: _currentUserId);
+  }
+
+  Future<void> updateMentalHealthBackground(String background) async {
+    final current = state.value ?? PsychologicalProfileModel.empty(userId: _currentUserId ?? 'local_user');
+    final updated = current.copyWith(
+      mentalHealthBackground: background,
+      updatedAt: DateTime.now(),
+    );
+
+    state = AsyncValue.data(updated);
+    await ref.read(profileRepositoryProvider).saveProfile(updated, userId: _currentUserId);
+  }
+
+  Future<void> updateProfessionalSupport(String support) async {
+    final current = state.value ?? PsychologicalProfileModel.empty(userId: _currentUserId ?? 'local_user');
+    final updated = current.copyWith(
+      professionalSupport: support,
+      updatedAt: DateTime.now(),
+    );
+
+    state = AsyncValue.data(updated);
+    await ref.read(profileRepositoryProvider).saveProfile(updated, userId: _currentUserId);
+  }
+
+  Future<void> updateOnboardingStep(int step) async {
+    final current = state.value ?? PsychologicalProfileModel.empty(userId: _currentUserId ?? 'local_user');
+    final updated = current.copyWith(
+      onboardingStep: step,
       updatedAt: DateTime.now(),
     );
 

@@ -25,10 +25,10 @@ class AuthService {
 
   final Uuid _uuid = const Uuid();
 
-  /// Generates a randomized forensic investigator codename.
+  /// Generates a randomized default user alias.
   String generateDefaultCodename() {
     final randomNum = 1000 + Random().nextInt(9000);
-    return 'Investigator #$randomNum';
+    return 'Observer #$randomNum';
   }
 
   /// Retrieves the currently authenticated user, or null if none.

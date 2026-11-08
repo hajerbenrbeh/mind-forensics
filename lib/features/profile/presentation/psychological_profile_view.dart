@@ -268,12 +268,14 @@ class PsychologicalProfileView extends ConsumerWidget {
                   border: Border.all(color: isDark ? LabColors.nightBorder : LabColors.daylightBorder),
                 ),
                 child: Text(
-                  strings.isArabic ? 'خزينة محلية مشفرة' : 'SOVEREIGN LOCAL VAULT',
-                  style: const TextStyle(
+                  strings.isArabic
+                      ? 'حساب محلي آمن'
+                      : (strings.isFrench ? 'COMPTE LOCAL SÉCURISÉ' : 'SECURE LOCAL ACCOUNT'),
+                  style: TextStyle(
                     fontSize: 8.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
-                    color: LabColors.champagneGold,
+                    color: isDark ? LabColors.mutedOliveLight : LabColors.mutedOlive,
                   ),
                 ),
               ),

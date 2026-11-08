@@ -616,7 +616,7 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                                 borderRadius: BorderRadius.circular(3),
                               ),
                               child: Text(
-                                c.caseNumber,
+                                strings.formatSessionNumber(c.caseNumber),
                                 style: TextStyle(
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.w700,

@@ -224,8 +224,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify header and chat input field
-      expect(find.text('INVESTIGATOR'), findsAtLeastNWidgets(1));
-      expect(find.text('Talk with the investigator...'), findsOneWidget);
+      expect(find.text('REFLECTION'), findsAtLeastNWidgets(1));
+      expect(find.text('Talk with your companion...'), findsOneWidget);
 
       // Verify Socratic quick suggestion pills
       expect(find.text('It feels like an assumption'), findsOneWidget);

@@ -18,11 +18,11 @@ class AppStrings {
   bool get isArabic => languageCode == 'ar';
   bool get isFrench => languageCode == 'fr';
 
-  // Navigation (4 Primary Destinations: Home, Investigator, Inner Observatory, Profile)
+  // Navigation (4 Primary Destinations: Home, Reflection, Inner Observatory, Profile)
   String get navHome => isArabic ? 'الرئيسية' : (isFrench ? 'Accueil' : 'Home');
   String get navObservatory => isArabic ? 'المرصد' : (isFrench ? 'Observatoire' : 'Observatory');
   String get navInnerObservatory => isArabic ? 'المرصد الداخلي' : (isFrench ? 'Observatoire intérieur' : 'Inner Observatory');
-  String get navInvestigator => isArabic ? 'المحقق' : (isFrench ? 'Enquêteur' : 'Investigator');
+  String get navInvestigator => isArabic ? 'تأمل فكري' : (isFrench ? 'Réflexion' : 'Reflection');
   String get navProfile => isArabic ? 'الملف الشخصي' : (isFrench ? 'Profil' : 'Profile');
 
   // Contextual Support
@@ -43,7 +43,7 @@ class AppStrings {
   String get needExploreTitle => isArabic ? 'نحب نستكشف حاجة أخرى' : (isFrench ? 'Je souhaite explorer autre chose' : 'I want to explore something else');
   String get needExploreDesc => isArabic ? 'المرصد الداخلي لاستكشاف الأعراض والتجارب' : (isFrench ? 'Accéder à l’Observatoire intérieur' : 'Open Inner Observatory for deeper psychological exploration');
   String get needCrisisHelp => isArabic ? 'طوارئ: مساعدة عاجلة وخطوط استماع' : (isFrench ? 'Besoin d’aide immédiate : Urgences' : 'Need help now: Emergency crisis lines');
-  String get emergencyCallDirect => isArabic ? 'اتصال مباشر بخطوط المساعدة الرسمية' : (isFrench ? 'Lignes d’écoute et de secours directes' : 'Direct connection to verified local hotlines');
+  String get emergencyCallDirect => isArabic ? 'خطوط المساعدة النفسية والطوارئ الرسمية' : (isFrench ? 'Lignes d’écoute et services d’urgence officiels' : 'Official crisis and emergency helplines');
 
   // Sensory Grounding (5-4-3-2-1)
   String get sensoryGroundingTitle => isArabic ? 'التثبيت الحسي 5-4-3-2-1' : (isFrench ? 'Ancrage sensoriel 5-4-3-2-1' : '5-4-3-2-1 Sensory Grounding');
@@ -62,6 +62,9 @@ class AppStrings {
   String get sectionExperimentsStrategies => isArabic ? 'تجارب واستراتيجيات عملية' : (isFrench ? 'Expériences & Stratégies' : 'Experiments & Strategies');
   String get sectionPersonalDiscoveries => isArabic ? 'اكتشافاتي وخلاصاتي' : (isFrench ? 'Découvertes personnelles' : 'Personal Discoveries');
 
+  // Common Actions & Navigation
+  String get backBtn => isArabic ? 'رجوع' : (isFrench ? 'Retour' : 'Back');
+
   // Backward compatibility tab aliases
   String get navJournal => isArabic ? 'السجل' : (isFrench ? 'Journal' : 'Journal');
   String get navToolkit => isArabic ? 'صندوق الأدوات' : (isFrench ? 'Boîte à outils' : 'Toolkit');
@@ -71,10 +74,10 @@ class AppStrings {
   String get navCases => navJournal;
   String get navTools => navToolkit;
   String get navSettings => navProfile;
-  String get newInvestigation => isArabic ? 'تفكيك معرفي جديد' : (isFrench ? 'Nouveau Recadrage' : 'New Deconstruction');
+  String get newInvestigation => isArabic ? 'استكشاف فكري جديد' : (isFrench ? 'Nouvelle Réflexion' : 'New Thought Exploration');
 
-  // Memory Vault
-  String get memoryVaultTitle => isArabic ? 'خزينة الذاكرة' : (isFrench ? 'Coffre de mémoire' : 'Memory Vault');
+  // Memory Log
+  String get memoryVaultTitle => isArabic ? 'سجل الذاكرة' : (isFrench ? 'Journal de mémoire' : 'Memory Log');
   String get memoryVaultDesc => isArabic
       ? 'عرض ومراجعة المعلومات التي يتذكرها المساعد الذكي عنك'
       : (isFrench ? 'Consulter et gérer les éléments mémorisés par le compagnon IA' : 'Review and manage what the AI companion remembers');
@@ -140,18 +143,18 @@ class AppStrings {
   String get updateCheckInButton => isArabic ? 'تحديث تقييم اليوم' : (isFrench ? 'Mettre à jour' : 'Update Check-in');
   String get todayCheckInRecorded => isArabic ? 'تم توثيق تقييم اليوم' : (isFrench ? 'Entrée du jour enregistrée' : 'Today\'s check-in recorded');
   String get homeQuestion => isArabic 
-      ? 'شنوة الفكرة ولا التوتر اللي تحب تفككو توا؟' 
-      : (isFrench ? 'Quel schéma cognitif souhaitez-vous déconstruire ?' : 'What cognitive loop would you like to deconstruct?');
+      ? 'شنوة الفكرة ولا التوتر اللي تحب نستكشفوه توا؟' 
+      : (isFrench ? 'Quelle pensée ou tension aimeriez-vous explorer ?' : 'What thought or tension would you like to explore?');
 
   // Dashboard Sections
   String get activeCaseSection => isArabic ? 'الجلسة النشطة' : (isFrench ? 'SESSION EN COURS' : 'ACTIVE SESSION');
   String get mindsetPulseSection => isArabic ? 'مؤشر الاستثارة العصبية' : (isFrench ? 'ÉTAT DU SYSTÈME NERVEUX' : 'NEURAL AROUSAL PULSE');
   String get recentCasesSection => isArabic ? 'سجل الجلسات المعرفية' : (isFrench ? 'SESSIONS RÉCENTES' : 'RECENT SESSIONS');
   String get viewAll => isArabic ? 'عرض الأرشيف' : (isFrench ? 'Voir tout' : 'View All');
-  String get startInvestigation => isArabic ? 'بدء تفكيك فكري سريع' : (isFrench ? 'Déconstruction Cognitive' : 'Cognitive Deconstruction');
+  String get startInvestigation => isArabic ? 'بدء استكشاف فكري' : (isFrench ? 'Explorer une Pensée' : 'Explore a Thought');
   String get startInvestigationSub => isArabic 
-      ? 'تفكيك فوري للأفكار التلقائية والتشنج الجسدي في 60 ثانية' 
-      : (isFrench ? 'Désamorcez les distorsions cognitives et sensations somatiques en 60 secondes' : 'De-escalate cognitive distortions and somatic arousal in 60 seconds');
+      ? 'استكشاف هادئ للأفكار التلقائية والتشنج الجسدي في دقائق معدودة' 
+      : (isFrench ? 'Prenez du recul sur vos pensées automatiques et sensations corporelles' : 'Gently examine automatic thoughts and physical tension in a few calm minutes');
   String get resumeInvestigation => isArabic ? 'مواصلة الجلسة' : (isFrench ? 'Reprendre la session' : 'Resume Session');
   String get noCasesOnFile => isArabic ? 'لا توجد جلسات مسجلة. اضغط + للبدء.' : (isFrench ? 'AUCUNE SESSION. APPUYEZ SUR + POUR COMMENCER.' : 'NO SESSIONS ON FILE. TAP + TO BEGIN.');
   String stageNumberLabel(int step) => isArabic ? 'المرحلة $step/6' : (isFrench ? 'PHASE $step/6' : 'PHASE $step/6');
@@ -271,11 +274,11 @@ class AppStrings {
   String get aiHistoryDesc => isArabic ? 'تضمين الجلسات السابقة لرصد الأنماط المتكررة بدقة' : (isFrench ? 'Croiser les sessions pour détecter les schémas récurrents' : 'Cross-reference sessions to identify recurring cognitive schemas');
   String get biometricLockTitle => isArabic ? 'قفل الأمان البيومتري' : (isFrench ? 'Verrouillage biométrique' : 'Biometric Security');
   String get biometricLockDesc => isArabic ? 'المصادقة بالبصمة لحماية سرية السجلات المعرفية' : (isFrench ? 'Empreinte requise pour accéder aux dossiers cliniques' : 'Require biometrics to access sensitive cognitive records');
-  String get biometricVaultLockedTitle => isArabic ? 'سجل الجلسات مقفل' : (isFrench ? 'DOSSIERS SÉCURISÉS' : 'SESSION VAULT LOCKED');
+  String get biometricVaultLockedTitle => isArabic ? 'الجلسة مقفلة' : (isFrench ? 'SESSION SÉCURISÉE' : 'SESSION LOCKED');
   String get biometricVaultLockedDesc => isArabic 
       ? 'يلزم التحقق بالبصمة للوصول إلى سجلات وتفكيكات أفكارك الخاصة.' 
       : (isFrench ? 'Authentification requise pour déverrouiller vos dossiers de déconstruction.' : 'Biometric authentication required to access your private cognitive session records.');
-  String get unlockWithBiometricsBtn => isArabic ? 'فتح القفل بالبصمة' : (isFrench ? 'DÉVERROUILLER' : 'UNLOCK VAULT');
+  String get unlockWithBiometricsBtn => isArabic ? 'فتح القفل بالبصمة' : (isFrench ? 'DÉVERROUILLER' : 'UNLOCK');
   String get biometricFailedSnackbar => isArabic ? 'فشلت المصادقة البيومترية' : (isFrench ? 'Échec de l’authentification' : 'Biometric authentication failed');
   String get biometricNotAvailableSnackbar => isArabic ? 'البصمة غير متوفرة في هذا الجهاز' : (isFrench ? 'Biométrie non disponible' : 'Biometrics not available on this device');
   // Cloud Sync (Firebase Spark Plan - Step 11)
@@ -283,8 +286,8 @@ class AppStrings {
   String get cloudSyncDesc => isArabic 
       ? 'نسخ احتياطي مشفر ومتوافق مع خطة Firebase Spark بدون فوترة (\$0.00)' 
       : (isFrench ? 'Sauvegarde chiffrée sur forfait Spark sans facturation (\$0.00)' : 'Encrypted backup on Firebase Spark plan with zero billing linked (\$0.00)');
-  String get exportVaultBtn => isArabic ? 'تصدير نسخة كاملة (JSON)' : (isFrench ? 'Exporter Sauvegarde (JSON)' : 'Export Full Vault (JSON)');
-  String get exportVaultSuccess => isArabic ? 'تم نسخ النسخة الكاملة إلى الحافظة' : (isFrench ? 'Sauvegarde complète copiée' : 'Full vault backup copied to clipboard');
+  String get exportVaultBtn => isArabic ? 'تصدير نسخة احتياطية (JSON)' : (isFrench ? 'Exporter la sauvegarde (JSON)' : 'Export Full Backup (JSON)');
+  String get exportVaultSuccess => isArabic ? 'تم نسخ النسخة الاحتياطية إلى الحافظة' : (isFrench ? 'Sauvegarde complète copiée' : 'Full backup copied to clipboard');
   String get sparkPlanBadge => isArabic ? 'خطة SPARK المجانية (\$0.00)' : (isFrench ? 'FORFAIT SPARK (\$0.00)' : 'SPARK FREE TIER (\$0.00)');
 
   String get wipeDataTitle => isArabic ? 'مسح السجلات نهائياً' : (isFrench ? 'Purger toutes les données' : 'Purge All Records');
@@ -417,8 +420,8 @@ class AppStrings {
   // Journal / Vault
   String get noCasesRecordedTitle => isArabic ? 'لا توجد جلسات مسجلة' : (isFrench ? 'AUCUNE SESSION ENREGISTRÉE' : 'NO SESSIONS RECORDED');
   String get noCasesRecordedDesc => isArabic 
-      ? 'عندما تشعر بأي استثارة عصبية أو فكرة مقلقة، ابدأ تفكيكاً سريعاً في 60 ثانية لتهدئة الدائرة.'
-      : (isFrench ? 'Dès qu’une tension ou pensée automatique surgit, initiez une déconstruction en 60 secondes.' : 'Whenever tension or automatic anxiety arises, launch a 60-second deconstruction.');
+      ? 'عندما تشعر بأي استثارة أو فكرة مقلقة، ابدأ جلسة تفكير هادئة لإعادة التوازن.'
+      : (isFrench ? 'Dès qu’une tension ou pensée automatique surgit, initiez une session de réflexion.' : 'Whenever tension or automatic anxiety arises, launch a gentle reflection session.');
   String get emotionHiddenPrivacy => isArabic ? 'البيانات الجسدية مخفية (وضع الخصوصية)' : (isFrench ? 'Données masquées (mode privé)' : 'Somatic state hidden (privacy mode)');
   String feltEmotionSub(String emotion, int intensity) => isArabic ? 'الاستجابة: $emotion • الشدة: $intensity/10' : (isFrench ? 'État : $emotion • Intensité $intensity/10' : 'State: $emotion • Arousal $intensity/10');
   String get showPreviewsTooltip => isArabic ? 'إظهار المعاينة' : (isFrench ? 'Afficher' : 'Show previews');
@@ -495,8 +498,8 @@ class AppStrings {
   String get sharingHistoryCleared => isArabic ? 'تم مسح سجل المشاركات بنجاح' : (isFrench ? 'Historique des partages purgé' : 'Clinical sharing history cleared');
   String get closeBtn => isArabic ? 'إغلاق' : (isFrench ? 'Fermer' : 'Close');
 
-  // AI Investigator Engine Settings (Direct Free Gemini API Key)
-  String get aiEngineSectionTitle => isArabic ? 'محرك الذكاء الاصطناعي (GEMINI)' : (isFrench ? 'MOTEUR D’IA (GEMINI)' : 'AI INVESTIGATOR ENGINE');
+  // AI Companion Engine Settings (Direct Free Gemini API Key)
+  String get aiEngineSectionTitle => isArabic ? 'محرك الذكاء الاصطناعي (GEMINI)' : (isFrench ? 'MOTEUR D’IA (GEMINI)' : 'AI COMPANION ENGINE');
   String get aiEngineSectionDesc => isArabic
       ? 'اربط مفتاح Gemini المجاني للتحليل السريري المباشر أو اعتمد المحاكي الداخلي (\$0.00)'
       : (isFrench
@@ -522,8 +525,8 @@ class AppStrings {
   // Direct Live Conversation with The Warm Investigator
   String get dialogueModeTitle => isArabic ? 'حوار مباشر' : (isFrench ? 'Dialogue Direct' : 'Live Dialogue');
   String get labModeTitle => isArabic ? 'المختبر السريري' : (isFrench ? 'Labo Clinique' : 'Clinical Lab');
-  String get investigatorTyping => isArabic ? 'المحقق بصدد التفكير...' : (isFrench ? 'L’Enquêteur réfléchit...' : 'The Investigator is reflecting...');
-  String get typeMessageHint => isArabic ? 'احكي مع المحقق (شنوة الفكرة اللي قالقتك؟)...' : (isFrench ? 'Échangez avec l’enquêteur...' : 'Talk with the investigator...');
+  String get investigatorTyping => isArabic ? 'المرافق بصدد التفكير...' : (isFrench ? 'Réflexion en cours...' : 'Reflecting...');
+  String get typeMessageHint => isArabic ? 'احكي مع رفيقك الذكي (شنوة الفكرة اللي قالقتك؟)...' : (isFrench ? 'Échangez avec votre compagnon...' : 'Talk with your companion...');
   String get welcomeDialoguePrompt => isArabic
       ? 'أهلاً بيك. أنا هوني باش نسمعك ونفككوا مع بعضنا أي فكرة أو توتر مقلقك توا. شنوة اللي صاير معاك؟'
       : (isFrench
@@ -534,8 +537,8 @@ class AppStrings {
   String get quickPillAlternative => isArabic ? 'كيفاش نجم نغزر للموضوع بطريقة أخرى؟' : (isFrench ? 'Quelle serait une autre explication ?' : 'What is an alternative explanation?');
   String get quickPillSomatic => isArabic ? 'حاسس بتوتر وضغط في بدني' : (isFrench ? 'Je ressens une tension physique' : 'I feel tension in my body');
   String get newSessionBtn => isArabic ? 'جلسة جديدة' : (isFrench ? 'Nouvelle Session' : 'New Session');
-  String get convertToCaseBtn => isArabic ? 'حفظ كملف قضية' : (isFrench ? 'Archiver le Dossier' : 'Save as Case File');
-  String get caseSavedFromChat => isArabic ? 'تم حفظ الحوار كملف قضية في السجل' : (isFrench ? 'Session archivée dans le Journal' : 'Session saved to Journal as a case file');
+  String get convertToCaseBtn => isArabic ? 'حفظ الجلسة' : (isFrench ? 'Enregistrer la session' : 'Save Session');
+  String get caseSavedFromChat => isArabic ? 'تم حفظ الحوار في السجل' : (isFrench ? 'Session archivée dans le Journal' : 'Session saved to Journal');
   String get tagStatementFact => isArabic ? 'حقيقة [F]' : (isFrench ? 'Fait [F]' : 'Fact [F]');
   String get tagStatementAssumption => isArabic ? 'فرضية [A]' : (isFrench ? 'Supposition [A]' : 'Assumption [A]');
   String get tagStatementInterpretation => isArabic ? 'تأويل [I]' : (isFrench ? 'Interprétation [I]' : 'Interpretation [I]');
@@ -613,7 +616,7 @@ class AppStrings {
   String get sectionCommunication => isArabic ? 'تفضيلات التواصل' : (isFrench ? 'Préférences de communication' : 'Communication Preferences');
   String get sectionCommunicationDesc => isArabic ? 'نبرة المساعد، طول الردود، وتفضيلات التعامل أثناء التوتر.' : (isFrench ? 'Ton du compagnon, longueur des réponses et préférences en cas de détresse.' : 'AI tone, response length, and preferences when feeling distressed.');
   String get sectionPrivacy => isArabic ? 'الخصوصية وتخصيص الذكاء الاصطناعي' : (isFrench ? 'Confidentialité et IA' : 'Privacy and AI Personalization');
-  String get sectionPrivacyDesc => isArabic ? 'التحكم الدقيق في مشاركة السياق، حذف البيانات، وأمان الخزينة.' : (isFrench ? 'Contrôle granulaire du contexte IA et gestion des données locales.' : 'Granular control over AI context, data removal, and vault security.');
+  String get sectionPrivacyDesc => isArabic ? 'التحكم الدقيق في مشاركة السياق، حذف البيانات، وخصوصية الحساب.' : (isFrench ? 'Contrôle granulaire du contexte IA et gestion des données locales.' : 'Granular control over AI context, data removal, and account privacy.');
   String get profileNotCompletedBadge => isArabic ? 'غير مكتمل بعد' : (isFrench ? 'À compléter' : 'Not yet completed');
   String get profileCompletedBadge => isArabic ? 'مكتمل' : (isFrench ? 'Complété' : 'Completed');
   String get profileSubtitle => isArabic
@@ -647,7 +650,7 @@ class AppStrings {
   String get editConditionStatusTitle => isArabic ? 'تحديد حالة التقييم' : (isFrench ? 'Définir le statut' : 'Specify Evaluation Status');
   String get conditionNoteLabel => isArabic ? 'ملاحظة خاصة بهذه الحالة' : (isFrench ? 'Note personnelle pour cette condition' : 'Personal note for this condition');
   String get tabProfile => isArabic ? 'ملفي النفسي' : (isFrench ? 'Mon Profil' : 'My Profile');
-  String get tabSettings => isArabic ? 'الإعدادات والأمان' : (isFrench ? 'Paramètres & Coffre' : 'Settings & Vault');
+  String get tabSettings => isArabic ? 'الإعدادات والخصوصية' : (isFrench ? 'Paramètres & Confidentialité' : 'Settings & Privacy');
 
   // =========================================================================
   // 2. Personalized Psychological Journey & Progress
@@ -679,56 +682,139 @@ class AppStrings {
   String get toolkitLabTab => isArabic ? 'مختبر الأدوات' : (isFrench ? 'Boîte à Outils' : 'Tools Lab');
 
   // =========================================================================
-  // 3. Authentication & Vault Onboarding
+  // 3. Authentication & Account Onboarding
   // =========================================================================
-  String get authTitle => isArabic ? 'فتح الخزنة الذهنية' : (isFrench ? 'Accès au Coffre Mental' : 'Access Your Mental Vault');
+  String get authTitle => isArabic ? 'الدخول إلى حسابك' : (isFrench ? 'Accès à votre compte' : 'Access Your Account');
   String get authSubtitle => isArabic
-      ? 'مساحة استكشاف معرفية مشفرة. ادخل إلى سجلاتك وخزنتك الآمنة.'
+      ? 'مساحة استكشاف معرفية خاصة. ادخل إلى سجلاتك وتأملاتك الشخصية.'
       : (isFrench
-          ? 'Espace d’exploration cognitive souverain et chiffré. Accédez à votre coffre.'
-          : 'A private cognitive exploration space. Access your encrypted forensic records.');
-  String get signInTab => isArabic ? 'فتح الخزنة (دخول)' : (isFrench ? 'Déverrouiller' : 'Unlock Vault');
-  String get signUpTab => isArabic ? 'إنشاء خزنة جديدة' : (isFrench ? 'Créer un Coffre' : 'Create Vault');
+          ? 'Espace d’exploration cognitive privé. Accédez à vos réflexions personnelles.'
+          : 'A private cognitive exploration space. Access your personal reflection records.');
+  String get signInTab => isArabic ? 'تسجيل الدخول' : (isFrench ? 'Connexion' : 'Sign In');
+  String get signUpTab => isArabic ? 'إنشاء حساب' : (isFrench ? 'Créer un compte' : 'Create Account');
   String get emailFieldLabel => isArabic ? 'البريد الإلكتروني' : (isFrench ? 'Adresse email' : 'Email Address');
-  String get emailFieldHint => 'investigator@domain.com';
-  String get passwordFieldLabel => isArabic ? 'كلمة سر الخزنة' : (isFrench ? 'Mot de passe' : 'Vault Password');
+  String get emailFieldHint => 'user@domain.com';
+  String get passwordFieldLabel => isArabic ? 'كلمة السر' : (isFrench ? 'Mot de passe' : 'Password');
   String get passwordFieldHint => isArabic ? '6 أحرف على الأقل' : (isFrench ? '6 caractères minimum' : 'At least 6 characters');
-  String get codenameFieldLabel => isArabic ? 'الاسم الرمزي للمحقق (اختياري)' : (isFrench ? 'Nom de code / Alias (facultatif)' : 'Forensic Codename (Optional)');
-  String get codenameFieldHint => isArabic ? 'مثال: باحث #4092' : (isFrench ? 'ex: Observateur #4092' : 'e.g. Observer #4092');
-  String get createVaultBtn => isArabic ? 'إنشاء الخزنة السيادية' : (isFrench ? 'CRÉER LE COFFRE SOUVERAIN' : 'CREATE SOVEREIGN VAULT');
-  String get unlockVaultBtn => isArabic ? 'فتح الخزنة' : (isFrench ? 'DÉVERROUILLER LE COFFRE' : 'UNLOCK VAULT');
-  String get anonymousOptionTitle => isArabic ? 'خزنة سيادية مجهولة الهوية' : (isFrench ? 'Coffre Souverain Anonyme' : 'Anonymous Sovereign Vault');
+  String get codenameFieldLabel => isArabic ? 'الاسم المفضل أو المستعار (اختياري)' : (isFrench ? 'Nom ou alias (facultatif)' : 'Preferred Name or Alias (Optional)');
+  String get codenameFieldHint => isArabic ? 'مثال: باحث' : (isFrench ? 'ex: Observateur' : 'e.g. Observer');
+  String get createVaultBtn => isArabic ? 'إنشاء حساب' : (isFrench ? 'CRÉER UN COMPTE' : 'CREATE ACCOUNT');
+  String get unlockVaultBtn => isArabic ? 'تسجيل الدخول' : (isFrench ? 'SE CONNECTER' : 'SIGN IN');
+  String get anonymousOptionTitle => isArabic ? 'مساحة محلية خاصة' : (isFrench ? 'Espace local privé' : 'Private Local Space');
   String get anonymousOptionSubtitle => isArabic
-      ? 'بدون بريد أو هاتف أو هوية شخصية. تبقى كافة البيانات مشفرة محلياً على جهازك لخصوصية تامة.'
+      ? 'بدون بريد أو هاتف. تبقى كافة البيانات محفوظة محلياً على جهازك لخصوصية تامة.'
       : (isFrench
-          ? 'Sans email ni identifiant. Toutes les données sont chiffrées localement pour une confidentialité absolue.'
-          : 'Zero email, phone, or identity footprint. All data remains encrypted on your device with complete privacy.');
-  String get startAnonymouslyBtn => isArabic ? 'استكشاف فوري بدون حساب (خزنة خاصة)' : (isFrench ? 'EXPLORATION PRIVÉE SANS COMPTE' : 'EXPLORE ANONYMOUSLY (PRIVATE VAULT)');
-  String get alreadyHaveVaultPrompt => isArabic ? 'لديك خزنة سابقة؟' : (isFrench ? 'Vous avez déjà un coffre ?' : 'Already have a vault?');
-  String get newInvestigatorPrompt => isArabic ? 'مستكشف جديد؟' : (isFrench ? 'Nouvel explorateur ?' : 'New investigator?');
+          ? 'Sans email ni identifiant requis. Toutes les données sont conservées localement sur votre appareil.'
+          : 'No email or phone required. All data remains stored locally on your device with complete privacy.');
+  String get startAnonymouslyBtn => isArabic ? 'متابعة بدون حساب' : (isFrench ? 'CONTINUER SANS COMPTE' : 'CONTINUE WITHOUT AN ACCOUNT');
+  String get alreadyHaveVaultPrompt => isArabic ? 'لديك حساب سابق؟' : (isFrench ? 'Vous avez déjà un compte ?' : 'Already have an account?');
+  String get newInvestigatorPrompt => isArabic ? 'مستخدم جديد؟' : (isFrench ? 'Nouveau ici ?' : 'New here?');
   String get startExplorationBtn => isArabic ? 'ابدأ رحلة الاستكشاف' : (isFrench ? 'Commencer l’exploration' : 'Start Exploration');
   String get signInPromptBtn => isArabic ? 'تسجيل الدخول' : (isFrench ? 'Se connecter' : 'Sign In');
   String get biometricUnlockBtn => isArabic ? 'فتح سريع بالبصمة' : (isFrench ? 'Déverrouillage biométrique' : 'Quick Biometric Unlock');
-  String get linkEmailTitle => isArabic ? 'ترقية إلى خزنة سحابية' : (isFrench ? 'Associer un compte cloud' : 'Upgrade to Cloud Vault');
+  String get linkEmailTitle => isArabic ? 'الربط بحساب سحابي' : (isFrench ? 'Associer un compte cloud' : 'Sync to Cloud Account');
   String get linkEmailSubtitle => isArabic
       ? 'اربط بريدك الإلكتروني لمزامنة مسارك النفسي بين أجهزتك بأمان دون فقدان أي ملاحظة.'
       : (isFrench
           ? 'Associez un email pour synchroniser votre parcours entre vos appareils sans rien perdre.'
           : 'Link an email and password to securely sync your journey across devices without losing data.');
-  String get linkEmailBtn => isArabic ? 'ربط ومزامنة الخزنة' : (isFrench ? 'ASSOCIER & SYNCHRONISER' : 'LINK & SYNC VAULT');
-  String get signOutBtn => isArabic ? 'قفل الخزنة والخروج' : (isFrench ? 'Verrouiller et déconnecter' : 'Lock & Sign Out');
-  String get deleteAccountBtn => isArabic ? 'حذف الحساب والخزنة نهائياً' : (isFrench ? 'Supprimer définitivement le compte' : 'Delete Account & Vault');
-  String get vaultStatusAnonymous => isArabic ? 'خزنة سيادية محلية (مجهولة الهوية)' : (isFrench ? 'Coffre Souverain Local (Anonyme)' : 'Sovereign Local Vault (Anonymous)');
-  String get vaultStatusCloud => isArabic ? 'خزنة سحابية مشفرة' : (isFrench ? 'Coffre Chiffré dans le Cloud' : 'Cloud-Synced Vault');
-  String get onboardingVaultChoiceTitle => isArabic ? 'الخزنة النفسية ودرع الخصوصية' : (isFrench ? 'Coffre Mental & Bouclier Privé' : 'Mental Vault & Privacy Shield');
+  String get linkEmailBtn => isArabic ? 'ربط ومزامنة الحساب' : (isFrench ? 'ASSOCIER & SYNCHRONISER' : 'LINK & SYNC ACCOUNT');
+  String get signOutBtn => isArabic ? 'تسجيل الخروج' : (isFrench ? 'Se déconnecter' : 'Sign Out');
+  String get deleteAccountBtn => isArabic ? 'حذف الحساب والبيانات' : (isFrench ? 'Supprimer le compte et les données' : 'Delete Account & Data');
+  String get vaultStatusAnonymous => isArabic ? 'حساب محلي على الجهاز' : (isFrench ? 'Compte local (sur l’appareil)' : 'Local On-Device Account');
+  String get vaultStatusCloud => isArabic ? 'حساب متزامن سحابياً' : (isFrench ? 'Compte synchronisé dans le cloud' : 'Cloud-Synced Account');
+  String get onboardingVaultChoiceTitle => isArabic ? 'الحساب والخصوصية' : (isFrench ? 'Compte & Confidentialité' : 'Account & Privacy');
   String get onboardingVaultChoiceSubtitle => isArabic
-      ? 'حدد أسلوب حفظ وتأمين سجلاتك وتأملاتك النفسية.'
+      ? 'حدد كيفية حفظ بياناتك وتأمينها.'
       : (isFrench
-          ? 'Choisissez comment sécuriser vos traces et découvertes cognitives.'
-          : 'Choose how your cognitive traces and reflections are stored and secured.');
+          ? 'Choisissez comment sauvegarder et sécuriser vos données.'
+          : 'Choose how your reflections and data are stored and protected.');
   String get anonymousChoiceBadge => isArabic ? 'أعلى درجات الخصوصية' : (isFrench ? 'CONFIDENTIALITÉ MAXIMALE' : 'MAXIMUM PRIVACY');
   String get cloudChoiceBadge => isArabic ? 'مزامنة متعددة الأجهزة' : (isFrench ? 'SYNCHRONISATION MULTI-APPAREILS' : 'MULTI-DEVICE SYNC');
   String get biometricEnableToggle => isArabic ? 'تأمين هذا الجهاز ببصمة الإصبع أو الوجه' : (isFrench ? 'Protéger l’accès par biométrie' : 'Secure device with Biometrics');
+
+  // =========================================================================
+  // Adaptive Personalized Onboarding
+  // =========================================================================
+  String get onboardingBasicInfoTitle => isArabic ? 'معلومات أولية' : (isFrench ? 'Informations de base' : 'Basic Information');
+  String get onboardingBasicInfoSubtitle => isArabic
+      ? 'تساعدنا الفئة العمرية على معايرة وتيرة الدعم. تقديم السياق الجسدي اختياري تماماً ولا يترتب عليه أي افتراضات سريرية.'
+      : (isFrench
+          ? 'Votre tranche d’âge aide à calibrer le rythme. Le contexte physiologique est facultatif et sans suppositions cliniques.'
+          : 'Your age range helps calibrate supportive pacing. Providing physiological context is completely voluntary and never creates clinical assumptions.');
+  String get ageRangeLabel => isArabic ? 'الفئة العمرية' : (isFrench ? 'Tranche d’âge' : 'Age Range');
+  String get biologicalSexLabel => isArabic ? 'السياق الجسدي / الجنس (اختياري)' : (isFrench ? 'Contexte physiologique / Sexe (facultatif)' : 'Physiological Context / Sex (Optional)');
+  String get biologicalSexHelperNote => isArabic
+      ? 'اختياري: يساعد على مواءمة استبصار الطاقة والأنماط الجسدية دون أي قيود أو تصنيفات مسبقة.'
+      : (isFrench
+          ? 'Facultatif : aide à affiner l’observation des rythmes somatiques sans restriction.'
+          : 'Voluntary: helps tailor somatic observation (such as physical energy rhythms) without clinical stereotyping or restrictions.');
+  String get minorSupportNotice => isArabic
+      ? 'تنبيه: التطبيق هو مساحة للاستبصار الذاتي وليس علاجاً طبياً أو تدخلاً طارئاً. إذا كنت تمر بضائقة حادة، تواصل مع شخص بالغ تثق به أو مع خدمات الطوارئ الطبية الرسمية.'
+      : (isFrench
+          ? 'Important : Mind Forensics est un outil d’auto-observation, non un traitement médical. En cas de détresse intense, parlez-en à un adulte de confiance ou aux services d’urgence.'
+          : 'Important: Mind Forensics is a self-reflection tool, not medical treatment. If you are experiencing acute distress, reach out to a trusted adult, professional, or local emergency services.');
+
+  String get onboardingBackgroundTitle => isArabic ? 'نقطة انطلاقك' : (isFrench ? 'Votre point de départ' : 'Your Starting Point');
+  String get onboardingBackgroundSubtitle => isArabic
+      ? 'أي من هذه الخيارات يصف وضعك الحالي بأفضل صورة؟ كل مسار هنا كامل ومحترم بالتساوي.'
+      : (isFrench
+          ? 'Quelle option décrit le mieux votre parcours ? Chaque chemin est complet et respecté.'
+          : 'Which best describes your current journey? Every path is complete and respected equally.');
+
+  String get bgDiagnosedTitle => isArabic ? 'تشخيص طبي رسمي' : (isFrench ? 'Diagnostic formel' : 'Diagnosed Condition');
+  String get bgDiagnosedDesc => isArabic ? 'لدي تشخيص سريري رسمي واحد أو أكثر من قبل مختص مؤهل.' : (isFrench ? 'J’ai reçu un diagnostic médical formel d’un professionnel.' : 'I have received one or more formal clinical diagnoses from a professional.');
+
+  String get bgSuspectedTitle => isArabic ? 'اشتباه أو استكشاف ذاتي' : (isFrench ? 'Suspicion / Exploration' : 'Suspected / Exploring');
+  String get bgSuspectedDesc => isArabic ? 'أشتبه في وجود حالة معينة، لكن بدون تشخيص رسمي حتى الآن.' : (isFrench ? 'Je suspecte un trouble précis, sans diagnostic formel.' : 'I suspect I experience a condition, but have no formal diagnosis yet.');
+
+  String get bgAssessingTitle => isArabic ? 'بصدد التقييم السريري حالياً' : (isFrench ? 'Évaluation en cours' : 'Currently Being Assessed');
+  String get bgAssessingDesc => isArabic ? 'أخضع حالياً لجلسات تقييم نفسي أو سريري مع مختص.' : (isFrench ? 'Je suis actuellement suivi pour une évaluation clinique.' : 'I am actively undergoing psychological or psychiatric evaluation.');
+  String get bgAssessedTitle => bgAssessingTitle;
+  String get bgAssessedDesc => bgAssessingDesc;
+
+  String get bgDifficultiesTitle => isArabic ? 'صعوبات وتحديات بدون تشخيص' : (isFrench ? 'Difficultés sans diagnostic' : 'Difficulties Without Diagnosis');
+  String get bgDifficultiesDesc => isArabic ? 'أعاني من صعوبات وتحديات نفسية متكررة دون أي تسميات طبية.' : (isFrench ? 'Je vis des défis émotionnels ou mentaux récurrents sans étiquette.' : 'I experience recurring emotional or cognitive challenges without medical labels.');
+
+  String get bgWellbeingTitle => isArabic ? 'تتبع العافية النفسية والروتين' : (isFrench ? 'Suivi du bien-être' : 'Wellbeing & Habit Tracking');
+  String get bgWellbeingDesc => isArabic ? 'أرغب في متابعة توازني النفسي، فهم أفكاري، وبناء عادات هادئة.' : (isFrench ? 'Je cherche à observer mes pensées et renforcer mon équilibre quotidien.' : 'I am here for self-reflection, emotional clarity, and gentle habit awareness.');
+
+  String get bgUnsureTitle => isArabic ? 'لست متأكداً بعد' : (isFrench ? 'Je ne sais pas encore' : 'Still Figuring It Out');
+  String get bgUnsureDesc => isArabic ? 'لست متأكداً تماماً، وأريد مساحة آمنة ومريحة لملاحظة نفسي.' : (isFrench ? 'Pas tout à fait sûr(e), je cherche un espace serein d’exploration.' : 'I am not sure where I fit, but I want a safe space to observe myself.');
+
+  String get conditionSearchHint => isArabic ? 'ابحث في الحالات والتجارب...' : (isFrench ? 'Rechercher une condition ou expérience...' : 'Search conditions or lived experiences...');
+  String get statusDiagnosedTag => isArabic ? 'تشخيص سريري مؤكد' : (isFrench ? 'Diagnostiqué' : 'Diagnosed');
+  String get statusSuspectedTag => isArabic ? 'اشتباه / استكشاف' : (isFrench ? 'Suspecté / En exploration' : 'Suspected / Exploring');
+  String get conditionNonDiagnosticNote => isArabic
+      ? 'تحديد حالتك يساعد على فهم عالمك النفسي؛ ولا يعني أبداً وضع تشخيص سريري جديد.'
+      : (isFrench
+          ? 'Ce choix contextualise vos outils ; il ne constitue jamais un diagnostic médical.'
+          : 'Selection contextualizes your reflection space; it never implies or confirms a diagnosis.');
+
+  String get symptomsSelectionTitle => isArabic ? 'الأعراض والتحديات الحالية' : (isFrench ? 'Symptômes & Défis actuels' : 'Current Symptoms & Difficulties');
+  String get symptomsSelectionSubtitle => isArabic
+      ? 'اختر التجارب التي تشعر بها حالياً عبر مجالات المرصد الداخلي.'
+      : (isFrench
+          ? 'Sélectionnez les manifestations qui vous touchent parmi les domaines de l’Observatoire.'
+          : 'Select the experiences you are currently navigating across the Observatory domains.');
+
+  String get supportSystemTitle => isArabic ? 'المرافقة المهنية الحالية (اختياري)' : (isFrench ? 'Accompagnement professionnel (Facultatif)' : 'Professional Support (Optional)');
+  String get supportSystemSubtitle => isArabic
+      ? 'هل تعمل حالياً مع مختص أو شبكة دعم؟ هذا يساعد في توجيه ميزات التصدير والتلخيص.'
+      : (isFrench
+          ? 'Bénéficiez-vous actuellement d’un suivi ? Cela aide à orienter les résumés pour votre thérapeute.'
+          : 'Are you currently working with professional care? This helps guide summary and therapist features.');
+
+  String get summaryPrioritiesTitle => isArabic ? 'مراجعة أولوياتك وملفك' : (isFrench ? 'Synthèse de vos priorités' : 'Review Your Priorities');
+  String get summaryPrioritiesSubtitle => isArabic
+      ? 'هذه خلاصتك الأولية. يمكنك تعديل أي قسم الآن أو لاحقاً في ملفك الشخصي.'
+      : (isFrench
+          ? 'Voici votre profil de départ. Vous pouvez modifier n’importe quel point maintenant ou plus tard.'
+          : 'Confirm your starting profile. You can edit any section now or refine it later in Profile.');
+
+  String get editSectionBtn => isArabic ? 'تعديل' : (isFrench ? 'Modifier' : 'Edit');
+  String get confirmAndStartBtn => isArabic ? 'تأكيد وبدء الاستخدام' : (isFrench ? 'CONFIRMER & COMMENCER' : 'CONFIRM & GET STARTED');
+  String get returnToSummaryBtn => isArabic ? 'الرجوع للملخص' : (isFrench ? 'Retour à la synthèse' : 'Return to Summary');
 
   // Condition and Status Display Name Localizers
   String conditionName(ConditionType condition) {
@@ -834,6 +920,83 @@ class AppStrings {
       }
     } else {
       return status.defaultDisplayName();
+    }
+  }
+
+  String ageRangeDisplayName(String key) {
+    switch (key) {
+      case 'under_18':
+      case '<18':
+        return isArabic ? 'أقل من 18 سنة' : (isFrench ? 'Moins de 18 ans' : 'Under 18');
+      case '18-24':
+        return isArabic ? '18 - 24 سنة' : (isFrench ? '18-24 ans' : '18-24');
+      case '25-34':
+        return isArabic ? '25 - 34 سنة' : (isFrench ? '25-34 ans' : '25-34');
+      case '35-44':
+        return isArabic ? '35 - 44 سنة' : (isFrench ? '35-44 ans' : '35-44');
+      case '45-54':
+        return isArabic ? '45 - 54 سنة' : (isFrench ? '45-54 ans' : '45-54');
+      case '55-64':
+        return isArabic ? '55 - 64 سنة' : (isFrench ? '55-64 ans' : '55-64');
+      case '65+':
+        return isArabic ? '+65 سنة' : (isFrench ? '65 ans et plus' : '65+');
+      case 'prefer_not_to_say':
+      default:
+        return isArabic ? 'أفضل عدم التحديد' : (isFrench ? 'Préfère ne pas préciser' : 'Prefer not to say');
+    }
+  }
+
+  String biologicalSexDisplayName(String key) {
+    switch (key) {
+      case 'female':
+        return isArabic ? 'أنثى' : (isFrench ? 'Femme' : 'Female');
+      case 'male':
+        return isArabic ? 'ذكر' : (isFrench ? 'Homme' : 'Male');
+      case 'intersex':
+        return isArabic ? 'ثنائي الجنس (Intersex)' : (isFrench ? 'Intersexe' : 'Intersex');
+      case 'other':
+        return isArabic ? 'آخر / مختلف' : (isFrench ? 'Autre' : 'Other');
+      case 'prefer_not_to_say':
+      default:
+        return isArabic ? 'أفضل عدم التحديد' : (isFrench ? 'Préfère ne pas préciser' : 'Prefer not to say');
+    }
+  }
+
+  String supportSystemOptionTitle(String key) {
+    switch (key) {
+      case 'therapist':
+        return isArabic ? 'معالج نفسي أو أخصائي عيادي' : (isFrench ? 'Psychothérapeute ou psychologue' : 'Therapist or Psychologist');
+      case 'psychiatrist':
+        return isArabic ? 'طبيب نفسي (Psychiatrist)' : (isFrench ? 'Psychiatre' : 'Psychiatrist');
+      case 'assessment':
+        return isArabic ? 'قيد التقييم السريري حالياً' : (isFrench ? 'Évaluation clinique en cours' : 'Undergoing Clinical Evaluation');
+      case 'primary_care':
+        return isArabic ? 'طبيب عام أو رعاية أولية' : (isFrench ? 'Médecin généraliste' : 'Primary Care / GP');
+      case 'coach':
+        return isArabic ? 'مرشد نفسي أو موجّه (Coach)' : (isFrench ? 'Conseiller ou coach' : 'Counselor or Coach');
+      case 'self_guided':
+        return isArabic ? 'متابعة ذاتية مستقلة' : (isFrench ? 'Suivi autonome' : 'Self-guided (No current care)');
+      case 'prefer_not_to_say':
+      default:
+        return isArabic ? 'أفضل عدم التحديد' : (isFrench ? 'Préfère ne pas préciser' : 'Prefer not to say');
+    }
+  }
+
+  String backgroundDisplayName(String key) {
+    switch (key) {
+      case 'diagnosed':
+        return bgDiagnosedTitle;
+      case 'suspected':
+        return bgSuspectedTitle;
+      case 'being_assessed':
+        return bgAssessedTitle;
+      case 'difficulties_no_diagnosis':
+        return bgDifficultiesTitle;
+      case 'wellbeing_tracking':
+        return bgWellbeingTitle;
+      case 'unsure':
+      default:
+        return bgUnsureTitle;
     }
   }
 
@@ -955,12 +1118,12 @@ class AppStrings {
           : 'Every thought leaves a trace. Record today’s check-in to begin your reflective timeline archive.');
   String get skyWaitingSub => thoughtTraceWaitingSub;
   String get recordTodayTraceBtn => isArabic ? 'تسجيل أثر اليوم' : (isFrench ? 'Enregistrer l’empreinte du jour' : 'Record Today\'s Trace');
-  String get tapTraceToInspect => isArabic ? 'المس أي تدوينة لمعاينة أثر الفكرة وتفكيكها.' : (isFrench ? 'Touchez une entrée pour inspecter et déconstruire la pensée.' : 'Tap any entry to inspect and deconstruct the thought.');
+  String get tapTraceToInspect => isArabic ? 'المس أي تدوينة لمعاينة أثر الفكرة واستكشافها.' : (isFrench ? 'Touchez une entrée pour examiner la pensée.' : 'Tap any entry to explore the thought.');
   String get tapStarToInspect => tapTraceToInspect;
   String get selectedTraceLabel => isArabic ? 'أثر الفكرة المحدد' : (isFrench ? 'Empreinte sélectionnée' : 'Selected Thought Trace');
   String get selectedStarLabel => selectedTraceLabel;
   String get viewFullTraceBtn => isArabic ? 'عرض تفاصيل الأثر' : (isFrench ? 'Voir la trace complète' : 'View Full Trace');
-  String get investigateThoughtBtn => isArabic ? 'فحص وتفكيك هذه الفكرة' : (isFrench ? 'Investiguer cette pensée' : 'Investigate This Thought');
+  String get investigateThoughtBtn => isArabic ? 'استكشاف هذه الفكرة' : (isFrench ? 'Explorer cette pensée' : 'Explore This Thought');
 
   String get totalEntriesMetric => isArabic ? 'إجمالي التدوينات' : (isFrench ? 'TOTAL ENTRÉES' : 'TOTAL ENTRIES');
   String get uniqueDaysMetric => isArabic ? 'الأيام الملاحظة' : (isFrench ? 'JOURS OBSERVÉS' : 'DAYS OBSERVED');
@@ -1002,10 +1165,10 @@ class AppStrings {
   String get filterAllSources => isArabic ? 'كافة المصادر' : (isFrench ? 'Toutes les sources' : 'All Sources');
   String get noReflectionsFound => isArabic ? 'لم يتم العثور على أي تأملات مطابقة للبحث.' : (isFrench ? 'Aucune réflexion ne correspond à votre recherche.' : 'No reflections found matching your query.');
   String get noReflectionsEmpty => isArabic
-      ? 'أرشيفك بانتظار تدويناتك. اكتب خواطرك أثناء التقييم اليومي أو جلسات التحقيق أو تمارين المسار.'
+      ? 'أرشيفك بانتظار تدويناتك. اكتب خواطرك أثناء التقييم اليومي أو جلسات التأمل الفكري أو تمارين المسار.'
       : (isFrench
           ? 'Vos réflexions apparaîtront ici dès vos premiers bilans ou exercices.'
-          : 'Your reflection archive is waiting. Write thoughts during daily check-ins, case deconstructions, or journey activities.');
+          : 'Your reflection archive is waiting. Write thoughts during daily check-ins, reflection sessions, or journey activities.');
 
   String get journeyProgressTitle => isArabic ? 'استكشاف مراحل المسار النفسي' : (isFrench ? 'EXPLORATION DU PARCOURS' : 'JOURNEY CURRICULUM EXPLORATION');
   String activitiesExplored(int completed, int total) => isArabic

@@ -72,6 +72,14 @@ class JourneyStateModel {
               JourneyActivity.fromJson(item)
       };
 
+      final defaultIds = defaultActivities.map((a) => a.id).toSet();
+      for (final item in rawList) {
+        final id = (item as Map<String, dynamic>)['id'] as String;
+        if (!defaultIds.contains(id)) {
+          loadedActivities.add(JourneyActivity.fromJson(item));
+        }
+      }
+
       for (final defaultAct in defaultActivities) {
         if (savedMap.containsKey(defaultAct.id)) {
           loadedActivities.add(savedMap[defaultAct.id]!);

@@ -1,12 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../data/local_journey_repository.dart';
+import '../domain/journey_activity.dart';
 import '../domain/journey_phase.dart';
 import '../domain/journey_state_model.dart';
 
 final journeyRepositoryProvider = Provider<JourneyRepository>((ref) {
-  final authUser = ref.watch(authControllerProvider).user;
-  return LocalJourneyRepository(userId: authUser?.id);
+  final userId = ref.watch(authControllerProvider.select((s) => s.user?.id));
+  return LocalJourneyRepository(userId: userId);
 });
 
 class JourneyNotifier extends AsyncNotifier<JourneyStateModel> {
@@ -73,6 +74,59 @@ class JourneyNotifier extends AsyncNotifier<JourneyStateModel> {
       }
       return act;
     }).toList();
+
+    final updated = current.copyWith(
+      activities: updatedActivities,
+      updatedAt: DateTime.now(),
+    );
+
+    state = AsyncValue.data(updated);
+    await ref.read(journeyRepositoryProvider).saveJourneyState(updated);
+  }
+
+  Future<void> addCustomDiscovery({
+    required String title,
+    required String notes,
+    String? category,
+  }) async {
+    if (state.value == null) {
+      await future;
+    }
+    final current = state.value;
+    if (current == null) return;
+
+    final now = DateTime.now();
+    final newActivity = JourneyActivity(
+      id: 'disc_${now.millisecondsSinceEpoch}',
+      phase: current.activePhase,
+      title: title.trim(),
+      purpose: category ?? 'Personal Discovery',
+      shortExplanation: category != null ? 'Category: $category' : 'User reflection note',
+      guidedInstructions: const [],
+      reflectionQuestions: const [],
+      isCompleted: true,
+      completedAt: now,
+      personalNotes: notes.trim(),
+    );
+
+    final updated = current.copyWith(
+      activities: [newActivity, ...current.activities],
+      updatedAt: now,
+    );
+
+    state = AsyncValue.data(updated);
+    await ref.read(journeyRepositoryProvider).saveJourneyState(updated);
+  }
+
+  Future<void> deleteDiscovery(String activityId) async {
+    if (state.value == null) {
+      await future;
+    }
+    final current = state.value;
+    if (current == null) return;
+
+    final updatedActivities =
+        current.activities.where((a) => a.id != activityId).toList();
 
     final updated = current.copyWith(
       activities: updatedActivities,

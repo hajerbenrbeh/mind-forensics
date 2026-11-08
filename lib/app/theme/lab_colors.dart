@@ -40,7 +40,7 @@ class LabColors {
   // ===========================================================================
   // DAYLIGHT PALETTE (Calm Organic Linen & Sage)
   // ===========================================================================
-  static const Color daylightBackground = Color(0xFFF7F8F5); // Soft natural parchment
+  static const Color daylightBackground = Color(0xFFF7F8F5); // Soft natural parchment / warm ivory
   static const Color daylightSurface = Color(0xFFFFFFFF); // Crisp clean surface
   static const Color daylightSurfaceSubtle = Color(0xFFE5ECE6); // Muted secondary surface
   static const Color daylightBorder = Color(0xFFD6DDD7); // Soft organic boundary
@@ -48,6 +48,18 @@ class LabColors {
   static const Color daylightTextSecondary = Color(0xFF5A6F62); // Balanced neutral secondary
   static const Color daylightAccent = Color(0xFF668274); // Grounded botanical sage
   static const Color daylightAccentSoft = Color(0xFFE8EFEA);
+
+  // ===========================================================================
+  // MUTED OLIVE & EDITORIAL BOTANICAL TOKENS (MOYA Matcha visual identity)
+  // ===========================================================================
+  static const Color mutedOlive = Color(0xFF3D4A39); // Deep earthy muted olive (Primary CTA & active borders)
+  static const Color mutedOliveDeep = Color(0xFF303C2D); // Deep botanical olive
+  static const Color mutedOliveMedium = Color(0xFF4A5A46); // Medium botanical olive
+  static const Color mutedOliveLight = Color(0xFF6E8069); // Muted soft olive
+  static const Color mutedOliveSoft = Color(0xFFEFF4F0); // Very soft sage-olive tint (Selected cards in light theme)
+  static const Color mutedOliveBadgeBg = Color(0xFFEBF1ED); // Editorial badge pill background (Light)
+  static const Color warmIvorySurface = Color(0xFFFBF9F5); // Warm ivory alternate surface
+  static const Color warmIvoryBorder = Color(0xFFE0DDD5); // Warm stone border
 
   // ===========================================================================
   // NIGHT PALETTE (Deep Slate Botanical & Sage Glow)

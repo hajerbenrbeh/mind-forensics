@@ -1232,8 +1232,8 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
           const SizedBox(height: 8),
           Text(
             strings.isArabic
-                ? 'تم حفظ أثر فكرتك بأمان في أرشيفك الشخصي المشفر.'
-                : 'Your thought trace is recorded in your personal archive and saved in your local vault.',
+                ? 'تم حفظ أثر فكرتك بأمان في أرشيفك الشخصي.'
+                : 'Your thought trace is recorded in your personal archive on this device.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12.5,

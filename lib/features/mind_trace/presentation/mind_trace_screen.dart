@@ -335,7 +335,7 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
           Text(
             strings.isArabic
                 ? 'لقد قمت بتوثيق أثرك لهذا اليوم. يمكنك مراجعة الإدخال أو تحديثه.'
-                : 'Your entry for today is active in your vault. You can review or edit it at any time.',
+                : 'Your entry for today is recorded. You can review or edit it at any time.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, height: 1.4, color: textSecondary),
           ),

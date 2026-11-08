@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../../investigation/domain/label_type.dart';
+import '../../../observatory/presentation/widgets/custom_perspective_sheet.dart';
 
 /// Perspective Exploration Card:
 /// - Replaces rigid cognitive distortion quiz with empowering thought deconstruction
@@ -185,20 +186,22 @@ class _PerspectiveExplorationCardState
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF111111) : const Color(0xFFF9FAFB),
+              color: isDark ? LabColors.factBackgroundDark : LabColors.factBackgroundLight,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: borderColor),
+              border: Border.all(
+                color: isDark ? LabColors.factBorderDark : LabColors.factBorderLight,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   isAr ? 'الواقعة الملموسة (FACT)' : 'OBSERVABLE FACT',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.6,
-                    color: textSecondary,
+                    color: LabColors.factBlue,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -220,10 +223,10 @@ class _PerspectiveExplorationCardState
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF190C10) : const Color(0xFFFFF1F2),
+              color: isDark ? LabColors.assumptionBackgroundDark : LabColors.assumptionBackgroundLight,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isDark ? const Color(0xFF4C1D24) : const Color(0xFFFECDD3),
+                color: isDark ? LabColors.assumptionBorderDark : LabColors.assumptionBorderLight,
               ),
             ),
             child: Column(
@@ -231,11 +234,11 @@ class _PerspectiveExplorationCardState
               children: [
                 Text(
                   isAr ? 'ما قفز إليه العقل (THOUGHT)' : 'AUTOMATIC INTERPRETATION',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.6,
-                    color: LabColors.cherryRed,
+                    color: LabColors.assumptionAmber,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -301,6 +304,24 @@ class _PerspectiveExplorationCardState
                 ),
               );
             }).toList(),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => CustomPerspectiveSheet.show(context),
+              icon: const Icon(Icons.tune_rounded, size: 14),
+              label: Text(
+                isAr ? 'تفكيك فكرة أو موقف خاص بك' : 'Deconstruct a thought of your own',
+                style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: LabColors.sageGreen,
+                side: BorderSide(color: LabColors.sageGreen.withValues(alpha: 0.5)),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
           ),
         ],
       ),

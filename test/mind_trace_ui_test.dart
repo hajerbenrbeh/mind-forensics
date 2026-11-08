@@ -177,7 +177,7 @@ void main() {
 
       // Verify thought quotation
       expect(find.text('“Feeling like I will let everyone down if this fails.”'), findsOneWidget);
-      expect(find.text('INVESTIGATE THIS THOUGHT'), findsOneWidget);
+      expect(find.text('EXPLORE THIS THOUGHT'), findsOneWidget);
 
       // Verify context displayed
       expect(find.text('Preparing a presentation.'), findsOneWidget);
@@ -196,14 +196,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify 6 Socratic inquiries
-      expect(find.text('INVESTIGATE THIS THOUGHT'), findsOneWidget);
+      expect(find.text('EXPLORE THIS THOUGHT'), findsOneWidget);
       expect(find.text('What happened before this thought appeared?'), findsOneWidget);
       expect(find.text('What was I feeling?'), findsOneWidget);
       expect(find.text('What did I believe was happening?'), findsOneWidget);
       expect(find.text('What did I do in response?'), findsOneWidget);
       expect(find.text('Is this something I have noticed before?'), findsOneWidget);
       expect(find.text('What would I like to understand about this experience?'), findsOneWidget);
-      expect(find.text('SAVE INVESTIGATION TO TRACE'), findsOneWidget);
+      expect(find.text('SAVE REFLECTION TO TRACE'), findsOneWidget);
     });
 
     testWidgets('PatternDiscoveryView renders filter buttons, statistics, and milestones',

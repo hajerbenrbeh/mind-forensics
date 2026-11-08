@@ -107,8 +107,8 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
         ),
         content: Text(
           strings.isArabic
-              ? 'تنبيه: حذف ملفك النفسي يمسح جميع الحالات والتفضيلات المسجلة. حسابك وخزينة تفكيكاتك في السجل ستبقى محفوظة دون حذف.'
-              : 'Important: Deleting your psychological profile resets all conditions and profile preferences. Your application account and journal cases remain safe.',
+              ? 'تنبيه: حذف ملفك النفسي يمسح جميع الحالات والتفضيلات المسجلة. حسابك وسجل جلساتك ستبقى محفوظة دون حذف.'
+              : 'Important: Deleting your psychological profile resets all conditions and profile preferences. Your application account and journal entries remain safe.',
           style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade300 : Colors.black87),
         ),
         actions: [
@@ -292,7 +292,7 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                strings.isArabic ? 'خزينة الذاكرة' : 'Memory Vault',
+                                strings.memoryVaultTitle,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,

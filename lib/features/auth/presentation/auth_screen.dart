@@ -97,7 +97,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     HapticFeedback.selectionClick();
     final lockNotifier = ref.read(appLockProvider.notifier);
     final unlocked = await lockNotifier.unlock(
-      reason: 'Authenticate to access your Mind Forensics vault',
+      reason: 'Authenticate to access Mind Forensics',
     );
     if (unlocked && mounted) {
       context.go(AppRouter.home);

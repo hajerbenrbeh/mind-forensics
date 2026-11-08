@@ -71,7 +71,7 @@ class TraceMilestone {
           title: 'Master Archivist',
           description:
               'Thirty thought traces mapped across your journey. A profound archive of resilience and self-awareness.',
-          symbolName: 'Vault',
+          symbolName: 'Archive',
           requiredTraces: 30,
         ),
       ];

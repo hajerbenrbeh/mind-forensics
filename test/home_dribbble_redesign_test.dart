@@ -10,6 +10,7 @@ import 'package:mind_forensics/features/home/presentation/widgets/home_time_segm
 import 'package:mind_forensics/features/home/presentation/widgets/home_week_mood_tracker.dart';
 import 'package:mind_forensics/features/mind_trace/controllers/mind_trace_controller.dart';
 import 'package:mind_forensics/features/mind_trace/domain/mind_trace_model.dart';
+import 'package:mind_forensics/features/support/presentation/contextual_support_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -66,7 +67,7 @@ void main() {
       expect(find.text('5 min'), findsOneWidget);
 
       // 6. Step 6 Daily check-in card
-      expect(find.text("TODAY'S NOTE (OPTIONAL)"), findsOneWidget);
+      expect(find.textContaining('NERVOUS ACTIVATION'), findsOneWidget);
       expect(find.text('Log Daily Check-in'), findsOneWidget);
     });
 
@@ -178,13 +179,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
 
       // Verify modal bottom sheet opened with breathing controls
-      expect(find.text('PAUSE'), findsOneWidget);
-      expect(find.textContaining('Cycles'), findsOneWidget);
+      expect(find.byType(ContextualSupportSheet), findsOneWidget);
+      expect(find.text('Begin 4-4-4-4 Breathing'), findsOneWidget);
 
       // Close sheet
-      Navigator.of(tester.element(find.text('PAUSE'))).pop();
+      Navigator.of(tester.element(find.byType(ContextualSupportSheet))).pop();
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.text('PAUSE'), findsNothing);
+      expect(find.byType(ContextualSupportSheet), findsNothing);
     });
 
     testWidgets('Tapping segmented time switcher toggles active selection', (tester) async {

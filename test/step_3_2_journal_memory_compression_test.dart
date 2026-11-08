@@ -591,7 +591,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify Header and Card
-      expect(find.text('MEMORY VAULT'), findsOneWidget);
+      expect(find.text('MEMORY LOG'), findsOneWidget);
       expect(find.text('Work deadline pressure noted across entries'), findsOneWidget);
       expect(find.text('RECURRING THEME'), findsOneWidget);
       expect(find.text('Confirm'), findsOneWidget);

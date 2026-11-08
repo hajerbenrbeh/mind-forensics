@@ -13,7 +13,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() {
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      'mf_onboarding_completed': true,
+    });
     GoogleFonts.config.allowRuntimeFetching = false;
   });
 

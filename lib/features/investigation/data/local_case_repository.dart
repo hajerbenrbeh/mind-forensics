@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,11 +22,20 @@ class LocalCaseRepository implements CaseRepository {
       : _legacyKeyCases;
 
   Map<String, CaseModel>? _cache;
+  Future<Map<String, CaseModel>>? _loadingFuture;
+  int? _cachedCounter;
+  Future<void> _counterLock = Future.value();
 
-  Future<Map<String, CaseModel>> _ensureLoaded() async {
-    if (_cache != null) return _cache!;
-    _cache = {};
+  Future<Map<String, CaseModel>> _ensureLoaded() {
+    if (_cache != null) return Future.value(_cache!);
+    if (_loadingFuture != null) return _loadingFuture!;
 
+    _loadingFuture = _loadFromStorage();
+    return _loadingFuture!;
+  }
+
+  Future<Map<String, CaseModel>> _loadFromStorage() async {
+    final cache = <String, CaseModel>{};
     final prefs = await SharedPreferences.getInstance();
     String? rawJson = prefs.getString(_storageKey);
 
@@ -40,13 +50,15 @@ class LocalCaseRepository implements CaseRepository {
         for (final item in decoded) {
           if (item is Map<String, dynamic>) {
             final model = CaseModel.fromJson(item);
-            _cache![model.id] = model;
+            cache[model.id] = model;
           }
         }
       } catch (_) {
         // Fallback to empty cache on corrupted data
       }
     }
+    _cache = cache;
+    _loadingFuture = null;
     return _cache!;
   }
 
@@ -102,6 +114,7 @@ class LocalCaseRepository implements CaseRepository {
   Future<void> deleteAllCases() async {
     final map = await _ensureLoaded();
     map.clear();
+    _cachedCounter = 1;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_storageKey);
     await prefs.remove(_legacyKeyCases);
@@ -119,11 +132,33 @@ class LocalCaseRepository implements CaseRepository {
   }
 
   @override
-  Future<String> getNextCaseNumber() async {
+  Future<String> getNextCaseNumber() {
+    final next = _counterLock.then((_) => _getNextCaseNumberInternal());
+    _counterLock = next.catchError((_) => '');
+    return next;
+  }
+
+  Future<String> _getNextCaseNumberInternal() async {
     final prefs = await SharedPreferences.getInstance();
-    final current = prefs.getInt(_keyCounter) ?? 1;
-    await prefs.setInt(_keyCounter, current + 1);
-    final formatted = current.toString().padLeft(2, '0');
+
+    if (_cachedCounter == null) {
+      final storedCounter = prefs.getInt(_keyCounter) ?? 1;
+      final map = await _ensureLoaded();
+      int maxFromCases = 0;
+      for (final c in map.values) {
+        final match = RegExp(r'\d+').firstMatch(c.caseNumber);
+        if (match != null) {
+          final num = int.tryParse(match.group(0) ?? '') ?? 0;
+          if (num > maxFromCases) maxFromCases = num;
+        }
+      }
+      _cachedCounter = maxFromCases >= storedCounter ? maxFromCases + 1 : storedCounter;
+    }
+
+    final allocated = _cachedCounter!;
+    _cachedCounter = allocated + 1;
+    await prefs.setInt(_keyCounter, allocated + 1);
+    final formatted = allocated.toString().padLeft(2, '0');
     return 'SESSION $formatted';
   }
 }

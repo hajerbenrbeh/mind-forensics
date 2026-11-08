@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/case_file/presentation/case_report_screen.dart';
 import '../../features/auth/presentation/auth_screen.dart';
@@ -34,6 +35,9 @@ class AppRouter {
   static const String insights = '/insights';
   static const String companion = '/companion';
 
+  /// Whether first-launch gating redirects new users to /onboarding.
+  static bool enableFirstLaunchGating = true;
+
   // Legacy route aliases for backward compatibility
   static const String tools = '/toolkit';
   static const String settings = '/profile';
@@ -45,6 +49,28 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: home,
+    redirect: (context, state) async {
+      if (!enableFirstLaunchGating) return null;
+
+      final prefs = await SharedPreferences.getInstance();
+      final hasCompleted = prefs.getBool('mf_onboarding_completed') ?? false;
+
+      final isGoingToOnboarding = state.matchedLocation == onboarding;
+      final isGoingToAuth = state.matchedLocation == auth;
+
+      // First-launch gating: if not completed, redirect to /onboarding
+      if (!hasCompleted) {
+        if (!isGoingToOnboarding && !isGoingToAuth) {
+          return onboarding;
+        }
+      } else {
+        // Completed returning users stay away from onboarding
+        if (isGoingToOnboarding) {
+          return home;
+        }
+      }
+      return null;
+    },
     routes: [
       GoRoute(
         path: onboarding,

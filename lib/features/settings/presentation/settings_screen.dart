@@ -199,7 +199,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Navigator.of(ctx).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(success ? 'Vault successfully linked to cloud account.' : 'Failed to link account.'),
+                        content: Text(success ? 'Account successfully linked to cloud.' : 'Failed to link account.'),
                         duration: const Duration(seconds: 2),
                       ),
                     );
@@ -299,7 +299,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               builder: (context, ref, _) {
                 final authState = ref.watch(authControllerProvider);
                 final user = authState.user;
-                final codename = user?.codename ?? 'Forensic Investigator';
+                final codename = user?.codename ?? (strings.isArabic ? 'مستكشف' : 'Observer');
                 final isAnon = user?.isAnonymous ?? true;
                 final email = user?.email;
 
@@ -986,7 +986,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            strings.isArabic ? 'خزينة الذاكرة' : 'Memory Vault',
+                            strings.memoryVaultTitle,
                             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: textPrimary),
                           ),
                           const SizedBox(height: 4),

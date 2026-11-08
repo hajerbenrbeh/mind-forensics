@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
+import '../../../journey/controllers/journey_controller.dart';
 
 /// Micro-Action Behavioral Activation Card:
 /// - Provides a 2-minute gentle micro-action to overcome inertia
@@ -245,7 +246,7 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF111111) : const Color(0xFFF9FAFB),
+              color: isDark ? LabColors.nightSurfaceElevated : LabColors.daylightSurfaceSubtle,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: borderColor),
             ),
@@ -325,15 +326,51 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
           ),
           if (_isFinished) ...[
             const SizedBox(height: 10),
-            Text(
-              isAr
-                  ? 'أحسنت. خطوة صغيرة واحدة تكسر الجمود بدون أي ضغط.'
-                  : 'Well done. One tiny step breaks inertia with zero pressure.',
-              style: const TextStyle(
-                fontSize: 11.5,
-                color: LabColors.sageGreen,
-                fontWeight: FontWeight.w600,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    isAr
+                        ? 'أحسنت. خطوة صغيرة واحدة تكسر الجمود بدون أي ضغط.'
+                        : 'Well done. One tiny step breaks inertia with zero pressure.',
+                    style: const TextStyle(
+                      fontSize: 11.5,
+                      color: LabColors.sageGreen,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () async {
+                    await ref.read(journeyControllerProvider.notifier).addCustomDiscovery(
+                          title: actionTitle,
+                          notes: 'Completed 2-minute micro-action: $actionTitle',
+                          category: 'Behavioral Strategy',
+                        );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            isAr ? 'تم حفظ التجربة في اكتشافاتك' : 'Strategy saved to Discoveries',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.bookmark_add_outlined, size: 14),
+                  label: Text(
+                    isAr ? 'حفظ كاكتشاف' : 'Save to Discoveries',
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: LabColors.sageGreen,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
             ),
           ],
         ],

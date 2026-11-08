@@ -74,7 +74,7 @@ class JournalMemorySheet extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      strings.isArabic ? 'خزينة الذاكرة' : 'MEMORY VAULT',
+                      strings.memoryVaultTitle.toUpperCase(),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,

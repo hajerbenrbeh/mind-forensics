@@ -207,6 +207,18 @@ Your purpose is to help them understand themselves more clearly and safely.
         buffer.writeln('• Preferred Name: ${profile.preferredName.trim()}');
       }
 
+      if (profile.isMinor) {
+        buffer.writeln('• Minor Protection Notice: The user is under 18 years old. Ensure all interactions remain age-appropriate, gently supportive, and strictly non-clinical. Never simulate medical or diagnostic authority.');
+      }
+
+      if (profile.mentalHealthBackground.isNotEmpty) {
+        buffer.writeln('• Mental-Health Starting Point: ${profile.mentalHealthBackground}');
+      }
+
+      if (profile.professionalSupport.isNotEmpty) {
+        buffer.writeln('• Professional Care Status: ${profile.professionalSupport}');
+      }
+
       if (profile.conditions.isNotEmpty) {
         buffer.writeln('• Selected Conditions & Self-Identified Experiences:');
         for (final entry in profile.conditions) {
