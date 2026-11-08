@@ -4,11 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_strings.dart';
+import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
+import '../../../core/widgets/botanical_emblem.dart';
 import '../../../core/widgets/mind_badge.dart';
 import '../../../core/widgets/mind_button.dart';
 import '../../../core/widgets/mind_card.dart';
+import '../../../core/widgets/mind_pill.dart';
+import '../../../core/widgets/smooth_spline_chart.dart';
 import '../../case_file/presentation/clinical_export_preview_sheet.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
@@ -17,18 +21,22 @@ import '../domain/pattern_divergence_model.dart';
 import '../domain/personal_baseline_model.dart';
 
 /// Insights destination: Turns self-observation into personal understanding.
-///
-/// Features:
-/// - Personal baseline calculation (sleep, energy, mood).
-/// - Multi-signal pattern divergence observations with uncertainty disclaimers.
-/// - Therapist-ready weekly summaries.
-/// - Emotion distribution and symptom frequency.
-class InsightsScreen extends ConsumerWidget {
+/// Matches Phone 4 in the master reference with mood trends spline, pattern cards,
+/// botanical encouragement, and clinical baseline analytics.
+class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InsightsScreen> createState() => _InsightsScreenState();
+}
+
+class _InsightsScreenState extends ConsumerState<InsightsScreen> {
+  String _selectedRange = '1M';
+
+  @override
+  Widget build(BuildContext context) {
     final tokens = context.tokens;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final strings = ref.watch(appStringsProvider);
     final baseline = ref.watch(personalBaselineProvider);
     final divergences = ref.watch(patternDivergencesProvider);
@@ -38,8 +46,24 @@ class InsightsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: tokens.background,
       appBar: AppBar(
-        title: Text(strings.navInsights),
+        backgroundColor: tokens.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text(
+          'Insights',
+          style: TextStyle(
+            fontFamily: 'serif',
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+          ),
+        ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.calendar_today_outlined, size: 20, color: tokens.textPrimary),
+            tooltip: 'Calendar',
+            onPressed: () {},
+          ),
           IconButton(
             icon: Icon(Icons.share_outlined, size: 20, color: tokens.textPrimary),
             tooltip: strings.exportSummaryButton,
@@ -52,14 +76,53 @@ class InsightsScreen extends ConsumerWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        children: [
-          // 1. Personal Baseline Card
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Time Horizon Filter (Phone 4)
+            Row(
+              children: ['1W', '1M', '3M', '6M'].map((r) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: MindPill(
+                    label: r,
+                    isSelected: _selectedRange == r,
+                    onTap: () => setState(() => _selectedRange = r),
+                  ),
+                );
+              }).toList(),
+            ),
+          const SizedBox(height: 18),
+
+          // 2. Mood Trends Section (Phone 4)
+          Text(
+            'Mood Trends',
+            style: TextStyle(
+              color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildMoodTrendsCard(context, tokens, isDark),
+          const SizedBox(height: 20),
+
+          // 3. Your Patterns Section (Phone 4)
+          _buildYourPatternsSection(context, tokens, isDark),
+          const SizedBox(height: 16),
+
+          // 4. Botanical Encouragement Banner (Phone 4)
+          _buildEncouragementCard(context, tokens, isDark),
+          const SizedBox(height: 24),
+
+          // 5. Personal Baseline Card (Preserved Core)
           _buildBaselineCard(context, baseline, tokens, strings),
           const SizedBox(height: 20),
 
-          // 2. Pattern Awareness Divergences (if any detected)
+          // 6. Pattern Awareness Divergences (if any detected)
           if (divergences.isNotEmpty) ...[
             Text(
               strings.patternAwarenessTitle.toUpperCase(),
@@ -75,11 +138,11 @@ class InsightsScreen extends ConsumerWidget {
             const SizedBox(height: 20),
           ],
 
-          // 3. Weekly Therapist Summary Card
+          // 7. Weekly Therapist Summary Card (Preserved Core)
           _buildWeeklyTherapistSummaryCard(context, weeklySummary, cases, tokens, strings),
           const SizedBox(height: 20),
 
-          // 4. Detailed Analytics Deep-Dive Button
+          // 8. Detailed Analytics Deep-Dive Button (Preserved Core)
           MindCard(
             padding: const EdgeInsets.all(16),
             onTap: () => context.go('/progress'),
@@ -119,6 +182,208 @@ class InsightsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 32),
+        ],
+      ),
+    ),
+  );
+}
+
+  Widget _buildMoodTrendsCard(BuildContext context, MindTokens tokens, bool isDark) {
+    // 7 data points reflecting the smooth curve in Phone 4
+    final chartValues = [0.45, 0.65, 0.50, 0.75, 0.60, 0.85, 0.70];
+
+    return MindCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+      borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+      child: Row(
+        children: [
+          // Y-axis faces (Happy, Neutral, Sad)
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(
+                Icons.sentiment_satisfied_outlined,
+                size: 19,
+                color: tokens.textSecondary,
+              ),
+              const SizedBox(height: 22),
+              Icon(
+                Icons.sentiment_neutral_outlined,
+                size: 19,
+                color: tokens.textSecondary,
+              ),
+              const SizedBox(height: 22),
+              Icon(
+                Icons.sentiment_dissatisfied_outlined,
+                size: 19,
+                color: tokens.textSecondary,
+              ),
+            ],
+          ),
+          const SizedBox(width: 10),
+          // Spline chart with callout tooltip matching Phone 4
+          Expanded(
+            child: SmoothSplineChart(
+              values: chartValues,
+              height: 120,
+              activePointIndex: 5,
+              activePointLabel: 'Nov 8\nCalm',
+              lineColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+              showDots: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildYourPatternsSection(BuildContext context, MindTokens tokens, bool isDark) {
+    final patterns = [
+      (
+        icon: Icons.nightlight_outlined,
+        title: 'Mood dips',
+        subtitle: 'Often linked to poor sleep',
+      ),
+      (
+        icon: Icons.menu_book_outlined,
+        title: 'Higher anxiety',
+        subtitle: 'During study periods',
+      ),
+      (
+        icon: Icons.eco_outlined,
+        title: 'More balance',
+        subtitle: 'On days with self-care',
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Your Patterns',
+              style: TextStyle(
+                color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.2,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => context.go('/progress'),
+              child: Text(
+                'View all →',
+                style: TextStyle(
+                  color: isDark ? LabColors.lightOlive : LabColors.secondaryOlive,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        ...patterns.map((p) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: MindCard(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+              borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+              onTap: () => context.go('/progress'),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                    ),
+                    child: Icon(
+                      p.icon,
+                      size: 19,
+                      color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          p.title,
+                          style: TextStyle(
+                            color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          p.subtitle,
+                          style: TextStyle(
+                            color: tokens.textSecondary,
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: tokens.textTertiary,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildEncouragementCard(BuildContext context, MindTokens tokens, bool isDark) {
+    return MindCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+      borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+      child: Row(
+        children: [
+          BotanicalEmblem(
+            size: 34,
+            color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "You're doing well.",
+                  style: TextStyle(
+                    color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Keep taking care of your mind.',
+                  style: TextStyle(
+                    fontFamily: 'serif',
+                    fontStyle: FontStyle.italic,
+                    color: tokens.textSecondary,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

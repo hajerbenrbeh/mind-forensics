@@ -15,6 +15,7 @@ class MindButton extends StatelessWidget {
   const MindButton({
     super.key,
     required this.text,
+    this.subText,
     this.onPressed,
     this.variant = MindButtonVariant.primary,
     this.leadingIcon,
@@ -24,6 +25,7 @@ class MindButton extends StatelessWidget {
   });
 
   final String text;
+  final String? subText;
   final VoidCallback? onPressed;
   final MindButtonVariant variant;
   final IconData? leadingIcon;
@@ -43,8 +45,8 @@ class MindButton extends StatelessWidget {
 
     switch (variant) {
       case MindButtonVariant.primary:
-        bg = isDark ? tokens.accent : tokens.textPrimary;
-        fg = isDark ? const Color(0xFF151B19) : Colors.white;
+        bg = isDark ? tokens.accent : LabColors.forestGreen;
+        fg = isDark ? LabColors.darkForestBackground : Colors.white;
         border = Colors.transparent;
         break;
       case MindButtonVariant.secondary:
@@ -87,14 +89,29 @@ class MindButton extends StatelessWidget {
           Icon(leadingIcon, size: 16, color: fg),
           const SizedBox(width: 8),
         ],
-        Text(
-          text,
-          style: TextStyle(
-            color: fg,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.2,
-          ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              text,
+              style: TextStyle(
+                color: fg,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.2,
+              ),
+            ),
+            if (subText != null)
+              Text(
+                subText!,
+                style: TextStyle(
+                  color: fg.withValues(alpha: 0.75),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+          ],
         ),
         if (trailingIcon != null && !isLoading) ...[
           const SizedBox(width: 8),

@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../core/safety/support_button.dart';
+import '../../../core/widgets/botanical_emblem.dart';
+import '../../../core/widgets/mind_card.dart';
 import '../../tools/presentation/tools_screen.dart';
 import '../controllers/journey_controller.dart';
 import '../domain/journey_activity.dart';
@@ -199,6 +201,168 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
     );
   }
 
+  Widget _buildPhone6Timeline(bool isDark, Color textPrimary, Color textSecondary) {
+    final timelinePhases = [
+      (
+        title: 'Balanced',
+        desc: 'Calm, focused, and in control',
+        isActive: true,
+      ),
+      (
+        title: 'Elevated',
+        desc: 'More energy and optimism',
+        isActive: false,
+      ),
+      (
+        title: 'Low',
+        desc: 'Feeling down, withdrawn',
+        isActive: false,
+      ),
+      (
+        title: 'Manic',
+        desc: 'High energy, less need for sleep',
+        isActive: false,
+      ),
+    ];
+
+    return MindCard(
+      padding: const EdgeInsets.all(18),
+      backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+      borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your Journey',
+            style: TextStyle(
+              fontFamily: 'serif',
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Explore the different phases of your mental journey.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: textSecondary,
+            ),
+          ),
+          const SizedBox(height: 18),
+          // Vertical Phase Timeline
+          Column(
+            children: List.generate(timelinePhases.length, (index) {
+              final p = timelinePhases[index];
+              final isLast = index == timelinePhases.length - 1;
+
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Node with vertical connecting line
+                    Column(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: p.isActive
+                                ? LabColors.forestGreen
+                                : (isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05)),
+                            border: Border.all(
+                              color: p.isActive
+                                  ? LabColors.forestGreen
+                                  : (isDark ? Colors.white24 : LabColors.borderIvory),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Icon(
+                            p.isActive ? Icons.check : Icons.circle,
+                            size: p.isActive ? 18 : 8,
+                            color: p.isActive ? Colors.white : textSecondary,
+                          ),
+                        ),
+                        if (!isLast)
+                          Expanded(
+                            child: Container(
+                              width: 1.5,
+                              color: isDark ? Colors.white12 : LabColors.borderIvory,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              p.title,
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                fontWeight: p.isActive ? FontWeight.w700 : FontWeight.w600,
+                                color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              p.desc,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 4),
+          // Botanical Quote Banner (Phone 6)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: isDark ? LabColors.darkForestSurface : LabColors.secondaryIvory,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+              ),
+            ),
+            child: Row(
+              children: [
+                BotanicalEmblem(
+                  size: 26,
+                  color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Your journey is unique, and every phase is part of it.',
+                    style: TextStyle(
+                      fontFamily: 'serif',
+                      fontStyle: FontStyle.italic,
+                      fontSize: 12,
+                      color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildJourneyExplorerView({
     required JourneyStateModel journey,
     required bool isDark,
@@ -215,6 +379,10 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       children: [
+        // Phone 6 Hero Section: Vertical Timeline & Botanical Card
+        _buildPhone6Timeline(isDark, textPrimary, textSecondary),
+        const SizedBox(height: 18),
+
         // Horizontal Phase Slider Pills
         SizedBox(
           height: 38,

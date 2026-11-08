@@ -94,20 +94,25 @@ class _NeuralWaveformVisualizerState extends State<NeuralWaveformVisualizer>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                telemetry,
-                style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  color: widget.intensity >= 7
-                      ? (isDark ? LabColors.cherryRedGlow : LabColors.cherryRedDeep)
-                      : (widget.intensity >= 4
-                          ? (isDark ? LabColors.warmBeigeGlow : LabColors.warmBeigeDark)
-                          : (isDark ? LabColors.sageGreenGlow : LabColors.sageGreen)),
+              Expanded(
+                child: Text(
+                  telemetry,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color: widget.intensity >= 7
+                        ? (isDark ? LabColors.cherryRedGlow : LabColors.cherryRedDeep)
+                        : (widget.intensity >= 4
+                            ? (isDark ? LabColors.warmBeigeGlow : LabColors.warmBeigeDark)
+                            : (isDark ? LabColors.sageGreenGlow : LabColors.sageGreen)),
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Container(
                 width: 6,
                 height: 6,

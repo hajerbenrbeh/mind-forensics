@@ -14,6 +14,8 @@ import '../../features/profile/presentation/psychological_profile_screen.dart';
 import '../../features/progress/presentation/progress_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/track/presentation/track_screen.dart';
+import '../../features/splash/presentation/splash_screen.dart';
+import '../../features/journey/presentation/journey_screen.dart';
 import 'scaffold_with_nav_bar.dart';
 
 /// App router configuration using GoRouter with 4 persistent bottom tabs:
@@ -22,6 +24,7 @@ import 'scaffold_with_nav_bar.dart';
 class AppRouter {
   static const String onboarding = '/onboarding';
   static const String auth = '/auth';
+  static const String splash = '/splash';
   static const String home = '/home';
   static const String journal = '/journal';
   static const String investigator = '/investigation';
@@ -34,6 +37,7 @@ class AppRouter {
   static const String track = '/track';
   static const String insights = '/insights';
   static const String companion = '/companion';
+  static const String journey = '/journey';
 
   /// Whether first-launch gating redirects new users to /onboarding.
   static bool enableFirstLaunchGating = true;
@@ -73,6 +77,11 @@ class AppRouter {
     },
     routes: [
       GoRoute(
+        path: splash,
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
         path: onboarding,
         name: 'onboarding',
         builder: (context, state) => const OnboardingScreen(),
@@ -81,6 +90,12 @@ class AppRouter {
         path: auth,
         name: 'auth',
         builder: (context, state) => const AuthScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: journey,
+        name: 'journey',
+        builder: (context, state) => const JourneyScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -117,18 +132,6 @@ class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: track,
-        name: 'track',
-        builder: (context, state) => const TrackScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: insights,
-        name: 'insights',
-        builder: (context, state) => const InsightsScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
         path: companion,
         name: 'companion',
         builder: (context, state) => const FlashCaseScreen(),
@@ -144,6 +147,10 @@ class AppRouter {
         redirect: (context, state) => mindTrace,
       ),
       GoRoute(
+        path: '/investigation',
+        redirect: (context, state) => companion,
+      ),
+      GoRoute(
         path: '/tools',
         redirect: (context, state) => observatory,
       ),
@@ -156,14 +163,14 @@ class AppRouter {
         redirect: (context, state) => profile,
       ),
 
-      // Persistent 4-Tab Bottom Navigation Shell:
-      // Home, Investigator, Inner Observatory, Profile.
+      // Persistent 5-Tab Bottom Navigation Shell (Master Reference):
+      // Home, Track, Inner Observatory (Center), Insights, Profile.
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavBar(navigationShell: navigationShell);
         },
         branches: [
-          // Branch 0: Home Dashboard (with check-in card, last mood, open cases, recent entries, insights)
+          // Branch 0: Home Dashboard
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -174,18 +181,18 @@ class AppRouter {
             ],
           ),
 
-          // Branch 1: Investigator (Flash Case / Cognitive Deconstruction)
+          // Branch 1: Track & Self-Observation
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: investigator,
-                name: 'investigator',
-                builder: (context, state) => const FlashCaseScreen(),
+                path: track,
+                name: 'track_nav',
+                builder: (context, state) => const TrackScreen(),
               ),
             ],
           ),
 
-          // Branch 2: Inner Observatory (Symptom Exploration, Perspectives, Experiments, Discoveries)
+          // Branch 2: Inner Observatory (Center prominent)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -196,7 +203,18 @@ class AppRouter {
             ],
           ),
 
-          // Branch 3: Profile & Clinical Settings
+          // Branch 3: Insights & Pattern Understanding
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: insights,
+                name: 'insights_nav',
+                builder: (context, state) => const InsightsScreen(),
+              ),
+            ],
+          ),
+
+          // Branch 4: Profile & Preferences
           StatefulShellBranch(
             routes: [
               GoRoute(

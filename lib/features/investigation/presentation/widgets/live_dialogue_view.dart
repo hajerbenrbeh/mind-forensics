@@ -8,6 +8,7 @@ import '../../../../app/theme/lab_colors.dart';
 import '../../../../core/safety/crisis_keywords.dart';
 import '../../../../core/safety/safety_interceptor.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
+import '../../../../core/widgets/mind_pressable.dart';
 import '../../../journal/controllers/journal_memory_controller.dart';
 import '../../../journey/controllers/journey_controller.dart';
 import '../../../mind_trace/controllers/mind_trace_controller.dart';
@@ -657,49 +658,107 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     Color surfaceColor,
     Color borderColor,
   ) {
+    final profile = ref.watch(profileControllerProvider).value;
+    final userName = profile?.preferredName.isNotEmpty == true
+        ? profile!.preferredName
+        : (strings.isArabic ? 'صديقي' : 'Hajer');
+
+    final starters = [
+      'Why do I feel anxious?',
+      'Am I in a mood episode?',
+      'Help me understand my thoughts',
+    ];
+
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // 1. Center 4-Point Radiant Sparkle Aura (Phone 7)
             Container(
-              padding: const EdgeInsets.all(12),
+              width: 84,
+              height: 84,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5),
-                border: Border.all(color: borderColor, width: 1),
+                color: isDark ? const Color(0xFF263321) : const Color(0xFFEAE0D1),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isDark ? LabColors.forestGreen : const Color(0xFF687157))
+                        .withValues(alpha: 0.25),
+                    blurRadius: 28,
+                    spreadRadius: 4,
+                  ),
+                ],
               ),
-              child: Icon(Icons.psychology_outlined, size: 28, color: textPrimary),
+              child: Icon(
+                Icons.auto_awesome,
+                size: 38,
+                color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+              ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
+
+            // 2. Headline & Subtitle matching Phone 7
             Text(
-              strings.navInvestigator.toUpperCase(),
+              "I'm here for you, $userName",
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
-                color: textSecondary,
+                fontFamily: 'serif',
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: textPrimary,
+                letterSpacing: -0.3,
               ),
             ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: surfaceColor,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: borderColor, width: 1),
+            const SizedBox(height: 6),
+            Text(
+              "Talk about what's on your mind,\nor ask anything you need.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: textSecondary,
+                height: 1.4,
               ),
-              child: Text(
-                strings.welcomeDialoguePrompt,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  height: 1.45,
-                  color: textPrimary,
-                ),
-              ),
+            ),
+            const SizedBox(height: 24),
+
+            // 3. Starter Suggestion Pills matching Phone 7
+            Column(
+              children: starters.map((starter) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: MindPressable(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _sendMessage(starter);
+                    },
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Text(
+                        starter,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ],
         ),

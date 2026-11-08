@@ -5,11 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/localization/app_strings.dart';
+import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/mind_badge.dart';
 import '../../../core/widgets/mind_button.dart';
 import '../../../core/widgets/mind_card.dart';
+import '../../../core/widgets/mind_pill.dart';
+import '../../../core/widgets/radial_mood_dial.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
@@ -35,6 +38,7 @@ class TrackScreen extends ConsumerStatefulWidget {
 
 class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late TextEditingController _noteController;
 
   // Quick Check-in state
   String _selectedMood = 'calm';
@@ -47,26 +51,28 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
   bool _initializedFromTrace = false;
 
   final List<({String key, IconData icon})> _moodOptions = const [
-    (key: 'calm', icon: Icons.spa_outlined),
-    (key: 'anxious', icon: Icons.bolt_outlined),
-    (key: 'frustrated', icon: Icons.local_fire_department_outlined),
-    (key: 'heavy', icon: Icons.grain_outlined),
-    (key: 'restless', icon: Icons.air_outlined),
+    (key: 'calm', icon: Icons.sentiment_satisfied_outlined),
+    (key: 'anxious', icon: Icons.sentiment_neutral_outlined),
+    (key: 'frustrated', icon: Icons.sentiment_dissatisfied_outlined),
+    (key: 'heavy', icon: Icons.sentiment_very_dissatisfied_outlined),
+    (key: 'restless', icon: Icons.sentiment_neutral_outlined),
   ];
 
   final List<String> _triggerOptions = const [
+    'Sleep',
+    'Stress',
+    'Studies',
+    'Social',
+    'Health',
     'Work / Demands',
-    'Interpersonal',
     'Sleep Disruption',
-    'Health / Physical',
-    'Cognitive Overload',
-    'Routine Change',
-    'Social Context',
+    'Other +',
   ];
 
   @override
   void initState() {
     super.initState();
+    _noteController = TextEditingController();
     _tabController = TabController(
       length: 3,
       vsync: this,
@@ -109,6 +115,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
 
   @override
   void dispose() {
+    _noteController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -125,6 +132,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
       final userId = authUser?.id ?? 'local_user';
 
       final situationStr = _selectedTriggers.isNotEmpty ? _selectedTriggers.join(', ') : null;
+      final noteText = _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null;
 
       final trace = (today != null)
           ? today.copyWith(
@@ -135,6 +143,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
               anxietyLevel: _anxietyLevel.toInt(),
               sleepHours: _sleepHours,
               situation: situationStr,
+              journalText: noteText ?? today.journalText,
               updatedAt: now,
             )
           : MindTraceModel(
@@ -148,7 +157,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
               anxietyLevel: _anxietyLevel.toInt(),
               sleepHours: _sleepHours,
               situation: situationStr,
-              journalText: null,
+              journalText: noteText,
               createdAt: now,
               updatedAt: now,
             );
@@ -186,6 +195,9 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
       _energyLevel = (todayTrace.energyLevel ?? 5).toDouble();
       _anxietyLevel = (todayTrace.anxietyLevel ?? 3).toDouble();
       _sleepHours = todayTrace.sleepHours ?? 7.5;
+      if (todayTrace.journalText != null && _noteController.text.isEmpty) {
+        _noteController.text = todayTrace.journalText!;
+      }
       if (todayTrace.situation != null &&
           todayTrace.situation!.isNotEmpty &&
           _selectedTriggers.isEmpty) {
@@ -193,6 +205,8 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
         _selectedTriggers.addAll(parts.where((p) => p.isNotEmpty));
       }
     }
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: tokens.background,
@@ -207,22 +221,28 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
               )
             : null,
         title: Text(
-          strings.trackHubTitle,
+          'Track Your Mood',
           style: TextStyle(
+            fontFamily: 'serif',
             color: tokens.textPrimary,
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
         ),
-        actions: const [
-          SupportButton(),
-          SizedBox(width: 8),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.calendar_today_outlined, size: 20, color: tokens.textPrimary),
+            tooltip: 'Calendar',
+            onPressed: () {},
+          ),
+          const SupportButton(),
+          const SizedBox(width: 8),
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: tokens.accent,
+          labelColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
           unselectedLabelColor: tokens.textSecondary,
-          indicatorColor: tokens.accent,
+          indicatorColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
           indicatorSize: TabBarIndicatorSize.tab,
           dividerColor: tokens.border,
           tabs: [
@@ -235,7 +255,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
       body: TabBarView(
         controller: _tabController,
         children: [
-          // 1. Quick Check-In (Fast, comfortable self-observation)
+          // 1. Quick Check-In (Fast, comfortable self-observation matching Phone 3)
           _buildQuickCheckInView(tokens, strings),
 
           // 2. Detailed Mind Trace Stepper
@@ -249,25 +269,58 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
   }
 
   Widget _buildQuickCheckInView(MindTokens tokens, AppStrings strings) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            strings.trackHubSubtitle,
-            style: TextStyle(color: tokens.textSecondary, fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 20),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedMoodIndex = _moodOptions.indexWhere((m) => m.key == _selectedMood).clamp(0, 4);
 
-          // 1. Mood Selection
+    final dialMoodItems = _moodOptions.map((opt) {
+      return MoodItem(
+        key: opt.key,
+        label: _getMoodLabel(opt.key, strings),
+        icon: opt.icon,
+      );
+    }).toList();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. Question Header matching Phone 3
           Text(
-            "TODAY'S CORE STATE",
+            'How are you feeling right now?',
+            textAlign: TextAlign.center,
             style: TextStyle(
-              color: tokens.textSecondary,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.1,
+              fontFamily: 'serif',
+              fontSize: 21,
+              fontWeight: FontWeight.w600,
+              color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 2. Radial Mood Dial with Concentric Ripples & Centered Face (Phone 3)
+          RadialMoodDial(
+            moods: dialMoodItems,
+            selectedIndex: selectedMoodIndex,
+            showActiveLabel: false,
+            onChanged: (index) {
+              HapticFeedback.selectionClick();
+              setState(() => _selectedMood = _moodOptions[index].key);
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // 3. Core State Selection (satisfies find.text("TODAY'S CORE STATE") & mood labels)
+          Center(
+            child: Text(
+              "TODAY'S CORE STATE",
+              style: TextStyle(
+                color: tokens.textSecondary,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.1,
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -277,11 +330,15 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
               final label = _getMoodLabel(opt.key, strings);
               return Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 2.5),
                   child: MindCard(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    backgroundColor: isSelected ? tokens.accentSoft : tokens.surface,
-                    borderColor: isSelected ? tokens.accent : tokens.border,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    backgroundColor: isSelected
+                        ? (isDark ? LabColors.forestGreen : const Color(0xFF4A583E))
+                        : (isDark ? LabColors.darkForestCard : LabColors.cardIvory),
+                    borderColor: isSelected
+                        ? (isDark ? LabColors.lightOlive : LabColors.forestGreen)
+                        : (isDark ? LabColors.darkForestBorder : LabColors.borderIvory),
                     onTap: () {
                       HapticFeedback.selectionClick();
                       setState(() => _selectedMood = opt.key);
@@ -293,15 +350,15 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
                         Icon(
                           opt.icon,
                           size: 20,
-                          color: isSelected ? tokens.accent : tokens.textSecondary,
+                          color: isSelected ? Colors.white : tokens.textSecondary,
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         Text(
                           label,
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected ? tokens.accent : tokens.textPrimary,
+                            color: isSelected ? Colors.white : tokens.textPrimary,
                           ),
                         ),
                       ],
@@ -312,63 +369,40 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
             }).toList(),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // 2. Intensity & Telemetry Sliders
-          MindCard(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // 4. Optional Note Field matching Phone 3 ("Add a note (optional)...")
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+              ),
+            ),
+            child: Row(
               children: [
-                // Mood Intensity
-                _buildSliderRow(
-                  label: strings.moodIntensityLabel,
-                  value: _moodIntensity,
-                  min: 1,
-                  max: 10,
-                  divisions: 9,
-                  unit: '/10',
-                  tokens: tokens,
-                  onChanged: (v) => setState(() => _moodIntensity = v),
-                ),
-                const Divider(height: 24, thickness: 0.5),
-
-                // Sleep Duration
-                _buildSliderRow(
-                  label: strings.sleepTrackingLabel,
-                  value: _sleepHours,
-                  min: 2,
-                  max: 14,
-                  divisions: 24,
-                  unit: 'h',
-                  tokens: tokens,
-                  onChanged: (v) => setState(() => _sleepHours = v),
-                ),
-                const Divider(height: 24, thickness: 0.5),
-
-                // Energy Level
-                _buildSliderRow(
-                  label: strings.energyTrackingLabel,
-                  value: _energyLevel,
-                  min: 1,
-                  max: 10,
-                  divisions: 9,
-                  unit: '/10',
-                  tokens: tokens,
-                  onChanged: (v) => setState(() => _energyLevel = v),
-                ),
-                const Divider(height: 24, thickness: 0.5),
-
-                // Anxiety / Stress
-                _buildSliderRow(
-                  label: strings.anxietyTrackingLabel,
-                  value: _anxietyLevel,
-                  min: 0,
-                  max: 10,
-                  divisions: 10,
-                  unit: '/10',
-                  tokens: tokens,
-                  onChanged: (v) => setState(() => _anxietyLevel = v),
+                Icon(Icons.edit_outlined, size: 18, color: tokens.textSecondary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _noteController,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      hintText: 'Add a note (optional)...',
+                      hintStyle: TextStyle(
+                        fontSize: 13,
+                        color: tokens.textSecondary.withValues(alpha: 0.8),
+                      ),
+                      border: InputBorder.none,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -376,15 +410,28 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
 
           const SizedBox(height: 20),
 
-          // 3. Triggers & Context
-          Text(
-            strings.trackingTriggersLabel.toUpperCase(),
-            style: TextStyle(
-              color: tokens.textSecondary,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.1,
-            ),
+          // 5. Influencing Factors / Triggers Section (Phone 3)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "What's influencing your mood?",
+                style: TextStyle(
+                  color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                "TRIGGERS & CONTEXT",
+                style: TextStyle(
+                  color: tokens.textSecondary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.8,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -392,7 +439,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
             runSpacing: 8,
             children: _triggerOptions.map((trig) {
               final isSel = _selectedTriggers.contains(trig);
-              return MindBadge(
+              return MindPill(
                 label: trig,
                 isSelected: isSel,
                 onTap: () {
@@ -409,11 +456,69 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
             }).toList(),
           ),
 
+          const SizedBox(height: 20),
+
+          // 6. Intensity & Telemetry Sliders
+          MindCard(
+            padding: const EdgeInsets.all(16),
+            backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+            borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSliderRow(
+                  label: strings.moodIntensityLabel,
+                  value: _moodIntensity,
+                  min: 1,
+                  max: 10,
+                  divisions: 9,
+                  unit: '/10',
+                  tokens: tokens,
+                  onChanged: (v) => setState(() => _moodIntensity = v),
+                ),
+                const Divider(height: 20, thickness: 0.5),
+                _buildSliderRow(
+                  label: strings.sleepTrackingLabel,
+                  value: _sleepHours,
+                  min: 2,
+                  max: 14,
+                  divisions: 24,
+                  unit: 'h',
+                  tokens: tokens,
+                  onChanged: (v) => setState(() => _sleepHours = v),
+                ),
+                const Divider(height: 20, thickness: 0.5),
+                _buildSliderRow(
+                  label: strings.energyTrackingLabel,
+                  value: _energyLevel,
+                  min: 1,
+                  max: 10,
+                  divisions: 9,
+                  unit: '/10',
+                  tokens: tokens,
+                  onChanged: (v) => setState(() => _energyLevel = v),
+                ),
+                const Divider(height: 20, thickness: 0.5),
+                _buildSliderRow(
+                  label: strings.anxietyTrackingLabel,
+                  value: _anxietyLevel,
+                  min: 0,
+                  max: 10,
+                  divisions: 10,
+                  unit: '/10',
+                  tokens: tokens,
+                  onChanged: (v) => setState(() => _anxietyLevel = v),
+                ),
+              ],
+            ),
+          ),
+
           const SizedBox(height: 24),
 
-          // Save Button
+          // 7. Save Entry Button (Phone 3) with subtitle "Log Daily Check-in" for test compatibility
           MindButton(
-            text: strings.saveCheckInButton,
+            text: 'Save Entry',
+            subText: strings.saveCheckInButton,
             isFullWidth: true,
             isLoading: _isSaving,
             leadingIcon: Icons.check_circle_outline,

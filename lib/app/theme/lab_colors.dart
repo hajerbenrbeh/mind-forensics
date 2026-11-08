@@ -38,28 +38,42 @@ class LabColors {
   static const Color interpretationBorder = interpretationBorderLight;
 
   // ===========================================================================
-  // DAYLIGHT PALETTE (Calm Organic Linen & Sage)
+  // MASTER MIND FORENSICS DESIGN SYSTEM (REFERENCE SPECIFICATION)
+  // Warm Ivory with Deep Forest-Green Accents
   // ===========================================================================
-  static const Color daylightBackground = Color(0xFFF7F8F5); // Soft natural parchment / warm ivory
-  static const Color daylightSurface = Color(0xFFFFFFFF); // Crisp clean surface
-  static const Color daylightSurfaceSubtle = Color(0xFFE5ECE6); // Muted secondary surface
-  static const Color daylightBorder = Color(0xFFD6DDD7); // Soft organic boundary
-  static const Color daylightTextPrimary = Color(0xFF34443B); // Deep slate forest green
-  static const Color daylightTextSecondary = Color(0xFF5A6F62); // Balanced neutral secondary
-  static const Color daylightAccent = Color(0xFF668274); // Grounded botanical sage
-  static const Color daylightAccentSoft = Color(0xFFE8EFEA);
+  static const Color forestGreen = Color(0xFF303A29); // Primary forest green
+  static const Color secondaryOlive = Color(0xFF687157); // Secondary olive
+  static const Color lightOlive = Color(0xFF92977D); // Light olive
+  static const Color warmIvory = Color(0xFFF5EEE3); // Main background (warm ivory)
+  static const Color secondaryIvory = Color(0xFFEAE0D1); // Secondary background
+  static const Color cardIvory = Color(0xFFE9DFD0); // Card background
+  static const Color primaryText = Color(0xFF29291F); // Primary text
+  static const Color secondaryText = Color(0xFF777365); // Secondary text
+  static const Color borderIvory = Color(0xFFD9CFBF); // Borders
 
   // ===========================================================================
-  // MUTED OLIVE & EDITORIAL BOTANICAL TOKENS (MOYA Matcha visual identity)
+  // DAYLIGHT PALETTE (Warm Ivory & Deep Forest-Green)
   // ===========================================================================
-  static const Color mutedOlive = Color(0xFF3D4A39); // Deep earthy muted olive (Primary CTA & active borders)
-  static const Color mutedOliveDeep = Color(0xFF303C2D); // Deep botanical olive
-  static const Color mutedOliveMedium = Color(0xFF4A5A46); // Medium botanical olive
-  static const Color mutedOliveLight = Color(0xFF6E8069); // Muted soft olive
-  static const Color mutedOliveSoft = Color(0xFFEFF4F0); // Very soft sage-olive tint (Selected cards in light theme)
-  static const Color mutedOliveBadgeBg = Color(0xFFEBF1ED); // Editorial badge pill background (Light)
-  static const Color warmIvorySurface = Color(0xFFFBF9F5); // Warm ivory alternate surface
-  static const Color warmIvoryBorder = Color(0xFFE0DDD5); // Warm stone border
+  static const Color daylightBackground = warmIvory; // #F5EEE3
+  static const Color daylightSurface = cardIvory; // #E9DFD0
+  static const Color daylightSurfaceSubtle = secondaryIvory; // #EAE0D1
+  static const Color daylightBorder = borderIvory; // #D9CFBF
+  static const Color daylightTextPrimary = primaryText; // #29291F
+  static const Color daylightTextSecondary = secondaryText; // #777365
+  static const Color daylightAccent = forestGreen; // #303A29
+  static const Color daylightAccentSoft = Color(0xFFE3DCCE); // Soft muted ivory-olive tint
+
+  // ===========================================================================
+  // MUTED OLIVE & EDITORIAL BOTANICAL TOKENS
+  // ===========================================================================
+  static const Color mutedOlive = forestGreen; // Deep forest green (#303A29)
+  static const Color mutedOliveDeep = Color(0xFF242C1F); // Ultra deep forest
+  static const Color mutedOliveMedium = secondaryOlive; // #687157
+  static const Color mutedOliveLight = lightOlive; // #92977D
+  static const Color mutedOliveSoft = secondaryIvory; // #EAE0D1
+  static const Color mutedOliveBadgeBg = Color(0xFFDFD6C6); // Editorial badge pill background (Light)
+  static const Color warmIvorySurface = cardIvory; // #E9DFD0
+  static const Color warmIvoryBorder = borderIvory; // #D9CFBF
 
   // ===========================================================================
   // NIGHT PALETTE (Deep Slate Botanical & Sage Glow)
@@ -75,6 +89,14 @@ class LabColors {
   static const Color nightAccent = Color(0xFF91AD9A); // Glowing sage interactive accent
   static const Color nightAccentBlue = Color(0xFF38BDF8);
   static const Color nightAccentSoft = Color(0xFF23322B);
+
+  // Dark Forest Semantic Aliases
+  static const Color darkForestBackground = nightBackground;
+  static const Color darkForestSurface = nightSurface;
+  static const Color darkForestCard = nightSurfaceElevated;
+  static const Color darkForestBorder = nightBorder;
+  static const Color darkTextPrimary = nightTextPrimary;
+  static const Color darkTextSecondary = nightTextSecondary;
 
   // ===========================================================================
   // HARMONIZED MOOD PALETTE (Distinct, dignified, grounded in nature)
@@ -135,7 +157,6 @@ class LabColors {
   static const Color deepBurgundy = Color(0xFF2E3D36);
   static const Color darkWine = Color(0xFF202925);
   static const Color almostBlackBurgundy = Color(0xFF151B19);
-  static const Color warmIvory = Color(0xFFF7F8F5);
   static const Color softBeige = Color(0xFFE5ECE6);
   static const Color champagneGold = Color(0xFF91AD9A); // Calm Sage Accent
   static const Color champagneGlow = Color(0xFFA7C2B0);

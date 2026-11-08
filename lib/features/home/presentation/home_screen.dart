@@ -6,13 +6,19 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../app/localization/app_strings.dart';
+import '../../../app/router/app_router.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/bouncing_widget.dart';
 import '../../../core/widgets/fingerprint_thread_signature.dart';
 import '../../../core/widgets/mind_badge.dart';
+import '../../../core/widgets/mind_card.dart';
+import '../../../core/widgets/mind_pressable.dart';
 import '../../../core/widgets/neural_waveform_visualizer.dart';
+import '../../../core/widgets/organic_wave_art.dart';
+import '../../../core/widgets/quick_action_card.dart';
+import '../../../core/widgets/smooth_spline_chart.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../insights/data/pattern_awareness_service.dart';
 import '../../investigation/controllers/investigation_providers.dart';
@@ -181,6 +187,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  Widget _buildLegendItem(String label, int pct, Color dotColor) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: dotColor,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$label $pct%',
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.2,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
@@ -209,6 +240,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       for (final t in traces)
         t.dateKey: _getMoodColor(t.overallMood),
     };
+
+    // Calculate authentic spline trend from real user traces
+    final List<double> splineValues;
+    if (traces.length >= 2) {
+      splineValues = traces
+          .take(7)
+          .toList()
+          .reversed
+          .map((t) => (t.moodIntensity / 10.0).clamp(0.1, 0.9))
+          .toList();
+    } else if (todayTrace != null) {
+      splineValues = [0.4, 0.5, 0.45, 0.6, (todayTrace.moodIntensity / 10.0).clamp(0.2, 0.9)];
+    } else {
+      splineValues = const [0.35, 0.42, 0.38, 0.55, 0.62, 0.58, 0.65];
+    }
+
+    // Calculate authentic mood distribution from real observations
+    final int calmPct;
+    final int anxiousPct;
+    final int lowPct;
+    if (traces.isNotEmpty) {
+      int cCount = 0;
+      int aCount = 0;
+      int lCount = 0;
+      for (final t in traces) {
+        if (t.overallMood == 'calm') {
+          cCount++;
+        } else if (t.overallMood == 'anxious' || t.overallMood == 'restless') {
+          aCount++;
+        } else {
+          lCount++;
+        }
+      }
+      calmPct = ((cCount / traces.length) * 100).round();
+      anxiousPct = ((aCount / traces.length) * 100).round();
+      lowPct = ((lCount / traces.length) * 100).round();
+    } else {
+      calmPct = 60;
+      anxiousPct = 20;
+      lowPct = 20;
+    }
 
     return Scaffold(
       backgroundColor: tokens.background,
@@ -252,83 +324,372 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. TOP HEADER: "Dear [Name], \n good morning"
-                Column(
+                // 1. TOP HEADER ROW (Phone 2 master reference):
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      strings.dearUserGreeting(userName),
-                      style: TextStyle(
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.w500,
-                        color: tokens.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _getLocalizedGreeting(strings),
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                        color: tokens.textPrimary,
-                      ),
-                    ),
-                    if (profile?.isMinor == true) ...[
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: LabColors.sageGreenGlow.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: LabColors.sageGreenGlow.withValues(alpha: 0.25)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.shield_outlined, size: 12, color: LabColors.sageGreenGlow),
-                            const SizedBox(width: 5),
-                            Text(
-                              strings.isArabic ? 'مساحة استبصار آمنة • خطوط الطوارئ متاحة' : 'Safe reflection space • Helplines available',
-                              style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: LabColors.sageGreenGlow),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hello, $userName',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.textPrimary,
+                              letterSpacing: -0.3,
                             ),
-                          ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            strings.isArabic ? 'كيف تشعر اليوم؟' : 'How are you feeling today?',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                              color: tokens.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            '${strings.dearUserGreeting(userName)} ${_getLocalizedGreeting(strings)}',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              color: tokens.textSecondary.withValues(alpha: 0.60),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        MindPressable(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            context.push(AppRouter.companion);
+                          },
+                          semanticLabel: 'Open Mind Assistant',
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+                              border: Border.all(
+                                color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+                                width: 1.0,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.auto_awesome,
+                              size: 18,
+                              color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+                            ),
+                          ),
                         ),
+                        const SizedBox(width: 10),
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: const BoxDecoration(
+                            color: LabColors.forestGreen,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            (profile?.preferredName.isNotEmpty == true && profile!.preferredName != 'Friend')
+                                ? profile.preferredName[0].toUpperCase()
+                                : 'H',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 18),
+
+                // 2. MASTER PHASE CARD (Phone 2 reference: "Your current phase: Balanced")
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+                      width: 1.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
                       ),
                     ],
-                    if (profile != null && (profile.selectedGoals.isNotEmpty || profile.personalGoals.isNotEmpty)) ...[
-                      const SizedBox(height: 6),
-                      Row(
+                  ),
+                  child: Stack(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: tokens.surface,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: tokens.border),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.flag_outlined, size: 12, color: LabColors.champagneGold),
-                                const SizedBox(width: 5),
                                 Text(
-                                  profile.selectedGoals.isNotEmpty
-                                      ? profile.selectedGoals.first
-                                      : profile.personalGoals.split(', ').first,
+                                  strings.isArabic ? 'مرحلتك الحالية' : 'Your current phase',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: tokens.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  strings.isArabic ? 'متوازن' : 'Balanced',
+                                  style: const TextStyle(
+                                    fontFamily: 'serif',
+                                    fontSize: 24,
                                     fontWeight: FontWeight.w600,
+                                    letterSpacing: -0.3,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  strings.isArabic ? 'مرحلة هادئة ومستقرة' : 'A calm and stable phase',
+                                  style: TextStyle(
+                                    fontSize: 12,
                                     color: tokens.textSecondary,
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                          const OrganicWaveArt(height: 95),
+                        ],
+                      ),
+                      Positioned(
+                        bottom: 14,
+                        right: 14,
+                        child: MindPressable(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            context.push(AppRouter.journey);
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: LabColors.forestGreen,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: LabColors.forestGreen.withValues(alpha: 0.35),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                // 3. MASTER "YOUR MIND AT A GLANCE" CARD (Phone 2 reference)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+                      width: 1.0,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            strings.isArabic ? 'نظرة عامة على ذهنك' : 'Your Mind at a Glance',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.textPrimary,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              context.go(AppRouter.insights);
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  strings.isArabic ? 'التفاصيل' : 'See details',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? LabColors.lightOlive : LabColors.secondaryOlive,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 13,
+                                  color: isDark ? LabColors.lightOlive : LabColors.secondaryOlive,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      SmoothSplineChart(
+                        height: 75,
+                        values: splineValues,
+                        lineColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildLegendItem('Calm', calmPct, LabColors.moodCalm),
+                          _buildLegendItem('Anxious', anxiousPct, LabColors.moodAnxious),
+                          _buildLegendItem('Low', lowPct, const Color(0xFFC04B22)),
                         ],
                       ),
                     ],
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                // 4. QUICK ACTIONS SECTION (Phone 2 reference)
+                Text(
+                  strings.isArabic ? 'إجراءات سريعة' : 'Quick Actions',
+                  style: TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.textPrimary,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    QuickActionCard(
+                      icon: Icons.wb_sunny_outlined,
+                      line1: 'Log',
+                      line2: 'Your Mood',
+                      onTap: () => context.go(AppRouter.track),
+                    ),
+                    const SizedBox(width: 10),
+                    QuickActionCard(
+                      icon: Icons.psychology_outlined,
+                      line1: 'Explore',
+                      line2: 'Your Mind',
+                      onTap: () => context.go(AppRouter.observatory),
+                    ),
+                    const SizedBox(width: 10),
+                    QuickActionCard(
+                      icon: Icons.spa_outlined,
+                      line1: 'Take a',
+                      line2: 'Breath',
+                      onTap: () => ContextualSupportSheet.show(context),
+                    ),
                   ],
+                ),
+
+                const SizedBox(height: 14),
+
+                // Mind Assistant Card (Direct access to Phone 7)
+                MindCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+                  borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.push(AppRouter.companion);
+                  },
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: isDark ? LabColors.forestGreen : const Color(0xFF4A583E),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.auto_awesome,
+                          size: 20,
+                          color: Color(0xFFF5EEE3),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Mind Assistant',
+                              style: TextStyle(
+                                fontFamily: 'serif',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Talk about what’s on your mind, or ask anything you need.',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                color: tokens.textSecondary,
+                                height: 1.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 18,
+                        color: tokens.textSecondary,
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 20),

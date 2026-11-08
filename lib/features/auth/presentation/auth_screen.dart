@@ -181,9 +181,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? const Color(0xFF141414)
-                        : const Color(0xFFF4F4F5),
-                    borderRadius: BorderRadius.circular(10),
+                        ? LabColors.darkForestSurface
+                        : LabColors.secondaryIvory,
+                    borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: borderColor, width: 1),
                   ),
                   child: Row(
@@ -199,20 +199,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
-                            padding: const EdgeInsets.symmetric(vertical: 9),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
                               color: !_isSignUp
-                                  ? (isDark
-                                      ? LabColors.darkWine
-                                      : LabColors.warmIvory)
+                                  ? LabColors.forestGreen
                                   : Colors.transparent,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: !_isSignUp
-                                    ? LabColors.champagneGold
-                                    : Colors.transparent,
-                                width: 1,
-                              ),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
                               strings.signInTab.toUpperCase(),
@@ -222,7 +214,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.5,
                                 color: !_isSignUp
-                                    ? LabColors.champagneGold
+                                    ? Colors.white
                                     : textSecondary,
                               ),
                             ),
@@ -241,20 +233,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
-                            padding: const EdgeInsets.symmetric(vertical: 9),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
                               color: _isSignUp
-                                  ? (isDark
-                                      ? LabColors.darkWine
-                                      : LabColors.warmIvory)
+                                  ? LabColors.forestGreen
                                   : Colors.transparent,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: _isSignUp
-                                    ? LabColors.champagneGold
-                                    : Colors.transparent,
-                                width: 1,
-                              ),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
                               strings.signUpTab.toUpperCase(),
@@ -264,7 +248,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.5,
                                 color: _isSignUp
-                                    ? LabColors.champagneGold
+                                    ? Colors.white
                                     : textSecondary,
                               ),
                             ),
@@ -391,12 +375,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   width: double.infinity,
                   child: FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: isDark ? Colors.white : Colors.black,
-                      foregroundColor: isDark ? Colors.black : Colors.white,
+                      backgroundColor: LabColors.forestGreen,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: authState.status == AuthStatus.loading
                         ? null
@@ -407,7 +391,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.grey,
+                              color: Colors.white,
                             ),
                           )
                         : Text(
@@ -415,8 +399,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                 ? strings.createVaultBtn.toUpperCase()
                                 : strings.unlockVaultBtn.toUpperCase(),
                             style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12.5,
                               letterSpacing: 0.6,
                             ),
                           ),
@@ -430,17 +414,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: LabColors.champagneGold,
+                        foregroundColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
                         side: BorderSide(
-                          color: isDark
-                              ? LabColors.wineBorder
-                              : LabColors.champagneGold.withValues(alpha: 0.4),
+                          color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
                           width: 1,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                       icon: const Icon(Icons.fingerprint_rounded, size: 18),
                       label: Text(
@@ -484,18 +466,25 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 BouncingWidget(
                   onTap: _continueAnonymously,
                   child: Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? LabColors.darkWine.withValues(alpha: 0.25)
-                          : const Color(0xFFFBF8F6),
-                      borderRadius: BorderRadius.circular(10),
+                          ? LabColors.darkForestCard
+                          : LabColors.cardIvory,
+                      borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isDark
-                            ? LabColors.wineBorder
-                            : LabColors.champagneGold.withValues(alpha: 0.4),
+                            ? LabColors.darkForestBorder
+                            : LabColors.borderIvory,
                         width: 1,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.03),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,20 +492,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(6),
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: isDark
-                                    ? LabColors.darkWine
-                                    : LabColors.warmIvory,
-                                borderRadius: BorderRadius.circular(6),
+                                    ? LabColors.darkForestSurface
+                                    : LabColors.secondaryIvory,
+                                shape: BoxShape.circle,
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.shield_outlined,
-                                size: 16,
-                                color: LabColors.champagneGold,
+                                size: 18,
+                                color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -534,20 +523,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                       const SizedBox(width: 6),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 4, vertical: 1),
+                                            horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: LabColors.sageGreenGlow
-                                              .withValues(alpha: 0.15),
-                                          borderRadius:
-                                              BorderRadius.circular(3),
+                                          color: LabColors.forestGreen.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(4),
                                         ),
-                                        child: const Text(
+                                        child: Text(
                                           'PRIVATE',
                                           style: TextStyle(
-                                            fontSize: 8,
+                                            fontSize: 8.5,
                                             fontWeight: FontWeight.w800,
                                             letterSpacing: 0.4,
-                                            color: LabColors.sageGreenGlow,
+                                            color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
                                           ),
                                         ),
                                       ),
@@ -556,20 +543,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                   const SizedBox(height: 2),
                                   Text(
                                     strings.anonymousChoiceBadge,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 9.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: LabColors.champagneGold,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark ? LabColors.lightOlive : LabColors.secondaryOlive,
                                       letterSpacing: 0.4,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               Icons.arrow_forward_rounded,
                               size: 16,
-                              color: LabColors.champagneGold,
+                              color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
                             ),
                           ],
                         ),
@@ -577,7 +564,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         Text(
                           strings.anonymousOptionSubtitle,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 11.5,
                             color: textSecondary,
                             height: 1.35,
                           ),
@@ -613,10 +600,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         const SizedBox(width: 6),
                         Text(
                           strings.startExplorationBtn,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: LabColors.champagneGold,
+                            color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
                             decoration: TextDecoration.underline,
                           ),
                         ),

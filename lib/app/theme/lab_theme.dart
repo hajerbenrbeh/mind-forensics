@@ -32,7 +32,7 @@ class LabTheme {
     double height = 1.3,
   }) {
     return TextStyle(
-      fontFamily: 'Inter',
+      fontFamily: 'serif',
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -51,7 +51,7 @@ class LabTheme {
     FontStyle fontStyle = FontStyle.normal,
   }) {
     return TextStyle(
-      fontFamily: 'Inter',
+      fontFamily: 'serif',
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -104,7 +104,7 @@ class LabTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: LabColors.daylightTextPrimary,
+          backgroundColor: LabColors.forestGreen,
           foregroundColor: Colors.white,
           minimumSize: const Size(48, 48), // Accessible touch target
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

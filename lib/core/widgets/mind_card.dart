@@ -40,6 +40,13 @@ class MindCard extends StatelessWidget {
           color: borderColor ?? tokens.border,
           width: 1.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: child,
     );

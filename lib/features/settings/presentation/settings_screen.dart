@@ -9,9 +9,13 @@ import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/theme_controller.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/security/app_lock_provider.dart';
+import '../../../core/widgets/botanical_emblem.dart';
+import '../../../core/widgets/mind_button.dart';
+import '../../../core/widgets/mind_card.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/data/cloud_sync_service.dart';
+import '../../profile/controllers/profile_controller.dart';
 import '../../profile/presentation/psychological_profile_screen.dart';
 import '../../journal/presentation/widgets/journal_memory_sheet.dart';
 import 'clinical_sharing_history_sheet.dart';
@@ -291,9 +295,130 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ],
       ),
       body: SafeArea(
-        child: ListView(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+            // Phone 8 Hero: Member Avatar & Account Card
+            Center(
+              child: Column(
+                children: [
+                  Container(
+                    width: 76,
+                    height: 76,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isDark ? const Color(0xFF1E281C) : const Color(0xFFD6E2D0),
+                      border: Border.all(
+                        color: isDark ? const Color(0xFF3D5036) : const Color(0xFFA8BFA0),
+                        width: 1.5,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: const BotanicalEmblem(size: 40),
+                  ),
+                  const SizedBox(height: 12),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final authState = ref.watch(authControllerProvider);
+                      final profileAsync = ref.watch(profileControllerProvider);
+                      final preferred = profileAsync.value?.preferredName;
+                      final displayName = (preferred != null && preferred.isNotEmpty)
+                          ? preferred
+                          : (authState.user?.codename.isNotEmpty == true
+                              ? authState.user!.codename
+                              : (strings.isArabic ? 'مستكشف' : 'Observer'));
+                      return Column(
+                        children: [
+                          Text(
+                            displayName,
+                            style: TextStyle(
+                              fontFamily: 'serif',
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Mind Forensics Member',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              letterSpacing: 0.3,
+                              color: textSecondary,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            MindCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const PsychologicalProfileScreen(),
+                  ),
+                );
+              },
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF22301F) : const Color(0xFFDCE9D6),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.eco_outlined,
+                      size: 20,
+                      color: isDark ? const Color(0xFF7EAF72) : const Color(0xFF355E2B),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'My Account',
+                          style: TextStyle(
+                            fontFamily: 'serif',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Manage clinical profile and preferences',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 22,
+                    color: textSecondary,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
             // Section 0A: Forensic Identity & Mental Vault
             Consumer(
               builder: (context, ref, _) {
@@ -1034,6 +1159,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             const SizedBox(height: 28),
 
+            // Phone 8: Sign Out Action
+            MindButton(
+              text: 'Log Out',
+              variant: MindButtonVariant.secondary,
+              isFullWidth: true,
+              onPressed: () async {
+                HapticFeedback.lightImpact();
+                await ref.read(authControllerProvider.notifier).signOut();
+              },
+            ),
+
+            const SizedBox(height: 16),
+
             // Danger Zone: Delete Everything
             Center(
               child: TextButton.icon(
@@ -1054,6 +1192,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 

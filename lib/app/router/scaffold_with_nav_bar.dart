@@ -6,13 +6,12 @@ import 'package:go_router/go_router.dart';
 import '../localization/app_strings.dart';
 import '../theme/lab_colors.dart';
 
-/// Calm, organic, modern capsule navigation bar.
-///
-/// Features:
-/// - Floating 28px rounded capsule bar matching the organic Earth/Sage palette.
-/// - Soft shadow layering and clean vector icons.
-/// - Four tabs: Home, Investigator, Toolkit, Profile.
-/// - Zero emoji clutter, minimum 48px interactive target.
+/// Calm, organic, modern capsule navigation bar matching the 5-item master reference:
+/// 1. Home
+/// 2. Track
+/// 3. Inner Observatory (Center elevated circular button with neural emblem)
+/// 4. Insights
+/// 5. Profile
 class ScaffoldWithNavBar extends ConsumerWidget {
   const ScaffoldWithNavBar({
     super.key,
@@ -36,11 +35,11 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     final strings = ref.watch(appStringsProvider);
     final currentIndex = navigationShell.currentIndex;
 
-    final scaffoldBg = isDark ? LabColors.nightBackground : LabColors.daylightBackground;
-    final navBg = isDark ? LabColors.nightSurface : LabColors.daylightSurface;
-    final borderColor = isDark ? LabColors.nightBorder : LabColors.daylightBorder;
-    final activeColor = isDark ? LabColors.nightAccent : LabColors.daylightAccent;
-    final inactiveColor = isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
+    final scaffoldBg = isDark ? LabColors.darkForestBackground : LabColors.warmIvory;
+    final navBg = isDark ? LabColors.darkForestSurface : LabColors.cardIvory;
+    final borderColor = isDark ? LabColors.darkForestBorder : LabColors.borderIvory;
+    final activeColor = isDark ? LabColors.lightOlive : LabColors.forestGreen;
+    final inactiveColor = isDark ? LabColors.darkTextSecondary : LabColors.secondaryText;
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -61,9 +60,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                 border: Border.all(color: borderColor, width: 1.0),
                 boxShadow: [
                   BoxShadow(
-                    color: isDark
-                        ? Colors.black.withValues(alpha: 0.35)
-                        : const Color(0xFF668274).withValues(alpha: 0.08),
+                    color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.05),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -75,40 +72,51 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                   _buildNavItem(
                     index: 0,
                     currentIndex: currentIndex,
-                    icon: Icons.grid_view_outlined,
-                    activeIcon: Icons.grid_view_rounded,
+                    icon: Icons.home_outlined,
+                    activeIcon: Icons.home_rounded,
                     label: strings.navHome,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
                   ),
 
-                  // 2. Investigator (Center Focus)
+                  // 2. Track
                   _buildNavItem(
                     index: 1,
                     currentIndex: currentIndex,
-                    icon: Icons.psychology_outlined,
-                    activeIcon: Icons.psychology_rounded,
-                    label: strings.navInvestigator,
+                    icon: Icons.adjust_outlined,
+                    activeIcon: Icons.adjust_rounded,
+                    label: strings.navTrack,
+                    activeColor: activeColor,
+                    inactiveColor: inactiveColor,
+                  ),
+
+                  // 3. Inner Observatory (Center Elevated Button)
+                  _buildNavItem(
+                    index: 2,
+                    currentIndex: currentIndex,
+                    icon: Icons.hub_outlined,
+                    activeIcon: Icons.hub_rounded,
+                    label: strings.navObservatory,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
                     isCenterAction: true,
                     isDark: isDark,
                   ),
 
-                  // 3. Inner Observatory (Symptom Exploration, Perspectives, Experiments, Discoveries)
+                  // 4. Insights
                   _buildNavItem(
-                    index: 2,
+                    index: 3,
                     currentIndex: currentIndex,
-                    icon: Icons.explore_outlined,
-                    activeIcon: Icons.explore_rounded,
-                    label: strings.navObservatory,
+                    icon: Icons.auto_stories_outlined,
+                    activeIcon: Icons.auto_stories_rounded,
+                    label: strings.navInsights,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
                   ),
 
-                  // 4. Profile
+                  // 5. Profile
                   _buildNavItem(
-                    index: 3,
+                    index: 4,
                     currentIndex: currentIndex,
                     icon: Icons.person_outline_rounded,
                     activeIcon: Icons.person_rounded,
@@ -149,19 +157,27 @@ class ScaffoldWithNavBar extends ConsumerWidget {
           children: [
             if (isCenterAction)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? (isDark ? LabColors.nightAccent : LabColors.daylightAccent)
-                      : (isDark ? LabColors.nightSurfaceSubtle : LabColors.daylightSurfaceSubtle),
-                  borderRadius: BorderRadius.circular(20),
+                  color: isDark ? LabColors.forestGreen : LabColors.forestGreen,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isSelected ? const Color(0xFFC7CDAD) : Colors.transparent,
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: LabColors.forestGreen.withValues(alpha: 0.35),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   isSelected ? activeIcon : icon,
-                  size: 18,
-                  color: isSelected
-                      ? (isDark ? const Color(0xFF151B19) : Colors.white)
-                      : (isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary),
+                  size: 19,
+                  color: const Color(0xFFF5EEE3),
                 ),
               )
             else

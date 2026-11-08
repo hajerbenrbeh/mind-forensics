@@ -89,6 +89,8 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const Icon(Icons.auto_awesome, size: 16, color: LabColors.secondaryOlive),
+            const SizedBox(width: 6),
             Flexible(
               child: Text(
                 strings.navInvestigator.toUpperCase(),
@@ -102,7 +104,7 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
@@ -113,11 +115,9 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
               child: Text(
                 _showHubView
                     ? 'AI HUB'
-                    : (caseModel != null
-                        ? strings.formatSessionNumber(caseModel.caseNumber)
-                        : 'SESSION 01'),
+                    : (caseModel?.caseNumber ?? 'SESSION 01'),
                 style: TextStyle(
-                  fontSize: 9.5,
+                  fontSize: 9,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.4,
                   color: _showHubView ? LabColors.champagneGold : textSecondary,
@@ -139,6 +139,14 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
                     .startNewCase('', mode: activeMode);
               },
             ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, size: 20),
+            tooltip: 'Settings',
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).pushNamed('/settings');
+            },
+          ),
           const SupportButton(),
           const SizedBox(width: 8),
         ],

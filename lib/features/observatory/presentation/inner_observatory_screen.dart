@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../core/safety/support_button.dart';
+import '../../../core/widgets/mind_pressable.dart';
+import '../../../core/widgets/neural_brain_wireframe.dart';
 import '../../journey/controllers/journey_controller.dart';
 import '../../journey/domain/journey_activity.dart';
 import '../../support/presentation/contextual_support_sheet.dart';
@@ -84,7 +86,13 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // Top Section Switcher Tabs
+            // Top Phone 5 Hero Banner (3D Neural Brain & Exploration Cards)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: _buildPhone5Hero(isDark, textPrimary, textSecondary),
+            ),
+
+            // Section Switcher Tabs
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -160,6 +168,150 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
                 textPrimary: textPrimary,
                 textSecondary: textSecondary,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhone5Hero(bool isDark, Color textPrimary, Color textSecondary) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: LabColors.forestGreen,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: LabColors.forestGreen.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'Inner Observatory',
+            style: TextStyle(
+              fontFamily: 'serif',
+              fontSize: 19,
+              fontWeight: FontWeight.w700,
+              color: LabColors.warmIvory,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'A deeper look into your mind',
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w400,
+              color: LabColors.warmIvory.withValues(alpha: 0.75),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const SizedBox(
+            height: 110,
+            child: NeuralBrainWireframe(size: 110),
+          ),
+          const SizedBox(height: 12),
+          // 3 Phone 5 Exploration Cards
+          _buildHeroExplorationCard(
+            title: 'Thought Patterns',
+            subtitle: 'Explore recurring thoughts',
+            icon: Icons.lightbulb_outline,
+            isSelected: _selectedSection == 0,
+            onTap: () => setState(() => _selectedSection = 0),
+          ),
+          const SizedBox(height: 6),
+          _buildHeroExplorationCard(
+            title: 'Emotional Landscape',
+            subtitle: 'Understand your emotions',
+            icon: Icons.favorite_border_rounded,
+            isSelected: _selectedSection == 3,
+            onTap: () => setState(() => _selectedSection = 3),
+          ),
+          const SizedBox(height: 6),
+          _buildHeroExplorationCard(
+            title: 'Behavior Insights',
+            subtitle: 'See what drives your actions',
+            icon: Icons.trending_up_rounded,
+            isSelected: _selectedSection == 1,
+            onTap: () => setState(() => _selectedSection = 1),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroExplorationCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return MindPressable(
+      onPressed: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.white.withValues(alpha: 0.18)
+              : Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? LabColors.warmIvory
+                : Colors.white.withValues(alpha: 0.15),
+            width: 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.12),
+              ),
+              child: Icon(icon, size: 15, color: LabColors.warmIvory),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: LabColors.warmIvory,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      color: LabColors.warmIvory.withValues(alpha: 0.70),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              size: 16,
+              color: LabColors.warmIvory,
             ),
           ],
         ),
