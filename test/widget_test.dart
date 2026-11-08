@@ -26,8 +26,9 @@ void main() {
     // 2. Verify all 4 persistent bottom navigation tabs (clean 4-tab bar)
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('Investigator'), findsOneWidget);
-    expect(find.text('Toolkit'), findsOneWidget);
+    expect(find.text('Observatory'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
+    expect(find.text('Toolkit'), findsNothing);
     expect(find.text('Journal'), findsNothing);
 
     // 3. Verify options-first Daily check-in elements on Home screen (no compulsory note)

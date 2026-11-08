@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,7 +10,11 @@ import 'package:mind_forensics/features/investigation/domain/case_model.dart';
 import 'package:mind_forensics/features/investigation/domain/case_stage.dart';
 import 'package:mind_forensics/features/investigation/domain/forensic_chain.dart';
 import 'package:mind_forensics/features/investigation/domain/label_type.dart';
+import 'package:mind_forensics/features/investigation/domain/statement.dart';
 import 'package:mind_forensics/features/investigation/presentation/flash_case_screen.dart';
+import 'package:mind_forensics/features/mind_trace/data/mind_trace_ai_service.dart';
+import 'package:mind_forensics/features/mind_trace/domain/mind_trace_model.dart';
+import 'package:mind_forensics/features/profile/domain/psychological_profile_model.dart';
 import 'package:mind_forensics/features/settings/presentation/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -66,10 +71,21 @@ void main() {
       container.dispose();
     });
 
-    test('Initial config starts with public key and active live AI out-of-the-box', () {
+    test('Initial config starts with default DEV_MOCK_GEMINI_KEY and selects MockInvestigatorService', () {
       final config = container.read(aiConfigProvider);
       expect(config.apiKey, equals(kPublicGeminiApiKey));
       expect(config.useLiveAi, isTrue);
+      expect(config.isMockKey, isTrue);
+      expect(config.isLiveActive, isFalse);
+
+      final service = container.read(investigatorServiceProvider);
+      expect(service, isA<MockInvestigatorService>());
+    });
+
+    test('Explicit live Gemini API key activates DirectGeminiInvestigatorService', () async {
+      await container.read(aiConfigProvider.notifier).setApiKey('AIzaSyValidProductionApiKeyForTesting');
+      final config = container.read(aiConfigProvider);
+      expect(config.isMockKey, isFalse);
       expect(config.isLiveActive, isTrue);
 
       final service = container.read(investigatorServiceProvider);
@@ -226,6 +242,100 @@ void main() {
       // Verify both user message and investigator response are visible in conversation
       expect(find.text('I am worried about my project deadline.'), findsOneWidget);
       expect(find.text('[A] Assumption'), findsAtLeastNWidgets(1));
+    });
+  });
+
+  group('Mock Key Zero Network Guarantee Tests', () {
+    test('DirectGeminiInvestigatorService performs 0 HTTP requests with DEV_MOCK_GEMINI_KEY', () async {
+      int payloadCount = 0;
+      final service = DirectGeminiInvestigatorService(
+        apiKey: 'DEV_MOCK_GEMINI_KEY',
+        onRequestAttempted: (url, payload) => payloadCount++,
+        clientFactory: () => throw const SocketException('Must NEVER open a socket in mock mode!'),
+      );
+
+      final now = DateTime.now();
+      final nonPrivateCase = CaseModel(
+        id: 'case_mock_net_01',
+        caseNumber: 'CASE-01',
+        title: 'Work anxiety',
+        createdAt: now,
+        updatedAt: now,
+        currentStage: CaseStage.incident,
+        incidentDescription: 'I received an unexpected email.',
+        isPrivate: false,
+      );
+
+      final consentedProfile = PsychologicalProfileModel(
+        shareWithAiCompanion: true,
+        allowAiPersonalization: true,
+        updatedAt: now,
+      );
+
+      // 1. testConnection check
+      final connResult = await service.testConnection();
+      expect(connResult.success, isFalse);
+      expect(connResult.message, contains('Mock API key configured'));
+
+      // 2. getNextQuestion
+      final question = await service.getNextQuestion(
+        currentCase: nonPrivateCase,
+        conversationHistory: [
+          Statement(id: 's1', text: 'Hello', speaker: StatementSpeaker.user, timestamp: now),
+        ],
+        profile: consentedProfile,
+      );
+      expect(question.isNotEmpty, isTrue);
+
+      // 3. generateHypotheses
+      final hypotheses = await service.generateHypotheses(
+        currentCase: nonPrivateCase,
+        profile: consentedProfile,
+      );
+      expect(hypotheses.isNotEmpty, isTrue);
+
+      // 4. summarizeFindings
+      final summary = await service.summarizeFindings(
+        currentCase: nonPrivateCase,
+        profile: consentedProfile,
+      );
+      expect(summary.isNotEmpty, isTrue);
+
+      // Absolutely ZERO network requests attempted
+      expect(service.networkRequestsAttempted, equals(0));
+      expect(payloadCount, equals(0));
+    });
+
+    test('MindTraceAiService performs 0 HTTP requests with DEV_MOCK_GEMINI_KEY', () async {
+      final service = MindTraceAiService(apiKey: 'DEV_MOCK_GEMINI_KEY');
+
+      final now = DateTime.now();
+      final trace = MindTraceModel(
+        id: 'trace_mock_test',
+        date: now,
+        overallMood: 'anxious',
+        moodIntensity: 7,
+        selectedEmotions: const ['Anxious'],
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      final consentedProfile = PsychologicalProfileModel(
+        shareWithAiCompanion: true,
+        allowAiPersonalization: true,
+        updatedAt: now,
+      );
+
+      final reflection = await service.generateDailyReflection(
+        currentTrace: trace,
+        history: [],
+        profile: consentedProfile,
+        languageCode: 'en',
+      );
+
+      expect(reflection.isNotEmpty, isTrue);
+      // Zero emojis in output
+      expect(reflection.contains(RegExp(r'[\u{1F300}-\u{1F9FF}]', unicode: true)), isFalse);
     });
   });
 }

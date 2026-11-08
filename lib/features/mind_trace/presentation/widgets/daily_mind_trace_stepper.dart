@@ -95,6 +95,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
     if (trace.voiceNotePath != null) {
       _hasVoiceNote = true;
     }
+    for (final entry in trace.dynamicAnswers.entries) {
+      _dynamicQuestionControllers[entry.key] =
+          TextEditingController(text: entry.value);
+    }
   }
 
   @override
@@ -114,11 +118,16 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
     final todayKey =
         'trace_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
 
-    final dynamicAnswers = <String, String>{};
+    final mergedDynamicAnswers = <String, String>{
+      if (widget.initialTrace != null) ...widget.initialTrace!.dynamicAnswers,
+    };
     for (final entry in _dynamicQuestionControllers.entries) {
       final text = entry.value.text.trim();
       if (text.isNotEmpty) {
-        dynamicAnswers[entry.key] = text;
+        mergedDynamicAnswers[entry.key] = text;
+      } else {
+        // Intentionally cleared/deleted by user in this session:
+        mergedDynamicAnswers.remove(entry.key);
       }
     }
 
@@ -126,31 +135,51 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
         ? _selectedEmotions.first.toLowerCase()
         : _overallMood;
 
-    final trace = MindTraceModel(
-      id: widget.initialTrace?.id ?? todayKey,
-      date: widget.initialTrace?.date ?? now,
-      overallMood: effectiveMood,
-      selectedEmotions: _selectedEmotions.toList(),
-      moodIntensity: _moodIntensity.toInt(),
-      energyLevel: _energyLevel.toInt(),
-      sleepHours: _sleepHours,
-      sleepQuality: _sleepQuality,
-      physicalTension: _physicalTension.toInt(),
-      concentrationLevel: _concentrationLevel.toInt(),
-      mentalClarity: _mentalClarity.toInt(),
-      racingThoughts: _racingThoughts.toInt(),
-      intrusiveThoughts: _intrusiveThoughts.toInt(),
-      emotionalDisconnection: _emotionalDisconnection.toInt(),
-      journalText: widget.initialTrace?.journalText,
-      voiceNotePath: _hasVoiceNote
-          ? (widget.initialTrace?.voiceNotePath ??
-              'memo_${now.millisecondsSinceEpoch}.m4a')
-          : null,
-      dynamicAnswers: dynamicAnswers,
-      isCompleted: true,
-      createdAt: widget.initialTrace?.createdAt ?? now,
-      updatedAt: now,
-    );
+    final voicePath = _hasVoiceNote
+        ? (widget.initialTrace?.voiceNotePath ??
+            'memo_${now.millisecondsSinceEpoch}.m4a')
+        : widget.initialTrace?.voiceNotePath;
+
+    final trace = widget.initialTrace != null
+        ? widget.initialTrace!.copyWith(
+            overallMood: effectiveMood,
+            selectedEmotions: _selectedEmotions.toList(),
+            moodIntensity: _moodIntensity.toInt(),
+            energyLevel: _energyLevel.toInt(),
+            sleepHours: _sleepHours,
+            sleepQuality: _sleepQuality,
+            physicalTension: _physicalTension.toInt(),
+            concentrationLevel: _concentrationLevel.toInt(),
+            mentalClarity: _mentalClarity.toInt(),
+            racingThoughts: _racingThoughts.toInt(),
+            intrusiveThoughts: _intrusiveThoughts.toInt(),
+            emotionalDisconnection: _emotionalDisconnection.toInt(),
+            dynamicAnswers: mergedDynamicAnswers,
+            voiceNotePath: voicePath,
+            isCompleted: true,
+            updatedAt: now,
+          )
+        : MindTraceModel(
+            id: todayKey,
+            date: now,
+            overallMood: effectiveMood,
+            selectedEmotions: _selectedEmotions.toList(),
+            moodIntensity: _moodIntensity.toInt(),
+            energyLevel: _energyLevel.toInt(),
+            sleepHours: _sleepHours,
+            sleepQuality: _sleepQuality,
+            physicalTension: _physicalTension.toInt(),
+            concentrationLevel: _concentrationLevel.toInt(),
+            mentalClarity: _mentalClarity.toInt(),
+            racingThoughts: _racingThoughts.toInt(),
+            intrusiveThoughts: _intrusiveThoughts.toInt(),
+            emotionalDisconnection: _emotionalDisconnection.toInt(),
+            dynamicAnswers: mergedDynamicAnswers,
+            voiceNotePath: voicePath,
+            isCompleted: true,
+            createdAt: now,
+            updatedAt: now,
+          );
 
     try {
       await ref.read(mindTraceControllerProvider.notifier).recordCheckIn(

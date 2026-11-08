@@ -18,17 +18,56 @@ class AppStrings {
   bool get isArabic => languageCode == 'ar';
   bool get isFrench => languageCode == 'fr';
 
-  // Navigation (4 Primary Destinations: Home, Investigator, Toolkit, Profile)
+  // Navigation (4 Primary Destinations: Home, Investigator, Inner Observatory, Profile)
   String get navHome => isArabic ? 'الرئيسية' : (isFrench ? 'Accueil' : 'Home');
-  String get navTrack => isArabic ? 'تتبّع' : (isFrench ? 'Observer' : 'Track');
-  String get navCompanion => isArabic ? 'الرفيق الذكي' : (isFrench ? 'Compagnon IA' : 'AI Companion');
-  String get navInsights => isArabic ? 'التحليلات' : (isFrench ? 'Analyses' : 'Insights');
+  String get navObservatory => isArabic ? 'المرصد' : (isFrench ? 'Observatoire' : 'Observatory');
+  String get navInnerObservatory => isArabic ? 'المرصد الداخلي' : (isFrench ? 'Observatoire intérieur' : 'Inner Observatory');
+  String get navInvestigator => isArabic ? 'المحقق' : (isFrench ? 'Enquêteur' : 'Investigator');
   String get navProfile => isArabic ? 'الملف الشخصي' : (isFrench ? 'Profil' : 'Profile');
+
+  // Contextual Support
+  String get contextualSupportTitle => isArabic ? 'دعم فوري' : (isFrench ? 'Soutien contextuel' : 'Contextual Support');
+  String get whatWouldHelpPrompt => isArabic ? 'شنوة يعاونك توا؟' : (isFrench ? 'De quoi avez-vous besoin maintenant ?' : 'What would help right now?');
+  String get whatWouldHelpSubtitle => isArabic ? 'اختر نقطة انطلاق هادية ومباشرة، من غير أي استبيان أو ضغط' : (isFrench ? 'Choisissez une aide simple et directe, sans aucun questionnaire ni pression' : 'Choose a calm, immediate starting point with zero pressure or lengthy forms');
+  String get homeSupportCardTitle => isArabic ? 'تحتاج مساعدة أو تهدئة توا؟' : (isFrench ? 'Besoin d’aide ou d’apaisement ?' : 'Need support right now?');
+  String get homeSupportCardSub => isArabic ? 'اختر نقطة انطلاق هادية ومباشرة حسب حاجتك' : (isFrench ? 'Choisissez un point de départ doux et direct selon votre besoin' : 'Choose a gentle starting point based on what you need.');
+  String get needPracticalSupportNow => isArabic ? 'نحتاج دعم عملي توا' : (isFrench ? 'Besoin d’aide concrète maintenant' : 'I need something practical right now');
+  String get needSettleTitle => isArabic ? 'نحب نهدّي روحي' : (isFrench ? 'J’ai besoin de m’apaiser' : 'I need to settle myself');
+  String get needSettleDesc => isArabic ? 'تنفس مهدئ أو تثبيت حسي في المكان' : (isFrench ? 'Respiration guidée ou ancrage sensoriel' : 'Paced breathing or sensory grounding');
+  String get needThoughtsTitle => isArabic ? 'أفكاري مشابكة ونحس روحي واحل' : (isFrench ? 'Je suis coincé dans mes pensées' : 'I’m stuck in my thoughts');
+  String get needThoughtsDesc => isArabic ? 'فصل الواقع عن التخمينات والتأويلات' : (isFrench ? 'Démêler les faits des suppositions' : 'Untangle facts from assumptions and interpretations');
+  String get needActionTitle => isArabic ? 'مانيش قادر نبدى في حتى شي' : (isFrench ? 'Je n’arrive pas à démarrer' : 'I can’t get myself started');
+  String get needActionDesc => isArabic ? 'خطوة ميكرو-بسيطة تدوم دقيقتين فقط' : (isFrench ? 'Un tout petit pas gérable de deux minutes' : 'A manageable two-minute action to overcome inertia');
+  String get needRoutineTitle => isArabic ? 'نحب نعاون روحي في الروتين اليومي' : (isFrench ? 'J’ai besoin d’aide avec ma routine' : 'I need help with my routine');
+  String get needRoutineDesc => isArabic ? 'إرساء نقطة توازن وحدة في يومك' : (isFrench ? 'Poser un point d’ancrage simple dans votre journée' : 'Establish one gentle anchor point in your day');
+  String get needExploreTitle => isArabic ? 'نحب نستكشف حاجة أخرى' : (isFrench ? 'Je souhaite explorer autre chose' : 'I want to explore something else');
+  String get needExploreDesc => isArabic ? 'المرصد الداخلي لاستكشاف الأعراض والتجارب' : (isFrench ? 'Accéder à l’Observatoire intérieur' : 'Open Inner Observatory for deeper psychological exploration');
+  String get needCrisisHelp => isArabic ? 'طوارئ: مساعدة عاجلة وخطوط استماع' : (isFrench ? 'Besoin d’aide immédiate : Urgences' : 'Need help now: Emergency crisis lines');
+  String get emergencyCallDirect => isArabic ? 'اتصال مباشر بخطوط المساعدة الرسمية' : (isFrench ? 'Lignes d’écoute et de secours directes' : 'Direct connection to verified local hotlines');
+
+  // Sensory Grounding (5-4-3-2-1)
+  String get sensoryGroundingTitle => isArabic ? 'التثبيت الحسي 5-4-3-2-1' : (isFrench ? 'Ancrage sensoriel 5-4-3-2-1' : '5-4-3-2-1 Sensory Grounding');
+  String get sensoryGroundingDesc => isArabic ? 'إعادة توجيه الانتباه نحو الحواس والمكان الحاضر' : (isFrench ? 'Réorienter doucement votre attention sur votre environnement' : 'Gently reconnect with your immediate physical environment');
+  String get groundingSee => isArabic ? '5 حاجات تراهم دايرين بيك' : (isFrench ? '5 choses que vous voyez' : '5 things you see around you');
+  String get groundingTouch => isArabic ? '4 حاجات تنجم تمسهم توا' : (isFrench ? '4 choses que vous pouvez toucher' : '4 things you can physically touch');
+  String get groundingHear => isArabic ? '3 أصوات تسمع فيهم في اللحظة' : (isFrench ? '3 sons que vous entendez' : '3 sounds you hear right now');
+  String get groundingSmell => isArabic ? '2 روائح تشم فيهم أو تتفكرهم' : (isFrench ? '2 odeurs que vous percevez ou imaginez' : '2 scents you notice or recall');
+  String get groundingTaste => isArabic ? 'إحساس واحد ملموس في فمك أو نفس نقي' : (isFrench ? '1 sensation physique ou goût de l’air' : '1 physical sensation or taste of fresh air');
+
+  // Inner Observatory
+  String get observatoryTitle => isArabic ? 'المرصد الداخلي' : (isFrench ? 'Observatoire intérieur' : 'Inner Observatory');
+  String get observatorySubtitle => isArabic ? 'مساحة هادية لاستكشاف الأعراض، الأنماط، والتجارب' : (isFrench ? 'Espace serein d’exploration des symptômes, schémas et stratégies' : 'A calm space for symptom exploration, perspective shifts, and strategies');
+  String get sectionSymptomExploration => isArabic ? 'استكشاف الأعراض والتناغم الذاتي' : (isFrench ? 'Exploration des symptômes & ressenti' : 'Symptom Exploration & Attunement');
+  String get sectionPerspectiveExploration => isArabic ? 'استكشاف زوايا النظر' : (isFrench ? 'Exploration des perspectives' : 'Perspective Exploration');
+  String get sectionExperimentsStrategies => isArabic ? 'تجارب واستراتيجيات عملية' : (isFrench ? 'Expériences & Stratégies' : 'Experiments & Strategies');
+  String get sectionPersonalDiscoveries => isArabic ? 'اكتشافاتي وخلاصاتي' : (isFrench ? 'Découvertes personnelles' : 'Personal Discoveries');
 
   // Backward compatibility tab aliases
   String get navJournal => isArabic ? 'السجل' : (isFrench ? 'Journal' : 'Journal');
-  String get navInvestigator => isArabic ? 'المحقق' : (isFrench ? 'Enquêteur' : 'Investigator');
   String get navToolkit => isArabic ? 'صندوق الأدوات' : (isFrench ? 'Boîte à outils' : 'Toolkit');
+  String get navTrack => isArabic ? 'تتبّع' : (isFrench ? 'Observer' : 'Track');
+  String get navCompanion => isArabic ? 'الرفيق الذكي' : (isFrench ? 'Compagnon IA' : 'AI Companion');
+  String get navInsights => isArabic ? 'التحليلات' : (isFrench ? 'Analyses' : 'Insights');
   String get navCases => navJournal;
   String get navTools => navToolkit;
   String get navSettings => navProfile;

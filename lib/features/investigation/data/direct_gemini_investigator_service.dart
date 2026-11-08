@@ -68,6 +68,12 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
     return true;
   }
 
+  static const String kDevMockKey = 'DEV_MOCK_GEMINI_KEY';
+
+  /// Returns true if [key] is empty or corresponds to the offline development mock key.
+  static bool isMockKey(String key) =>
+      key.trim().isEmpty || key.trim() == kDevMockKey;
+
   static const List<String> fallbackModels = [
     'gemini-3.1-flash-lite',
     'gemini-2.5-flash',
@@ -80,6 +86,12 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
     final cleanKey = apiKey.trim();
     if (cleanKey.isEmpty) {
       return (success: false, message: 'API key cannot be empty');
+    }
+    if (cleanKey == kDevMockKey) {
+      return (
+        success: false,
+        message: 'Mock API key configured (zero network mode)',
+      );
     }
 
     final modelsToTry = [
@@ -170,7 +182,7 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
     bool isJson = false,
   }) async {
     final cleanKey = apiKey.trim();
-    if (cleanKey.isEmpty) return null;
+    if (isMockKey(cleanKey)) return null;
 
     final canProceed = await DailyUsageLimiter.canMakeRequest();
     if (!canProceed) return DailyUsageLimiter.limitExceededMessage;

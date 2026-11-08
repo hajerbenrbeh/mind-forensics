@@ -95,13 +95,13 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     isDark: isDark,
                   ),
 
-                  // 3. Toolkit (My Journey & Tools Lab)
+                  // 3. Inner Observatory (Symptom Exploration, Perspectives, Experiments, Discoveries)
                   _buildNavItem(
                     index: 2,
                     currentIndex: currentIndex,
-                    icon: Icons.handyman_outlined,
-                    activeIcon: Icons.handyman_rounded,
-                    label: strings.navToolkit,
+                    icon: Icons.explore_outlined,
+                    activeIcon: Icons.explore_rounded,
+                    label: strings.navObservatory,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
                   ),

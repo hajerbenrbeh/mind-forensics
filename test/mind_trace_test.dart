@@ -165,6 +165,111 @@ void main() {
       // Ensure zero emojis
       expect(reflection.contains(RegExp(r'[\u{1F300}-\u{1F9FF}]', unicode: true)), isFalse);
     });
+
+    test('Historical five-step MindTrace preserves all uncollected fields through copyWith update', () {
+      final historicalDate = DateTime(2026, 10, 15, 14, 0);
+      final historicalTrace = MindTraceModel(
+        id: 'trace_historical_001',
+        userId: 'user_clinical_test',
+        date: historicalDate,
+        overallMood: 'overwhelmed',
+        selectedEmotions: const ['Anxious', 'Exhausted'],
+        moodIntensity: 8,
+        energyLevel: 3,
+        anxietyLevel: 7,
+        sleepHours: 5.0,
+        sleepQuality: 2,
+        physicalTension: 8,
+        concentrationLevel: 3,
+        mentalClarity: 3,
+        racingThoughts: 8,
+        intrusiveThoughts: 7,
+        emotionalDisconnection: 6,
+        situation: 'Public presentation with executive stakeholders.',
+        symptomsAndExperiences: 'Tension in chest, rapid heartbeat.',
+        behavioralResponse: 'Avoided eye contact, drank water repeatedly.',
+        investigationAnswers: {'evidence_for': 'Stumbled on slide 3', 'evidence_against': 'Audience nodded'},
+        aiReflection: 'You navigated a high-pressure situation with courage.',
+        suggestedJourneyActivityId: 'act_grounding_box_breathing',
+        journalText: 'Historical personal journal entry that must never be lost.',
+        voiceNotePath: 'recordings/voice_20261015.m4a',
+        dynamicAnswers: {'q_trigger': 'Meeting invitation at 8 AM'},
+        isCompleted: true,
+        createdAt: historicalDate,
+        updatedAt: historicalDate,
+      );
+
+      final now = DateTime.now();
+      final updatedTrace = historicalTrace.copyWith(
+        overallMood: 'calm',
+        selectedEmotions: const ['Calm', 'Relieved'],
+        moodIntensity: 3,
+        energyLevel: 6,
+        sleepHours: 7.5,
+        sleepQuality: 4,
+        physicalTension: 2,
+        concentrationLevel: 7,
+        mentalClarity: 8,
+        racingThoughts: 2,
+        intrusiveThoughts: 1,
+        emotionalDisconnection: 1,
+        dynamicAnswers: {
+          ...historicalTrace.dynamicAnswers,
+          'q_evening_followup': 'Feeling much calmer after walking.',
+        },
+        isCompleted: true,
+        updatedAt: now,
+      );
+
+      // Verify wizard-edited fields updated
+      expect(updatedTrace.overallMood, equals('calm'));
+      expect(updatedTrace.moodIntensity, equals(3));
+      expect(updatedTrace.physicalTension, equals(2));
+      expect(updatedTrace.updatedAt, equals(now));
+
+      // Verify all historical uncollected fields remained 100% intact
+      expect(updatedTrace.id, equals('trace_historical_001'));
+      expect(updatedTrace.userId, equals('user_clinical_test'));
+      expect(updatedTrace.date, equals(historicalDate));
+      expect(updatedTrace.createdAt, equals(historicalDate));
+      expect(updatedTrace.anxietyLevel, equals(7));
+      expect(updatedTrace.situation, equals('Public presentation with executive stakeholders.'));
+      expect(updatedTrace.symptomsAndExperiences, equals('Tension in chest, rapid heartbeat.'));
+      expect(updatedTrace.behavioralResponse, equals('Avoided eye contact, drank water repeatedly.'));
+      expect(updatedTrace.investigationAnswers, equals({'evidence_for': 'Stumbled on slide 3', 'evidence_against': 'Audience nodded'}));
+      expect(updatedTrace.aiReflection, equals('You navigated a high-pressure situation with courage.'));
+      expect(updatedTrace.suggestedJourneyActivityId, equals('act_grounding_box_breathing'));
+      expect(updatedTrace.journalText, equals('Historical personal journal entry that must never be lost.'));
+      expect(updatedTrace.voiceNotePath, equals('recordings/voice_20261015.m4a'));
+      expect(updatedTrace.dynamicAnswers['q_trigger'], equals('Meeting invitation at 8 AM'));
+      expect(updatedTrace.dynamicAnswers['q_evening_followup'], equals('Feeling much calmer after walking.'));
+    });
+
+    test('Dynamic answers merge logic preserves unedited keys and removes intentionally deleted keys', () {
+      final initialAnswers = {'q1': 'Existing answer', 'q2': 'To be deleted', 'q3': 'Unrelated older question'};
+
+      // Simulate wizard session where q1 is updated, q2 is cleared, and q4 is added
+      final controllers = {
+        'q1': 'Updated answer',
+        'q2': '', // Intentionally cleared
+        'q4': 'New answer',
+      };
+
+      final merged = <String, String>{...initialAnswers};
+      for (final entry in controllers.entries) {
+        final text = entry.value.trim();
+        if (text.isNotEmpty) {
+          merged[entry.key] = text;
+        } else {
+          merged.remove(entry.key);
+        }
+      }
+
+      expect(merged['q1'], equals('Updated answer'));
+      expect(merged.containsKey('q2'), isFalse); // Intentionally deleted, not restored
+      expect(merged['q3'], equals('Unrelated older question')); // Preserved
+      expect(merged['q4'], equals('New answer'));
+    });
   });
 }
 

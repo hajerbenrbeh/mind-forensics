@@ -6,7 +6,7 @@ import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/insights/presentation/insights_screen.dart';
 import '../../features/investigation/presentation/flash_case_screen.dart';
-import '../../features/journey/presentation/journey_screen.dart';
+import '../../features/observatory/presentation/inner_observatory_screen.dart';
 import '../../features/mind_trace/presentation/mind_trace_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/profile/presentation/psychological_profile_screen.dart';
@@ -24,6 +24,7 @@ class AppRouter {
   static const String home = '/home';
   static const String journal = '/journal';
   static const String investigator = '/investigation';
+  static const String observatory = '/observatory';
   static const String toolkit = '/toolkit';
   static const String profile = '/profile';
   static const String caseReport = '/case/:id';
@@ -118,7 +119,11 @@ class AppRouter {
       ),
       GoRoute(
         path: '/tools',
-        redirect: (context, state) => toolkit,
+        redirect: (context, state) => observatory,
+      ),
+      GoRoute(
+        path: '/toolkit',
+        redirect: (context, state) => observatory,
       ),
       GoRoute(
         path: '/settings',
@@ -126,7 +131,7 @@ class AppRouter {
       ),
 
       // Persistent 4-Tab Bottom Navigation Shell:
-      // Home, Investigator, Toolkit, Profile.
+      // Home, Investigator, Inner Observatory, Profile.
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavBar(navigationShell: navigationShell);
@@ -154,13 +159,13 @@ class AppRouter {
             ],
           ),
 
-          // Branch 2: Toolkit (My Journey & Tools Lab)
+          // Branch 2: Inner Observatory (Symptom Exploration, Perspectives, Experiments, Discoveries)
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: toolkit,
-                name: 'toolkit',
-                builder: (context, state) => const JourneyScreen(),
+                path: observatory,
+                name: 'observatory',
+                builder: (context, state) => const InnerObservatoryScreen(),
               ),
             ],
           ),

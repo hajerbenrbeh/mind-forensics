@@ -55,6 +55,17 @@ class SupportButton extends ConsumerWidget {
 class SupportModalSheet extends ConsumerWidget {
   const SupportModalSheet({super.key});
 
+  /// Static entry point to display the support crisis sheet from any context.
+  static Future<void> show(BuildContext context) {
+    HapticFeedback.lightImpact();
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => const SupportModalSheet(),
+    );
+  }
+
   Future<void> _makeCall(String phone) async {
     HapticFeedback.mediumImpact();
     final uri = Uri.parse('tel:$phone');

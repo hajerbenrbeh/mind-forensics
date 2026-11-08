@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mind_forensics/features/mind_trace/controllers/mind_trace_controller.dart';
 import 'package:mind_forensics/features/mind_trace/domain/mind_trace_model.dart';
 import 'package:mind_forensics/features/mind_trace/presentation/mind_trace_screen.dart';
+import 'package:mind_forensics/features/mind_trace/presentation/widgets/daily_mind_trace_stepper.dart';
 import 'package:mind_forensics/features/mind_trace/presentation/widgets/pattern_discovery_view.dart';
 import 'package:mind_forensics/features/mind_trace/presentation/widgets/thought_trace_detail_sheet.dart';
 import 'package:mind_forensics/features/mind_trace/presentation/widgets/thought_trace_timeline_view.dart';
@@ -252,6 +254,118 @@ void main() {
       // Verify milestones
       expect(find.text('THOUGHT & REFLECTION MILESTONES'), findsOneWidget);
       expect(find.text('First Thought Trace'), findsOneWidget);
+    });
+
+    testWidgets('DailyMindTraceStepper with historical 5-step trace preserves uncollected fields upon re-saving',
+        (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      SharedPreferences.setMockInitialValues({});
+      final historicalDate = DateTime(2026, 10, 20, 10, 30);
+      final historicalTrace = MindTraceModel(
+        id: 'trace_historical_step5',
+        userId: 'clinical_user_01',
+        date: historicalDate,
+        overallMood: 'anxious',
+        selectedEmotions: const ['Anxious'],
+        moodIntensity: 7,
+        energyLevel: 4,
+        anxietyLevel: 8,
+        sleepHours: 6.0,
+        sleepQuality: 3,
+        physicalTension: 7,
+        concentrationLevel: 4,
+        mentalClarity: 5,
+        racingThoughts: 7,
+        intrusiveThoughts: 6,
+        emotionalDisconnection: 3,
+        situation: 'Historical critical incident situation text.',
+        symptomsAndExperiences: 'Tension, shortness of breath.',
+        behavioralResponse: 'Left the room, drank water.',
+        investigationAnswers: {'q1': 'answer 1'},
+        aiReflection: 'Historical AI clinical reflection note.',
+        suggestedJourneyActivityId: 'act_breathing_01',
+        journalText: 'Historical personal journal reflection that must not be deleted.',
+        voiceNotePath: 'voice/historical_memo.m4a',
+        dynamicAnswers: {'q_env': 'Office environment'},
+        isCompleted: true,
+        createdAt: historicalDate,
+        updatedAt: historicalDate,
+      );
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(
+              body: DailyMindTraceStepper(
+                initialTrace: historicalTrace,
+                onViewConstellation: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Step 1: Deselect Anxious, select Calm, and Continue
+      await tester.tap(find.text('Anxious'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Calm'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('CONTINUE'));
+      await tester.pumpAndSettle();
+
+      // Step 2: Intensity -> Continue
+      expect(find.text('2. EMOTIONAL INTENSITY'), findsOneWidget);
+      await tester.tap(find.text('CONTINUE'));
+      await tester.pumpAndSettle();
+
+      // Step 3: Mind -> Continue
+      expect(find.text('3. HOW IS YOUR MIND?'), findsOneWidget);
+      await tester.tap(find.text('CONTINUE'));
+      await tester.pumpAndSettle();
+
+      // Step 4: Body -> Submit
+      expect(find.text('4. HOW IS YOUR BODY?'), findsOneWidget);
+      final submitButton = find.text('RECORD DAILY THOUGHT TRACE');
+      expect(submitButton, findsOneWidget);
+      await tester.tap(submitButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Verify the saved trace in repository
+      final repo = container.read(mindTraceRepositoryProvider);
+      final savedTraces = await repo.getAllTraces();
+      expect(savedTraces.isNotEmpty, isTrue);
+
+      final saved = savedTraces.firstWhere((t) => t.id == 'trace_historical_step5');
+
+      // 1. Wizard-edited fields updated:
+      expect(saved.overallMood, equals('calm'));
+      expect(saved.selectedEmotions.contains('Calm'), isTrue);
+      expect(saved.updatedAt.isAfter(historicalDate), isTrue);
+
+      // 2. All 10 historical uncollected fields preserved 100%:
+      expect(saved.userId, equals('clinical_user_01'));
+      expect(saved.date, equals(historicalDate));
+      expect(saved.createdAt, equals(historicalDate));
+      expect(saved.anxietyLevel, equals(8));
+      expect(saved.situation, equals('Historical critical incident situation text.'));
+      expect(saved.symptomsAndExperiences, equals('Tension, shortness of breath.'));
+      expect(saved.behavioralResponse, equals('Left the room, drank water.'));
+      expect(saved.investigationAnswers, equals({'q1': 'answer 1'}));
+      expect(saved.aiReflection, equals('Historical AI clinical reflection note.'));
+      expect(saved.suggestedJourneyActivityId, equals('act_breathing_01'));
+      expect(saved.journalText, equals('Historical personal journal reflection that must not be deleted.'));
+      expect(saved.voiceNotePath, equals('voice/historical_memo.m4a'));
+      expect(saved.dynamicAnswers['q_env'], equals('Office environment'));
     });
   });
 }

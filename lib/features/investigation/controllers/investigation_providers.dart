@@ -26,6 +26,9 @@ const String kPublicGeminiApiKey = String.fromEnvironment(
   defaultValue: 'DEV_MOCK_GEMINI_KEY',
 );
 
+/// Sentinel key representing development mock mode.
+const String kDevMockGeminiKey = 'DEV_MOCK_GEMINI_KEY';
+
 /// Configuration state for the AI Investigator Engine.
 class AiConfigState {
   const AiConfigState({
@@ -38,7 +41,9 @@ class AiConfigState {
   final bool useLiveAi;
   final String modelName;
 
-  bool get isLiveActive => useLiveAi && apiKey.trim().isNotEmpty;
+  bool get isMockKey => apiKey.trim() == kDevMockGeminiKey;
+
+  bool get isLiveActive => useLiveAi && apiKey.trim().isNotEmpty && !isMockKey;
 }
 
 class AiConfigNotifier extends Notifier<AiConfigState> {

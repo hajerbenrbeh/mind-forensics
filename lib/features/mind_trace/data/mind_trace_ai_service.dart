@@ -22,6 +22,8 @@ class MindTraceAiService {
     this.modelName = 'gemini-3.1-flash-lite',
   });
 
+  static const String kDevMockKey = 'DEV_MOCK_GEMINI_KEY';
+
   final String? apiKey;
   final String modelName;
 
@@ -50,7 +52,7 @@ class MindTraceAiService {
 
     final cleanKey = apiKey?.trim() ?? '';
 
-    if (cleanKey.isNotEmpty) {
+    if (cleanKey.isNotEmpty && cleanKey != kDevMockKey) {
       final geminiResult = await _callGeminiReflection(
         apiKey: cleanKey,
         currentTrace: currentTrace,
@@ -79,6 +81,8 @@ class MindTraceAiService {
     required PsychologicalProfileModel? profile,
     required String languageCode,
   }) async {
+    final cleanKey = apiKey.trim();
+    if (cleanKey.isEmpty || cleanKey == kDevMockKey) return null;
     // Defense-in-depth consent check
     final hasConsent = profile != null &&
         profile.shareWithAiCompanion &&

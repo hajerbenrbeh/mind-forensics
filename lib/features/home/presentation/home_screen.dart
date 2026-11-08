@@ -21,7 +21,7 @@ import '../../investigation/domain/case_stage.dart';
 import '../../mind_trace/controllers/mind_trace_controller.dart';
 import '../../mind_trace/domain/mind_trace_model.dart';
 import '../../profile/controllers/profile_controller.dart';
-import 'widgets/exercise_breathing_modal_sheet.dart';
+import '../../support/presentation/contextual_support_sheet.dart';
 import 'widgets/home_metric_sparkline.dart';
 import 'widgets/home_organic_exercise_art.dart';
 import 'widgets/home_stress_bar_chart.dart';
@@ -315,6 +315,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 const SizedBox(height: 24),
 
+                // 5b. CONTEXTUAL SUPPORT ENTRY POINT ("What would help right now?")
+                _buildContextualSupportCard(tokens, strings, isDark),
+
+                const SizedBox(height: 24),
+
                 // 6. STEP 6: DAILY CHECK-IN & NOTE (20px radius, Unified with Mind Trace)
                 _buildDailyCheckInCard(tokens, strings, isDark, todayTrace, traces),
 
@@ -589,7 +594,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         BouncingWidget(
           onTap: () {
             HapticFeedback.mediumImpact();
-            ExerciseBreathingModalSheet.show(context, strings);
+            ContextualSupportSheet.show(
+              context,
+              initialChoice: SupportChoice.settle,
+            );
           },
           child: Container(
             padding: const EdgeInsets.all(16),
@@ -665,6 +673,173 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildContextualSupportCard(
+    MindTokens tokens,
+    AppStrings strings,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(color: tokens.border, width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => ContextualSupportSheet.show(context),
+            borderRadius: BorderRadius.circular(12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: LabColors.sageGreen.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.spa_outlined,
+                    size: 18,
+                    color: LabColors.sageGreen,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        strings.homeSupportCardTitle,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: tokens.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        strings.homeSupportCardSub,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: tokens.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: tokens.textSecondary,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildSupportPill(
+                  label: strings.needSettleTitle,
+                  icon: Icons.air_rounded,
+                  tokens: tokens,
+                  onTap: () => ContextualSupportSheet.show(
+                    context,
+                    initialChoice: SupportChoice.settle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildSupportPill(
+                  label: strings.needThoughtsTitle,
+                  icon: Icons.psychology_outlined,
+                  tokens: tokens,
+                  onTap: () => ContextualSupportSheet.show(
+                    context,
+                    initialChoice: SupportChoice.thoughts,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildSupportPill(
+                  label: strings.needActionTitle,
+                  icon: Icons.timer_outlined,
+                  tokens: tokens,
+                  onTap: () => ContextualSupportSheet.show(
+                    context,
+                    initialChoice: SupportChoice.action,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildSupportPill(
+                  label: strings.needRoutineTitle,
+                  icon: Icons.anchor_rounded,
+                  tokens: tokens,
+                  onTap: () => ContextualSupportSheet.show(
+                    context,
+                    initialChoice: SupportChoice.routine,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _buildSupportPill(
+                  label: strings.needExploreTitle,
+                  icon: Icons.explore_outlined,
+                  tokens: tokens,
+                  onTap: () => context.go('/observatory'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSupportPill({
+    required String label,
+    required IconData icon,
+    required MindTokens tokens,
+    required VoidCallback onTap,
+  }) {
+    return BouncingWidget(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: tokens.surfaceSecondary,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: tokens.border, width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 13, color: tokens.textSecondary),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: tokens.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

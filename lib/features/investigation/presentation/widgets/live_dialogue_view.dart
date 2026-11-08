@@ -12,6 +12,7 @@ import '../../../journal/controllers/journal_memory_controller.dart';
 import '../../../journey/controllers/journey_controller.dart';
 import '../../../mind_trace/controllers/mind_trace_controller.dart';
 import '../../../profile/controllers/profile_controller.dart';
+import '../../../support/presentation/contextual_support_sheet.dart';
 import '../../controllers/investigation_providers.dart';
 import '../../domain/case_model.dart';
 import '../../domain/conversation_mode.dart';
@@ -525,9 +526,15 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  if (statements.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Flexible(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (statements.isNotEmpty) ...[
                     TextButton.icon(
                       style: TextButton.styleFrom(
                         foregroundColor: textSecondary,
@@ -597,9 +604,11 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
+      ),
+    ),
 
         // Conversation Modes Selector Bar
         _buildConversationModesBar(isDark, borderColor, surfaceColor, textPrimary, textSecondary, strings),
@@ -929,24 +938,37 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     return Container(
       height: 38,
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: ListView.separated(
+      child: ListView(
         scrollDirection: Axis.horizontal,
-        itemCount: pills.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 6),
-        itemBuilder: (context, index) {
-          final pill = pills[index];
-          return ActionChip(
+        children: [
+          ActionChip(
             backgroundColor: surfaceColor,
-            side: BorderSide(color: borderColor, width: 1),
+            side: BorderSide(color: LabColors.sageGreen.withValues(alpha: 0.5), width: 1),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+            avatar: const Icon(Icons.spa_outlined, size: 13, color: LabColors.sageGreen),
             label: Text(
-              pill,
-              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: textSecondary),
+              strings.needPracticalSupportNow,
+              style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: LabColors.sageGreen),
             ),
-            onPressed: () => _sendMessage(pill),
-          );
-        },
+            onPressed: () => ContextualSupportSheet.show(context),
+          ),
+          const SizedBox(width: 6),
+          ...pills.map((pill) => Padding(
+            padding: const EdgeInsetsDirectional.only(end: 6),
+            child: ActionChip(
+              backgroundColor: surfaceColor,
+              side: BorderSide(color: borderColor, width: 1),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+              label: Text(
+                pill,
+                style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: textSecondary),
+              ),
+              onPressed: () => _sendMessage(pill),
+            ),
+          )),
+        ],
       ),
     );
   }
