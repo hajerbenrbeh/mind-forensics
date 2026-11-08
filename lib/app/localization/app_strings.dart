@@ -506,7 +506,7 @@ class AppStrings {
           ? 'Connectez votre clé Gemini gratuite pour l’analyse directe ou utilisez le simulateur local (\$0.00)'
           : 'Connect your free Gemini API key for live analysis or use the local simulator (\$0.00)');
   String get liveGeminiActiveBadge => isArabic ? 'GEMINI FLASH مباشر' : (isFrench ? 'GEMINI FLASH ACTIF' : 'LIVE GEMINI FLASH');
-  String get offlineMockActiveBadge => isArabic ? 'محاكي محلي (\$0.00)' : (isFrench ? 'SIMULATEUR LOCAL (\$0.00)' : 'LOCAL OFFLINE MOCK (\$0.00)');
+  String get offlineMockActiveBadge => isArabic ? 'محاكي محلي' : (isFrench ? 'MOCK LOCAL' : 'OFFLINE MOCK');
   String get geminiApiKeyLabel => isArabic ? 'مفتاح Gemini API (Google AI Studio)' : (isFrench ? 'Clé API Gemini (Google AI Studio)' : 'Gemini API Key (Google AI Studio)');
   String get geminiApiKeyHint => isArabic ? 'الصق المفتاح AIzaSy... أو AQ...' : (isFrench ? 'Collez votre clé API...' : 'Paste your API key');
   String get getFreeKeyLink => isArabic

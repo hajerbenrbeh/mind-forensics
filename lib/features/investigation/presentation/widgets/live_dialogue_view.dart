@@ -20,6 +20,7 @@ import '../../domain/conversation_mode.dart';
 import '../../domain/label_type.dart';
 import '../../domain/session_memory_window.dart';
 import '../../domain/statement.dart';
+import 'ai_engine_config_sheet.dart';
 import 'custom_ai_instructions_sheet.dart';
 
 /// Direct Interactive Conversation with "The Warm Investigator" AI.
@@ -504,28 +505,46 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
           ),
           child: Row(
             children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isLive ? LabColors.sageGreenGlow : LabColors.warmBeige,
+              Flexible(
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    AiEngineConfigSheet.show(context);
+                  },
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isLive ? LabColors.sageGreenGlow : LabColors.warmBeige,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            isLive ? strings.liveGeminiActiveBadge : strings.offlineMockActiveBadge,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                              color: isLive ? LabColors.sageGreenGlow : LabColors.warmBeige,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Icon(Icons.tune_rounded, size: 10, color: isLive ? LabColors.sageGreenGlow : LabColors.warmBeige),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    isLive ? strings.liveGeminiActiveBadge : strings.offlineMockActiveBadge,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.3,
-                      color: isLive ? LabColors.sageGreenGlow : LabColors.warmBeige,
-                    ),
-                  ),
-                ],
+                ),
               ),
               const SizedBox(width: 6),
               Expanded(

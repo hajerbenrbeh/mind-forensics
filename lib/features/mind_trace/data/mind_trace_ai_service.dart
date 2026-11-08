@@ -19,7 +19,7 @@ import '../domain/mind_trace_model.dart';
 class MindTraceAiService {
   MindTraceAiService({
     this.apiKey,
-    this.modelName = 'gemini-3.1-flash-lite',
+    this.modelName = 'gemini-2.0-flash',
   });
 
   static const String kDevMockKey = 'DEV_MOCK_GEMINI_KEY';

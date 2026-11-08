@@ -13,8 +13,10 @@ import '../../../core/widgets/botanical_emblem.dart';
 import '../../../core/widgets/mind_button.dart';
 import '../../../core/widgets/mind_card.dart';
 import '../../auth/controllers/auth_controller.dart';
+import '../../backup/data/unified_backup_service.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/data/cloud_sync_service.dart';
+import '../../investigation/presentation/widgets/ai_engine_config_sheet.dart';
 import '../../profile/controllers/profile_controller.dart';
 import '../../profile/presentation/psychological_profile_screen.dart';
 import '../../journal/presentation/widgets/journal_memory_sheet.dart';
@@ -401,6 +403,62 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         const SizedBox(height: 2),
                         Text(
                           'Manage clinical profile and preferences',
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 22,
+                    color: textSecondary,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            MindCard(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                AiEngineConfigSheet.show(context);
+              },
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF2B281B) : const Color(0xFFF7F2E7),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.auto_awesome,
+                      size: 20,
+                      color: isDark ? LabColors.champagneGold : const Color(0xFF8A6A23),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Mind Assistant Engine',
+                          style: TextStyle(
+                            fontFamily: 'serif',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Gemini live AI & test mode diagnostics',
                           style: TextStyle(
                             fontSize: 11.5,
                             color: textSecondary,
@@ -917,8 +975,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             const SizedBox(height: 24),
 
-            // Section 6: Cloud Sync (Firebase Spark Plan)
-            _sectionLabel(strings.cloudSyncTitle.toUpperCase(), textSecondary),
+            // Section 6: Data Backup & Cloud Synchronization
+            _sectionLabel(strings.isArabic ? 'النسخ الاحتياطي والمزامنة السحابية' : 'DATA BACKUP & CLOUD RESTORATION', textSecondary),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -951,7 +1009,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     border: Border.all(color: (isDark ? LabColors.nightAccent : LabColors.daylightAccent).withValues(alpha: 0.3)),
                                   ),
                                   child: Text(
-                                    strings.sparkPlanBadge,
+                                    'SPARK & LOCAL',
                                     style: TextStyle(
                                       fontSize: 8.5,
                                       fontWeight: FontWeight.w800,
@@ -985,39 +1043,101 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark ? LabColors.nightSurfaceElevated : LabColors.daylightSurfaceSubtle,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.shield_outlined, size: 14, color: isDark ? LabColors.sageGreenGlow : LabColors.forestGreen),
+                            const SizedBox(width: 6),
+                            Text(
+                              'LOCAL SOVEREIGN STORAGE: ACTIVE',
+                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.4, color: isDark ? LabColors.sageGreenGlow : LabColors.forestGreen),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'All mood logs, reflection sessions, and clinical profiles are securely stored on this device. Cloud sync activates automatically when Firebase credentials (google-services.json) are provided.',
+                          style: TextStyle(fontSize: 11, color: textSecondary, height: 1.35),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   Divider(height: 1, color: borderColor),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: textPrimary,
-                        side: BorderSide(color: borderColor, width: 1),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: textPrimary,
+                            side: BorderSide(color: borderColor, width: 1),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
+                          icon: const Icon(Icons.backup_outlined, size: 15),
+                          label: const Text(
+                            'BACKUP NOW',
+                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.4),
+                          ),
+                          onPressed: () async {
+                            HapticFeedback.mediumImpact();
+                            final result = await ref.read(unifiedBackupServiceProvider).createFullBackup();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Backup complete: ${result.tracesCount} traces, ${result.sessionsCount} sessions, ${result.memoriesCount} memories preserved.'),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          },
+                        ),
                       ),
-                      icon: const Icon(Icons.file_download_outlined, size: 16),
-                      label: Text(
-                        strings.exportVaultBtn.toUpperCase(),
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.4),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: textPrimary,
+                            side: BorderSide(color: borderColor, width: 1),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                          ),
+                          icon: const Icon(Icons.file_download_outlined, size: 15),
+                          label: Text(
+                            strings.exportVaultBtn.toUpperCase(),
+                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.4),
+                          ),
+                          onPressed: () async {
+                            HapticFeedback.lightImpact();
+                            final result = await ref.read(unifiedBackupServiceProvider).createFullBackup();
+                            if (result.rawJson != null) {
+                              Clipboard.setData(ClipboardData(text: result.rawJson!));
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(strings.exportVaultSuccess),
+                                    duration: const Duration(seconds: 2),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                        ),
                       ),
-                      onPressed: () async {
-                        HapticFeedback.lightImpact();
-                        final repo = ref.read(caseRepositoryProvider);
-                        final allCases = await repo.getAllCases();
-                        final json = ref.read(cloudSyncServiceProvider).exportBackupJson(allCases);
-                        Clipboard.setData(ClipboardData(text: json));
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(strings.exportVaultSuccess),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      },
-                    ),
+                    ],
                   ),
                 ],
               ),

@@ -34,20 +34,33 @@ class AiConfigState {
   const AiConfigState({
     this.apiKey = kPublicGeminiApiKey,
     this.useLiveAi = true,
-    this.modelName = 'gemini-3.1-flash-lite',
+    this.modelName = 'gemini-2.0-flash',
   });
 
   final String apiKey;
   final bool useLiveAi;
   final String modelName;
 
-  bool get isMockKey => apiKey.trim() == kDevMockGeminiKey;
+  bool get isMockKey => apiKey.trim() == kDevMockGeminiKey || apiKey.trim().isEmpty;
 
   bool get isLiveActive => useLiveAi && apiKey.trim().isNotEmpty && !isMockKey;
+
+  AiConfigState copyWith({
+    String? apiKey,
+    bool? useLiveAi,
+    String? modelName,
+  }) {
+    return AiConfigState(
+      apiKey: apiKey ?? this.apiKey,
+      useLiveAi: useLiveAi ?? this.useLiveAi,
+      modelName: modelName ?? this.modelName,
+    );
+  }
 }
 
 class AiConfigNotifier extends Notifier<AiConfigState> {
   static const String _prefUseLive = 'mf_use_live_gemini';
+  static const String _prefApiKey = 'mf_gemini_api_key';
 
   @override
   AiConfigState build() {
@@ -57,37 +70,41 @@ class AiConfigNotifier extends Notifier<AiConfigState> {
 
   Future<void> _loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    // Guarantee live AI mode is active out-of-the-box with the public key.
-    // Overwrite any legacy disabled preference so live Gemini is always active.
-    if (prefs.containsKey(_prefUseLive) && !(prefs.getBool(_prefUseLive) ?? true)) {
-      await prefs.setBool(_prefUseLive, true);
-    }
-    state = const AiConfigState(
-      apiKey: kPublicGeminiApiKey,
-      useLiveAi: true,
-      modelName: 'gemini-3.1-flash-lite',
+    final savedKey = prefs.getString(_prefApiKey)?.trim();
+    final effectiveKey = (savedKey != null && savedKey.isNotEmpty)
+        ? savedKey
+        : kPublicGeminiApiKey;
+    final useLive = prefs.getBool(_prefUseLive) ?? true;
+    state = AiConfigState(
+      apiKey: effectiveKey,
+      useLiveAi: useLive,
+      modelName: 'gemini-2.0-flash',
     );
   }
 
   Future<void> toggleLiveMode(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_prefUseLive, enabled);
-    state = AiConfigState(
-      apiKey: kPublicGeminiApiKey,
-      useLiveAi: enabled,
-    );
+    state = state.copyWith(useLiveAi: enabled);
   }
 
   Future<void> setApiKey(String key) async {
-    // Kept for backward-compatibility if invoked programmatically
-    state = AiConfigState(
-      apiKey: key.trim().isNotEmpty ? key.trim() : kPublicGeminiApiKey,
+    final prefs = await SharedPreferences.getInstance();
+    final clean = key.trim();
+    if (clean.isNotEmpty && clean != kDevMockGeminiKey) {
+      await prefs.setString(_prefApiKey, clean);
+    } else {
+      await prefs.remove(_prefApiKey);
+    }
+    state = state.copyWith(
+      apiKey: clean.isNotEmpty ? clean : kPublicGeminiApiKey,
       useLiveAi: true,
     );
   }
 
   Future<void> clearApiKey() async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_prefApiKey);
     await prefs.setBool(_prefUseLive, false);
     state = const AiConfigState(
       apiKey: '',

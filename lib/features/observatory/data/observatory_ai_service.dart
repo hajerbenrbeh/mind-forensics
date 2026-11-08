@@ -15,7 +15,7 @@ import '../domain/symptom_entry.dart';
 class ObservatoryAiService {
   ObservatoryAiService({
     this.apiKey,
-    this.modelName = 'gemini-3.1-flash-lite',
+    this.modelName = 'gemini-2.0-flash',
   });
 
   static const String kDevMockKey = 'DEV_MOCK_GEMINI_KEY';

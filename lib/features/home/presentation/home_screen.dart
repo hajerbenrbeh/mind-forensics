@@ -413,6 +413,61 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 ),
 
+                if (profile?.isMinor == true) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: LabColors.sageGreenGlow.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: LabColors.sageGreenGlow.withValues(alpha: 0.25)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.shield_outlined, size: 13, color: LabColors.sageGreenGlow),
+                        const SizedBox(width: 6),
+                        Text(
+                          strings.isArabic ? 'مساحة استبصار آمنة • خطوط الطوارئ متاحة' : 'Safe reflection space • Helplines available',
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: LabColors.sageGreenGlow),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (profile != null && (profile.selectedGoals.isNotEmpty || profile.personalGoals.isNotEmpty)) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.flag_outlined, size: 13, color: LabColors.champagneGold),
+                            const SizedBox(width: 6),
+                            Text(
+                              profile.selectedGoals.isNotEmpty
+                                  ? profile.selectedGoals.first
+                                  : profile.personalGoals.split(', ').first,
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                                color: tokens.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
                 const SizedBox(height: 18),
 
                 // 2. MASTER PHASE CARD (Phone 2 reference: "Your current phase: Balanced")

@@ -21,6 +21,7 @@ class AuthController extends Notifier<AuthState> {
       final user = await _service.getCurrentUser();
       final onboardingDone = await _service.hasCompletedOnboarding();
 
+      if (!ref.mounted) return;
       if (user != null) {
         state = AuthState(
           status: AuthStatus.authenticated,
@@ -35,6 +36,7 @@ class AuthController extends Notifier<AuthState> {
         );
       }
     } catch (e) {
+      if (!ref.mounted) return;
       state = AuthState(
         status: AuthStatus.unauthenticated,
         errorMessage: e.toString(),
