@@ -30,8 +30,10 @@ class LocalMindTraceRepository implements MindTraceRepository {
     final prefs = await SharedPreferences.getInstance();
     var raw = prefs.getString(_storageKey);
 
-    // Fallback check to legacy key if user-specific key is fresh
-    if ((raw == null || raw.isEmpty) && _storageKey != _legacyStorageKey) {
+    // Fallback check to legacy key ONLY if user is anonymous or local default
+    if ((raw == null || raw.isEmpty) &&
+        _storageKey != _legacyStorageKey &&
+        (userId == null || userId == 'local_user')) {
       raw = prefs.getString(_legacyStorageKey);
     }
 

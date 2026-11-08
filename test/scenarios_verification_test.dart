@@ -298,5 +298,120 @@ void main() {
       expect(aliceTracesReloaded.first.moodIntensity, equals(9));
       container.dispose();
     });
+
+    test('TEST F: Password security — Credentials stored with salted SHA-256 and never in plaintext', () async {
+      final mockStore = <String, Object>{};
+      SharedPreferences.setMockInitialValues(mockStore);
+      final service = AuthService();
+
+      await service.signUpWithEmail('secure@example.com', 'SuperSecret99!');
+
+      final prefs = await SharedPreferences.getInstance();
+      final credsRaw = prefs.getString('mf_auth_user_credentials') ?? '{}';
+      final Map<String, dynamic> creds = jsonDecode(credsRaw);
+
+      // Verify the plaintext password was never stored
+      expect(creds['secure@example.com'], isNot(equals('SuperSecret99!')));
+      expect(creds['secure@example.com'], contains(':')); // Salt:Hash format
+
+      // Verify successful sign in using the salted hash
+      final user = await service.signInWithEmail('secure@example.com', 'SuperSecret99!');
+      expect(user.email, equals('secure@example.com'));
+
+      // Verify failure on wrong password
+      expect(
+        () => service.signInWithEmail('secure@example.com', 'WrongPassword!'),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('TEST G: Account deletion — Purges user-specific data partitions from storage', () async {
+      SharedPreferences.setMockInitialValues({});
+      final service = AuthService();
+
+      final user = await service.signUpWithEmail('charlie@example.com', 'Password123!');
+      final uid = user.id;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('mf_mind_traces_$uid', jsonEncode([{'id': 'trace_charlie'}]));
+      await prefs.setString('mind_forensics_cases_$uid', jsonEncode([{'id': 'case_charlie'}]));
+
+      expect(prefs.containsKey('mf_mind_traces_$uid'), isTrue);
+      expect(prefs.containsKey('mind_forensics_cases_$uid'), isTrue);
+
+      // Delete account
+      await service.deleteAccount();
+
+      // Verify user partitions were completely purged
+      expect(prefs.containsKey('mf_mind_traces_$uid'), isFalse);
+      expect(prefs.containsKey('mind_forensics_cases_$uid'), isFalse);
+      expect(await service.getCurrentUser(), isNull);
+    });
+
+    test('TEST H: Backup restoration — Schema version rejection and non-destructive deduplication', () async {
+      SharedPreferences.setMockInitialValues({});
+      final container = ProviderContainer();
+      final backupService = container.read(unifiedBackupServiceProvider);
+      final traceRepo = container.read(mindTraceRepositoryProvider);
+
+      // Seed an existing local trace
+      final now = DateTime.now();
+      await traceRepo.saveTrace(
+        MindTraceModel(
+          id: 'existing_trace_01',
+          date: now,
+          overallMood: 'peaceful',
+          moodIntensity: 8,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      // 1. Incompatible major schema version is rejected safely
+      final incompatibleBackup = jsonEncode({
+        'app': 'Mind Forensics',
+        'schemaVersion': '9.0.0',
+        'traces': [],
+      });
+      final resIncompatible = await backupService.restoreFromBackupJson(incompatibleBackup);
+      expect(resIncompatible.success, isFalse);
+      expect(resIncompatible.message, contains('Unsupported backup schema version'));
+
+      // 2. Valid backup with duplicate trace and new trace from yesterday
+      final yesterday = now.subtract(const Duration(days: 1));
+      final validBackup = jsonEncode({
+        'app': 'Mind Forensics',
+        'schemaVersion': '2.0.0',
+        'traces': [
+          {
+            'id': 'existing_trace_01', // Duplicate ID
+            'date': now.toIso8601String(),
+            'overallMood': 'overwrite_attempt',
+            'moodIntensity': 1,
+            'createdAt': now.toIso8601String(),
+            'updatedAt': now.toIso8601String(),
+          },
+          {
+            'id': 'new_incoming_trace_02', // New ID and distinct date
+            'date': yesterday.toIso8601String(),
+            'overallMood': 'calm',
+            'moodIntensity': 7,
+            'createdAt': yesterday.toIso8601String(),
+            'updatedAt': yesterday.toIso8601String(),
+          },
+        ],
+      });
+
+      final resValid = await backupService.restoreFromBackupJson(validBackup);
+      expect(resValid.success, isTrue);
+      expect(resValid.tracesCount, equals(1)); // Only the 1 new non-duplicate trace was inserted
+
+      final allTraces = await traceRepo.getAllTraces();
+      expect(allTraces.length, equals(2));
+      final original = allTraces.firstWhere((t) => t.id == 'existing_trace_01');
+      expect(original.overallMood, equals('peaceful')); // Preserved original value, NOT overwritten
+
+      container.dispose();
+    });
   });
 }

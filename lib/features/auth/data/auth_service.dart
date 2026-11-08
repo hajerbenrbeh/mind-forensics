@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -13,9 +14,9 @@ final authServiceProvider = Provider<AuthService>((ref) {
 /// Offline-first Sovereign Authentication Service for Mind Forensics.
 ///
 /// Features:
-/// - Anonymous Sovereign Vault generation (Zero-trace, offline encrypted)
-/// - Email & Password authentication with local credential vault
-/// - Seamless upgrade from Anonymous to Cloud-Linked Vault without data loss
+/// - Anonymous Sovereign Account generation (Zero-trace, offline storage)
+/// - Email & Password authentication with salted SHA-256 password hashing
+/// - Seamless upgrade from Anonymous to Cloud-Linked Account without data loss
 /// - Onboarding state tracking
 class AuthService {
   static const String _keyCurrentUser = 'mf_auth_current_user';
@@ -24,6 +25,23 @@ class AuthService {
   static const String _keyOnboardingDone = 'mf_onboarding_completed';
 
   final Uuid _uuid = const Uuid();
+
+  /// Computes salted SHA-256 hash for secure credential storage.
+  static String _hashPassword(String password, String salt) {
+    final bytes = utf8.encode('$salt:$password');
+    return sha256.convert(bytes).toString();
+  }
+
+  /// Verifies password against stored salted hash with legacy migration support.
+  static bool _verifyPassword(String password, String storedRecord) {
+    if (!storedRecord.contains(':')) {
+      return storedRecord == password;
+    }
+    final colonIndex = storedRecord.indexOf(':');
+    final salt = storedRecord.substring(0, colonIndex);
+    final expectedHash = storedRecord.substring(colonIndex + 1);
+    return _hashPassword(password, salt) == expectedHash;
+  }
 
   /// Generates a randomized default user alias.
   String generateDefaultCodename() {
@@ -55,7 +73,7 @@ class AuthService {
     await prefs.setBool(_keyOnboardingDone, completed);
   }
 
-  /// Creates a completely private Anonymous Sovereign Vault.
+  /// Creates a completely private Anonymous Sovereign Account.
   Future<AuthUser> createAnonymousVault({String? codename}) async {
     final prefs = await SharedPreferences.getInstance();
     final user = AuthUser(
@@ -73,7 +91,7 @@ class AuthService {
     return user;
   }
 
-  /// Signs up with email and password, creating a Cloud-Synced Vault.
+  /// Signs up with email and password, creating a Cloud-Synced Account with salted hash.
   Future<AuthUser> signUpWithEmail(
     String email,
     String password, {
@@ -94,11 +112,13 @@ class AuthService {
     final Map<String, dynamic> credentials = json.decode(credsRaw);
 
     if (credentials.containsKey(cleanEmail)) {
-      throw const FormatException('A vault with this email already exists.');
+      throw const FormatException('An account with this email already exists.');
     }
 
-    // Save credentials (simulated password store)
-    credentials[cleanEmail] = cleanPassword;
+    // Save salted hash instead of plaintext
+    final salt = _uuid.v4();
+    final hash = _hashPassword(cleanPassword, salt);
+    credentials[cleanEmail] = '$salt:$hash';
     await prefs.setString(_keyUserCredentials, json.encode(credentials));
 
     final user = AuthUser(
@@ -123,7 +143,7 @@ class AuthService {
     return user;
   }
 
-  /// Signs in to an existing Cloud Vault with email and password.
+  /// Signs in to an existing Account with email and password verification.
   Future<AuthUser> signInWithEmail(String email, String password) async {
     final cleanEmail = email.trim().toLowerCase();
     final cleanPassword = password.trim();
@@ -133,7 +153,7 @@ class AuthService {
     final Map<String, dynamic> credentials = json.decode(credsRaw);
 
     if (!credentials.containsKey(cleanEmail) ||
-        credentials[cleanEmail] != cleanPassword) {
+        !_verifyPassword(cleanPassword, credentials[cleanEmail].toString())) {
       throw const FormatException('Invalid email or password.');
     }
 
@@ -141,7 +161,7 @@ class AuthService {
     final Map<String, dynamic> users = json.decode(usersRaw);
 
     if (!users.containsKey(cleanEmail)) {
-      throw const FormatException('Vault profile not found.');
+      throw const FormatException('Account profile not found.');
     }
 
     final userMap = Map<String, dynamic>.from(users[cleanEmail] as Map);
@@ -153,7 +173,7 @@ class AuthService {
     return user;
   }
 
-  /// Upgrades an anonymous user to an email-secured vault without losing any data.
+  /// Upgrades an anonymous user to an email-secured account without losing any data.
   Future<AuthUser> linkEmailToAnonymous(
     String email,
     String password, {
@@ -175,11 +195,13 @@ class AuthService {
     final Map<String, dynamic> credentials = json.decode(credsRaw);
 
     if (credentials.containsKey(cleanEmail)) {
-      throw const FormatException('A vault with this email already exists.');
+      throw const FormatException('An account with this email already exists.');
     }
 
-    // Save credentials
-    credentials[cleanEmail] = cleanPassword;
+    // Save salted hash
+    final salt = _uuid.v4();
+    final hash = _hashPassword(cleanPassword, salt);
+    credentials[cleanEmail] = '$salt:$hash';
     await prefs.setString(_keyUserCredentials, json.encode(credentials));
 
     final updatedUser = (current ??
@@ -213,7 +235,7 @@ class AuthService {
     await prefs.remove(_keyCurrentUser);
   }
 
-  /// Permanently deletes the active user vault and credentials.
+  /// Permanently deletes the active user account, credentials, and data partitions.
   Future<void> deleteAccount() async {
     final current = await getCurrentUser();
     final prefs = await SharedPreferences.getInstance();
@@ -228,6 +250,15 @@ class AuthService {
       final Map<String, dynamic> users = json.decode(usersRaw);
       users.remove(current.email);
       await prefs.setString(_keyRegisteredUsers, json.encode(users));
+    }
+
+    if (current != null) {
+      final uid = current.id;
+      await prefs.remove('mind_forensics_cases_$uid');
+      await prefs.remove('mf_mind_traces_$uid');
+      await prefs.remove('mf_profile_$uid');
+      await prefs.remove('mf_journal_memories_$uid');
+      await prefs.remove('mf_journey_state_$uid');
     }
 
     await prefs.remove(_keyCurrentUser);

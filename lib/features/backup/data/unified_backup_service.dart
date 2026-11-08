@@ -167,48 +167,69 @@ class UnifiedBackupService {
         );
       }
 
+      final schema = data['schemaVersion']?.toString() ?? '1.0.0';
+      final majorVersion = int.tryParse(schema.split('.').first) ?? 1;
+      if (majorVersion > 2) {
+        return BackupOperationResult(
+          success: false,
+          message: 'Unsupported backup schema version ($schema). Please update Mind Forensics.',
+        );
+      }
+
       int restoredTraces = 0;
       int restoredSessions = 0;
       int restoredMemories = 0;
 
-      // 1. Restore Mind Traces
+      // 1. Restore Mind Traces (deduplicated by ID)
       if (data['traces'] is List) {
         final traceRepo = _ref.read(mindTraceRepositoryProvider);
+        final existingTraces = await traceRepo.getAllTraces();
+        final existingIds = existingTraces.map((t) => t.id).toSet();
         final rawTraces = (data['traces'] as List).whereType<Map<String, dynamic>>();
         for (final item in rawTraces) {
           try {
             final trace = MindTraceModel.fromJson(item);
-            await traceRepo.saveTrace(trace);
-            restoredTraces++;
+            if (!existingIds.contains(trace.id)) {
+              await traceRepo.saveTrace(trace);
+              restoredTraces++;
+            }
           } catch (_) {}
         }
         _ref.invalidate(mindTraceControllerProvider);
       }
 
-      // 2. Restore Sessions / Cases
+      // 2. Restore Sessions / Cases (deduplicated by ID)
       if (data['sessions'] is List) {
         final caseRepo = _ref.read(caseRepositoryProvider);
+        final existingCases = await caseRepo.getAllCases();
+        final existingIds = existingCases.map((c) => c.id).toSet();
         final rawCases = (data['sessions'] as List).whereType<Map<String, dynamic>>();
         for (final item in rawCases) {
           try {
             final caseModel = CaseModel.fromJson(item);
-            await caseRepo.saveCase(caseModel);
-            restoredSessions++;
+            if (!existingIds.contains(caseModel.id)) {
+              await caseRepo.saveCase(caseModel);
+              restoredSessions++;
+            }
           } catch (_) {}
         }
         _ref.invalidate(savedCasesProvider);
         _ref.invalidate(activeCaseControllerProvider);
       }
 
-      // 3. Restore Journal Memories
+      // 3. Restore Journal Memories (deduplicated by ID)
       if (data['memories'] is List) {
         final memoryRepo = _ref.read(journalMemoryRepositoryProvider);
+        final existingMemories = await memoryRepo.getAllMemories();
+        final existingIds = existingMemories.map((m) => m.id).toSet();
         final rawMemories = (data['memories'] as List).whereType<Map<String, dynamic>>();
         for (final item in rawMemories) {
           try {
             final memory = JournalMemoryModel.fromJson(item);
-            await memoryRepo.saveMemory(memory);
-            restoredMemories++;
+            if (!existingIds.contains(memory.id)) {
+              await memoryRepo.saveMemory(memory);
+              restoredMemories++;
+            }
           } catch (_) {}
         }
         _ref.invalidate(journalMemoryControllerProvider);

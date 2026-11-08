@@ -39,8 +39,10 @@ class LocalCaseRepository implements CaseRepository {
     final prefs = await SharedPreferences.getInstance();
     String? rawJson = prefs.getString(_storageKey);
 
-    // Backward-compatibility: fallback to legacy key if user-specific key is empty
-    if ((rawJson == null || rawJson.isEmpty) && _storageKey != _legacyKeyCases) {
+    // Backward-compatibility: fallback to legacy key ONLY if user is anonymous or local default
+    if ((rawJson == null || rawJson.isEmpty) &&
+        _storageKey != _legacyKeyCases &&
+        (userId == null || userId == 'local_user')) {
       rawJson = prefs.getString(_legacyKeyCases);
     }
 

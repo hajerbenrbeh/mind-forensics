@@ -282,10 +282,10 @@ class AppStrings {
   String get biometricFailedSnackbar => isArabic ? 'فشلت المصادقة البيومترية' : (isFrench ? 'Échec de l’authentification' : 'Biometric authentication failed');
   String get biometricNotAvailableSnackbar => isArabic ? 'البصمة غير متوفرة في هذا الجهاز' : (isFrench ? 'Biométrie non disponible' : 'Biometrics not available on this device');
   // Cloud Sync (Firebase Spark Plan - Step 11)
-  String get cloudSyncTitle => isArabic ? 'المزامنة السحابية (خطة Spark)' : (isFrench ? 'Synchronisation Cloud (Spark)' : 'Cloud Sync (Firebase Spark)');
+  String get cloudSyncTitle => isArabic ? 'النسخ الاحتياطي والمزامنة' : (isFrench ? 'Sauvegarde & Synchronisation' : 'Backup & Synchronization');
   String get cloudSyncDesc => isArabic 
-      ? 'نسخ احتياطي مشفر ومتوافق مع خطة Firebase Spark بدون فوترة (\$0.00)' 
-      : (isFrench ? 'Sauvegarde chiffrée sur forfait Spark sans facturation (\$0.00)' : 'Encrypted backup on Firebase Spark plan with zero billing linked (\$0.00)');
+      ? 'نسخ احتياطي محلي سيادي متوافق مع قيود الخصوصية والتكلفة (\$0.00)' 
+      : (isFrench ? 'Sauvegarde locale souveraine sans facturation (\$0.00)' : 'Local sovereign backup on device with zero billing linked (\$0.00)');
   String get exportVaultBtn => isArabic ? 'تصدير نسخة احتياطية (JSON)' : (isFrench ? 'Exporter la sauvegarde (JSON)' : 'Export Full Backup (JSON)');
   String get exportVaultSuccess => isArabic ? 'تم نسخ النسخة الاحتياطية إلى الحافظة' : (isFrench ? 'Sauvegarde complète copiée' : 'Full backup copied to clipboard');
   String get sparkPlanBadge => isArabic ? 'خطة SPARK المجانية (\$0.00)' : (isFrench ? 'FORFAIT SPARK (\$0.00)' : 'SPARK FREE TIER (\$0.00)');
@@ -295,10 +295,10 @@ class AppStrings {
   String get dataTransparencyTitle => isArabic ? 'بروتوكول حماية وسرية البيانات' : (isFrench ? 'CONFIDENTIALITÉ & SÉCURITÉ' : 'DATA PRIVACY PROTOCOL');
   String get privacyPrinciplesTitle => isArabic ? 'المعايير السريرية للخصوصية' : (isFrench ? 'Normes de Confidentialité Médicale' : 'Clinical Privacy Standards');
   String get privacyPrinciplesBody => isArabic
-      ? '1. تشفير تام لكافة الجلسات محلياً على هاتفك فقط.\n2. لا يتم بيع أو مشاركة أي معطى شخصي مع أطراف ثالثة.\n3. لا يتم تدريب نماذج الذكاء الاصطناعي على بياناتك الخاصة.\n4. استقلالية تامة وملكية مطلقة لكل فكرة تسجلها.'
+      ? '1. حفظ محلي سيادي لكافة الجلسات على هاتفك فقط دون إرسالها لسيرفرات خارجية.\n2. لا يتم بيع أو مشاركة أي معطى شخصي مع أطراف ثالثة.\n3. لا يتم تدريب نماذج الذكاء الاصطناعي على بياناتك الخاصة.\n4. استقلالية تامة وملكية مطلقة لكل فكرة تسجلها.'
       : (isFrench
-          ? '1. Chiffrement local intégral sur votre appareil.\n2. Aucune donnée n’est partagée, monétisée ou utilisée à des fins tierces.\n3. Vos pensées ne servent jamais à entraîner des modèles IA.\n4. Contrôle absolu et propriété totale de vos enregistrements cognitifs.'
-          : '1. Strict local device encryption for all sessions.\n2. Zero data monetization, sharing, or advertising tracking.\n3. Your private thoughts are never used for AI model training.\n4. Complete sovereignty and ownership over every logged record.');
+          ? '1. Stockage local souverain sur votre appareil sans transmission à des serveurs tiers.\n2. Aucune donnée n’est partagée, monétisée ou utilisée à des fins tierces.\n3. Vos pensées ne servent jamais à entraîner des modèles IA.\n4. Contrôle absolu et propriété totale de vos enregistrements cognitifs.'
+          : '1. Sovereign local on-device storage without transmission to third-party servers.\n2. Zero data monetization, sharing, or advertising tracking.\n3. Your private thoughts are never used for AI model training.\n4. Complete sovereignty and ownership over every logged record.');
   String get allDataWipedSnackbar => isArabic ? 'تم مسح كافة السجلات المعرفية بنجاح.' : (isFrench ? 'Toutes les données ont été purgées avec succès.' : 'All clinical session records permanently cleared.');
 
   // Deconstruction Workflow (Clinical Stages)
