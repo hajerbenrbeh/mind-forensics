@@ -18,7 +18,7 @@ class AppStrings {
   bool get isArabic => languageCode == 'ar';
   bool get isFrench => languageCode == 'fr';
 
-  // Navigation (5 Primary Destinations)
+  // Navigation (4 Primary Destinations: Home, Investigator, Toolkit, Profile)
   String get navHome => isArabic ? 'الرئيسية' : (isFrench ? 'Accueil' : 'Home');
   String get navTrack => isArabic ? 'تتبّع' : (isFrench ? 'Observer' : 'Track');
   String get navCompanion => isArabic ? 'الرفيق الذكي' : (isFrench ? 'Compagnon IA' : 'AI Companion');
@@ -34,12 +34,20 @@ class AppStrings {
   String get navSettings => navProfile;
   String get newInvestigation => isArabic ? 'تفكيك معرفي جديد' : (isFrench ? 'Nouveau Recadrage' : 'New Deconstruction');
 
+  // Memory Vault
+  String get memoryVaultTitle => isArabic ? 'خزينة الذاكرة' : (isFrench ? 'Coffre de mémoire' : 'Memory Vault');
+  String get memoryVaultDesc => isArabic
+      ? 'عرض ومراجعة المعلومات التي يتذكرها المساعد الذكي عنك'
+      : (isFrench ? 'Consulter et gérer les éléments mémorisés par le compagnon IA' : 'Review and manage what the AI companion remembers');
+
   // Track & Self-Observation Hub
   String get trackHubTitle => isArabic ? 'مساحة الملاحظة والتتبّع' : (isFrench ? 'Espace d’auto-observation' : 'Self-Observation & Tracking');
   String get trackHubSubtitle => isArabic ? 'سجل حالتك الشعورية، النوم، الطاقة، وأفكارك بكل سهولة' : (isFrench ? 'Observez vos émotions, sommeil, énergie et pensées sans friction' : 'Track mood, sleep, energy, thoughts, and symptoms with ease');
   String get quickCheckInTab => isArabic ? 'تسجيل سريع' : (isFrench ? 'Bilan rapide' : 'Quick Check-in');
   String get fullObservationTab => isArabic ? 'ملاحظة مفصلة' : (isFrench ? 'Observation complète' : 'Detailed Trace');
-  String get journalTab => isArabic ? 'اليوميات والسجل' : (isFrench ? 'Journal & Historique' : 'Journal & Archive');
+  String get traceHistoryTab => isArabic ? 'السجل الزمني' : (isFrench ? 'Historique' : 'Trace History');
+  String get historyTab => traceHistoryTab;
+  String get journalTab => traceHistoryTab;
   String get sleepTrackingLabel => isArabic ? 'ساعات النوم' : (isFrench ? 'Heures de sommeil' : 'Sleep Duration');
   String get energyTrackingLabel => isArabic ? 'مستوى الطاقة' : (isFrench ? 'Niveau d’énergie' : 'Energy Level');
   String get anxietyTrackingLabel => isArabic ? 'مستوى التوتر والقلق' : (isFrench ? 'Niveau d’anxiété / tension' : 'Stress & Anxiety');

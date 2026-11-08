@@ -1,3 +1,4 @@
+import '../../journal/domain/journal_memory_model.dart';
 import '../../journey/domain/journey_state_model.dart';
 import '../../mind_trace/domain/mind_trace_model.dart';
 import '../../profile/domain/psychological_profile_model.dart';
@@ -27,6 +28,9 @@ class MockInvestigatorService implements InvestigatorService {
     JourneyStateModel? journey,
     ConversationMode? conversationMode,
     MindTraceModel? latestTrace,
+    List<MindTraceModel>? historicalTraces,
+    List<JournalMemoryModel>? compressedMemories,
+    String? sessionSummary,
   }) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final lang = languageCode ?? 'en';
@@ -115,6 +119,7 @@ class MockInvestigatorService implements InvestigatorService {
   Future<List<Hypothesis>> generateHypotheses({
     required CaseModel currentCase,
     String? languageCode,
+    PsychologicalProfileModel? profile,
   }) async {
     await Future.delayed(const Duration(milliseconds: 500));
     final lang = languageCode ?? 'en';
@@ -199,6 +204,7 @@ class MockInvestigatorService implements InvestigatorService {
     required CaseModel currentCase,
     required Hypothesis hypothesis,
     String? languageCode,
+    PsychologicalProfileModel? profile,
   }) async {
     await Future.delayed(const Duration(milliseconds: 300));
     final lang = languageCode ?? 'en';
@@ -228,6 +234,7 @@ class MockInvestigatorService implements InvestigatorService {
   Future<String> summarizeFindings({
     required CaseModel currentCase,
     String? languageCode,
+    PsychologicalProfileModel? profile,
   }) async {
     await Future.delayed(const Duration(milliseconds: 400));
     final lang = languageCode ?? 'en';

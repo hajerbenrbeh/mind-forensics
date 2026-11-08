@@ -23,6 +23,7 @@ class CaseModel {
     this.statements = const [],
     this.hypotheses = const [],
     this.findingsSummary,
+    this.sessionSummary,
     this.userConclusion,
     this.emotionTags = const [],
     this.isCompleted = false,
@@ -66,6 +67,9 @@ class CaseModel {
   /// Structured summary sorting what is observed, assumed, and uncertain.
   final String? findingsSummary;
 
+  /// Structured rolling summary of statements outside the verbatim window.
+  final String? sessionSummary;
+
   /// The user's own final takeaway. Section 2: "The user has the final word."
   final String? userConclusion;
 
@@ -96,6 +100,7 @@ class CaseModel {
     List<Statement>? statements,
     List<Hypothesis>? hypotheses,
     String? findingsSummary,
+    String? sessionSummary,
     String? userConclusion,
     List<String>? emotionTags,
     bool? isCompleted,
@@ -116,6 +121,7 @@ class CaseModel {
       statements: statements ?? this.statements,
       hypotheses: hypotheses ?? this.hypotheses,
       findingsSummary: findingsSummary ?? this.findingsSummary,
+      sessionSummary: sessionSummary ?? this.sessionSummary,
       userConclusion: userConclusion ?? this.userConclusion,
       emotionTags: emotionTags ?? this.emotionTags,
       isCompleted: isCompleted ?? this.isCompleted,
@@ -138,6 +144,7 @@ class CaseModel {
         'statements': statements.map((s) => s.toJson()).toList(),
         'hypotheses': hypotheses.map((h) => h.toJson()).toList(),
         'findingsSummary': findingsSummary,
+        'sessionSummary': sessionSummary,
         'userConclusion': userConclusion,
         'emotionTags': emotionTags,
         'isCompleted': isCompleted,
@@ -187,6 +194,7 @@ class CaseModel {
               .toList() ??
           const [],
       findingsSummary: json['findingsSummary'] as String?,
+      sessionSummary: json['sessionSummary'] as String?,
       userConclusion: json['userConclusion'] as String?,
       emotionTags: (json['emotionTags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
           const [],

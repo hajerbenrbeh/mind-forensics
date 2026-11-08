@@ -21,8 +21,8 @@ class PatternAwarenessService {
     }
 
     final now = DateTime.now();
-    final past3DaysCutoff = now.subtract(const Duration(days: 4));
-    final recentTraces = traces.where((t) => t.date.isAfter(past3DaysCutoff)).toList();
+    final past3DaysCutoff = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 4));
+    final recentTraces = traces.where((t) => !t.date.isBefore(past3DaysCutoff)).toList();
 
     if (recentTraces.length < 2) {
       return [];
@@ -31,45 +31,70 @@ class PatternAwarenessService {
     recentTraces.sort((a, b) => a.date.compareTo(b.date));
     final List<PatternDivergence> divergences = [];
 
-    // 1. Check for Elevated Activation Pattern
-    // (Reduced sleep + elevated energy or racing thoughts over recent entries)
+    // Telemetry extraction
     final recentSleeps = recentTraces
         .map((t) => t.sleepHours)
         .whereType<double>()
-        .where((h) => h > 0)
+        .where((h) => h >= 0.0 && h <= 24.0)
         .toList();
     final recentAvgSleep = recentSleeps.isNotEmpty
         ? recentSleeps.reduce((a, b) => a + b) / recentSleeps.length
-        : baseline.averageSleepHours;
+        : null;
 
-    final recentAvgEnergy = recentTraces.map((t) => t.energyLevel).reduce((a, b) => a + b) /
-        recentTraces.length;
+    final recentEnergyValues = recentTraces
+        .map((t) => t.energyLevel)
+        .whereType<int>()
+        .where((e) => e >= 1 && e <= 10)
+        .toList();
+    final recentAvgEnergy = recentEnergyValues.isNotEmpty
+        ? recentEnergyValues.reduce((a, b) => a + b) / recentEnergyValues.length
+        : null;
+
     final hasRacingThoughts = recentTraces.any((t) => (t.racingThoughts ?? 0) >= 6);
 
-    final sleepDeficit = baseline.averageSleepHours - recentAvgSleep;
-    final energySurge = recentAvgEnergy - baseline.averageEnergyLevel;
+    final sleepDeficit = (baseline.averageSleepHours != null && recentAvgSleep != null)
+        ? baseline.averageSleepHours! - recentAvgSleep
+        : null;
+    final energySurge = (baseline.averageEnergyLevel != null && recentAvgEnergy != null)
+        ? recentAvgEnergy - baseline.averageEnergyLevel!
+        : null;
+    final energyDrop = (baseline.averageEnergyLevel != null && recentAvgEnergy != null)
+        ? baseline.averageEnergyLevel! - recentAvgEnergy
+        : null;
 
-    if (sleepDeficit >= 1.5 && (energySurge >= 1.5 || hasRacingThoughts)) {
+    // -------------------------------------------------------------------------
+    // 1. Co-Occurring Combinations (Multi-Metric Shifts)
+    // -------------------------------------------------------------------------
+    // Combined Shift: Lower sleep co-occurring with elevated energy or racing thoughts
+    if (sleepDeficit != null &&
+        sleepDeficit > 0 &&
+        ((energySurge != null && energySurge > 0) || hasRacingThoughts)) {
       final List<String> observations = [];
       observations.add(
-        'Recorded sleep averaged ${recentAvgSleep.toStringAsFixed(1)} hours (baseline: ${baseline.averageSleepHours.toStringAsFixed(1)} hours).',
+        'Recorded sleep averaged ${recentAvgSleep!.toStringAsFixed(1)} hours across ${recentSleeps.length} nights (baseline: ${baseline.averageSleepHours!.toStringAsFixed(1)} hours across ${baseline.sleepObservationCount} nights).',
       );
-      observations.add(
-        'Reported energy averaged ${recentAvgEnergy.toStringAsFixed(1)}/10 (baseline: ${baseline.averageEnergyLevel.toStringAsFixed(1)}/10).',
-      );
+      if (baseline.averageEnergyLevel != null && recentAvgEnergy != null) {
+        observations.add(
+          'Reported energy averaged ${recentAvgEnergy.toStringAsFixed(1)}/10 across ${recentEnergyValues.length} entries (baseline: ${baseline.averageEnergyLevel!.toStringAsFixed(1)}/10 across ${baseline.energyObservationCount} entries).',
+        );
+      }
       if (hasRacingThoughts) {
-        observations.add('Elevated racing thoughts were noted on recent check-ins.');
+        final maxRacing = recentTraces
+            .map((t) => t.racingThoughts ?? 0)
+            .reduce((a, b) => a > b ? a : b);
+        observations.add('Racing thoughts were rated at $maxRacing/10 on a recent check-in.');
       }
 
       divergences.add(
         PatternDivergence(
           id: 'div_activation_${now.millisecondsSinceEpoch}',
           category: DivergenceCategory.elevatedActivation,
-          title: 'Shift in Energy & Sleep Pattern',
+          observationType: ObservationType.combinedMetricShift,
+          title: 'Shift in Energy & Sleep: Combined Ratings',
           timeWindow: 'Past 3–4 days',
           contributingObservations: observations,
           baselineComparison:
-              'Sleep is lower by ${sleepDeficit.toStringAsFixed(1)}h while reported energy is higher by ${energySurge.toStringAsFixed(1)} points compared to your usual baseline.',
+              'Sleep is lower by ${sleepDeficit.toStringAsFixed(1)}h while reported energy is higher by ${(energySurge ?? 0).toStringAsFixed(1)} points compared to your usual baseline.',
           uncertaintyStatement:
               'This observation reflects numbers and sensations you logged. It is an exploration of pattern shifts, not a clinical diagnosis or confirmed episode.',
           userCheckInQuestion:
@@ -83,23 +108,37 @@ class PatternAwarenessService {
       );
     }
 
-    // 2. Check for Low Activation & Withdrawal Pattern
-    final recentAvgIntensity = recentTraces.map((t) => t.moodIntensity).reduce((a, b) => a + b) /
-        recentTraces.length;
+    // Combined Shift: Lower energy co-occurring with lower mood or heavy mood descriptors
+    final recentIntensities = recentTraces.map((t) => t.moodIntensity).toList();
+    final recentAvgIntensity = recentIntensities.isNotEmpty
+        ? recentIntensities.reduce((a, b) => a + b) / recentIntensities.length
+        : null;
     final hasHeavyOrLowMood = recentTraces.any((t) => t.overallMood == 'heavy' || t.overallMood == 'frustrated');
-    final energyDrop = baseline.averageEnergyLevel - recentAvgEnergy;
+    final moodDrop = (baseline.averageMoodIntensity != null && recentAvgIntensity != null)
+        ? baseline.averageMoodIntensity! - recentAvgIntensity
+        : null;
 
-    if (energyDrop >= 2.0 && (recentAvgIntensity <= 3.5 || hasHeavyOrLowMood)) {
+    if (energyDrop != null &&
+        energyDrop > 0 &&
+        ((moodDrop != null && moodDrop > 0) || hasHeavyOrLowMood)) {
       final List<String> observations = [
-        'Reported energy averaged ${recentAvgEnergy.toStringAsFixed(1)}/10 (baseline: ${baseline.averageEnergyLevel.toStringAsFixed(1)}/10).',
-        'Recorded mood state reflected lower energy or heavier sensations across recent entries.',
+        'Reported energy averaged ${recentAvgEnergy!.toStringAsFixed(1)}/10 across ${recentEnergyValues.length} entries (baseline: ${baseline.averageEnergyLevel!.toStringAsFixed(1)}/10 across ${baseline.energyObservationCount} entries).',
       ];
+      if (moodDrop != null && moodDrop > 0) {
+        observations.add(
+          'Mood intensity averaged ${recentAvgIntensity!.toStringAsFixed(1)}/10 (lower by ${moodDrop.toStringAsFixed(1)} points compared to your baseline of ${baseline.averageMoodIntensity!.toStringAsFixed(1)}/10 across ${baseline.moodObservationCount} entries).',
+        );
+      }
+      if (hasHeavyOrLowMood) {
+        observations.add('Recorded mood state reflected lower energy or heavier sensations across recent entries.');
+      }
 
       divergences.add(
         PatternDivergence(
           id: 'div_low_${now.millisecondsSinceEpoch}',
           category: DivergenceCategory.lowActivation,
-          title: 'Sustained Drop in Energy & Mood',
+          observationType: ObservationType.combinedMetricShift,
+          title: 'Drop in Energy & Mood: Combined Ratings',
           timeWindow: 'Past 3–4 days',
           contributingObservations: observations,
           baselineComparison:
@@ -117,20 +156,85 @@ class PatternAwarenessService {
       );
     }
 
-    // 3. Check for Elevated Tension / Stress Pattern
+    // -------------------------------------------------------------------------
+    // 2. Independent Metric Differences (Never Hidden by Other Metrics)
+    // -------------------------------------------------------------------------
+    // Independent Sleep difference: reported regardless of energy level
+    final alreadyHasCombinedSleep = divergences.any((d) => d.category == DivergenceCategory.elevatedActivation);
+    if (!alreadyHasCombinedSleep && sleepDeficit != null && sleepDeficit != 0) {
+      divergences.add(
+        PatternDivergence(
+          id: 'div_sleep_${now.millisecondsSinceEpoch}',
+          category: DivergenceCategory.sleepDisruption,
+          observationType: ObservationType.individualMetricShift,
+          title: 'Observed Difference in Sleep Duration',
+          timeWindow: 'Past 3–4 days',
+          contributingObservations: [
+            'Recorded sleep averaged ${recentAvgSleep!.toStringAsFixed(1)} hours across ${recentSleeps.length} nights (baseline: ${baseline.averageSleepHours!.toStringAsFixed(1)} hours across ${baseline.sleepObservationCount} nights).',
+          ],
+          baselineComparison:
+              'Sleep averaged ${recentAvgSleep.toStringAsFixed(1)}h (${sleepDeficit > 0 ? "lower" : "higher"} by ${sleepDeficit.abs().toStringAsFixed(1)}h compared to your baseline of ${baseline.averageSleepHours!.toStringAsFixed(1)}h).',
+          uncertaintyStatement:
+              'Sleep variations can stem from scheduling, environment, or temporary stress.',
+          userCheckInQuestion:
+              'How has your sleep schedule felt over these past few nights?',
+          supportPlanPrompt:
+              'Evening wind-down rituals, minimizing screen exposure, or resting without sleep pressure may be helpful.',
+          therapistPrompt: null,
+          detectedAt: now,
+        ),
+      );
+    }
+
+    // Independent Energy difference: reported regardless of mood
+    final alreadyHasCombinedEnergy = divergences.any((d) => d.category == DivergenceCategory.lowActivation || d.category == DivergenceCategory.elevatedActivation);
+    if (!alreadyHasCombinedEnergy && energyDrop != null && energyDrop != 0) {
+      divergences.add(
+        PatternDivergence(
+          id: 'div_energy_${now.millisecondsSinceEpoch}',
+          category: energyDrop > 0 ? DivergenceCategory.lowActivation : DivergenceCategory.generalVariation,
+          observationType: ObservationType.individualMetricShift,
+          title: 'Observed Difference in Energy Level',
+          timeWindow: 'Past 3–4 days',
+          contributingObservations: [
+            'Reported energy averaged ${recentAvgEnergy!.toStringAsFixed(1)}/10 across ${recentEnergyValues.length} entries (baseline: ${baseline.averageEnergyLevel!.toStringAsFixed(1)}/10 across ${baseline.energyObservationCount} entries).',
+          ],
+          baselineComparison:
+              'Energy is ${energyDrop > 0 ? "lower" : "higher"} by ${energyDrop.abs().toStringAsFixed(1)} points compared to your baseline.',
+          uncertaintyStatement:
+              'Fluctuations in vitality and daily energy are normal bodily variations.',
+          userCheckInQuestion:
+              'Are you noticing changes in your daily energy or stamina?',
+          supportPlanPrompt:
+              'Consider gentle pacing and prioritizing basic nourishment and rest.',
+          therapistPrompt: null,
+          detectedAt: now,
+        ),
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. Multi-Day Observations vs Single Observations (Physical Tension & Anxiety)
+    // -------------------------------------------------------------------------
     final highTensionDays = recentTraces.where((t) => (t.physicalTension ?? 0) >= 7).length;
     final highAnxietyDays = recentTraces.where((t) => (t.anxietyLevel ?? 0) >= 7).length;
 
-    if (highTensionDays >= 2 || highAnxietyDays >= 2) {
+    if (highTensionDays > 0 || highAnxietyDays > 0) {
+      final isMultiDay = highTensionDays >= 2 || highAnxietyDays >= 2;
+      final daysCount = highTensionDays > highAnxietyDays ? highTensionDays : highAnxietyDays;
       divergences.add(
         PatternDivergence(
           id: 'div_tension_${now.millisecondsSinceEpoch}',
           category: DivergenceCategory.elevatedTension,
-          title: 'Elevated Physical Tension & Stress',
+          observationType: isMultiDay ? ObservationType.longitudinalPattern : ObservationType.individualMetricShift,
+          title: isMultiDay
+              ? 'Physical Tension or Stress Noted Across $daysCount Days'
+              : 'Physical Tension or Stress Noted on a Recent Check-in',
           timeWindow: 'Past 3–4 days',
           contributingObservations: [
-            'Physical tension or stress levels were rated 7/10 or higher on multiple recent days.',
-            'Somatic markers indicate your nervous system may be carrying accumulated strain.',
+            isMultiDay
+                ? 'Physical tension or anxiety was rated 7/10 or higher on $daysCount separate recorded days ($highTensionDays tension check-ins, $highAnxietyDays anxiety check-ins).'
+                : 'Physical tension or anxiety was rated 7/10 or higher on a recent check-in.',
           ],
           baselineComparison:
               'Tension and stress ratings are higher than your typical resting baseline.',
@@ -202,25 +306,33 @@ class WeeklySummaryReport {
         weekTraces.map((t) => t.moodIntensity).reduce((a, b) => a + b) / weekTraces.length;
 
     // What changed
-    final moodDiff = avgMoodThisWeek - baseline.averageMoodIntensity;
-    final sleepDiff = avgSleepThisWeek - baseline.averageSleepHours;
+    final baselineMood = baseline.averageMoodIntensity;
+    final moodDiff = baselineMood != null ? avgMoodThisWeek - baselineMood : null;
+
+    final baselineSleep = baseline.averageSleepHours;
+    final sleepDiff = (avgSleepThisWeek != null && baselineSleep != null)
+        ? avgSleepThisWeek - baselineSleep
+        : null;
 
     String whatChanged = 'This week, mood intensity averaged ${avgMoodThisWeek.toStringAsFixed(1)}/10 ';
-    if (moodDiff.abs() >= 1.0) {
-      whatChanged += moodDiff > 0
-          ? '(+${moodDiff.toStringAsFixed(1)} higher than typical baseline). '
-          : '(${moodDiff.toStringAsFixed(1)} lower than typical baseline). ';
+    if (moodDiff != null && baselineMood != null) {
+      whatChanged += moodDiff == 0
+          ? '(consistent with your baseline). '
+          : '(${moodDiff > 0 ? '+' : ''}${moodDiff.toStringAsFixed(1)} points from baseline average of ${baselineMood.toStringAsFixed(1)}/10 across ${baseline.moodObservationCount} entries). ';
     } else {
-      whatChanged += '(consistent with your baseline). ';
+      whatChanged += '(no baseline available for comparison). ';
     }
 
-    String sleepTrendStr = 'Average sleep was ${avgSleepThisWeek.toStringAsFixed(1)}h/night ';
-    if (sleepDiff.abs() >= 1.0) {
-      sleepTrendStr += sleepDiff > 0
-          ? '(up by ${sleepDiff.toStringAsFixed(1)}h from typical baseline).'
-          : '(down by ${sleepDiff.abs().toStringAsFixed(1)}h from typical baseline).';
+    String sleepTrendStr;
+    if (avgSleepThisWeek == null) {
+      sleepTrendStr = 'Sleep duration was not recorded this week.';
+    } else if (sleepDiff != null && baselineSleep != null) {
+      sleepTrendStr = 'Average sleep was ${avgSleepThisWeek.toStringAsFixed(1)}h/night ';
+      sleepTrendStr += sleepDiff == 0
+          ? '(consistent with baseline).'
+          : '(${sleepDiff > 0 ? 'up by ' : 'down by '}${sleepDiff.abs().toStringAsFixed(1)}h from typical baseline of ${baselineSleep.toStringAsFixed(1)}h across ${baseline.sleepObservationCount} nights).';
     } else {
-      sleepTrendStr += '(stable with baseline).';
+      sleepTrendStr = 'Average sleep was ${avgSleepThisWeek.toStringAsFixed(1)}h/night (no baseline available for comparison).';
     }
 
     // Top symptoms
@@ -240,8 +352,8 @@ class WeeklySummaryReport {
 
     // Topics to discuss with therapist
     final topics = <String>[];
-    if (sleepDiff.abs() >= 1.5) {
-      topics.add('Review recent sleep shifts (${avgSleepThisWeek.toStringAsFixed(1)}h/night vs ${baseline.averageSleepHours.toStringAsFixed(1)}h baseline).');
+    if (sleepDiff != null && sleepDiff != 0 && avgSleepThisWeek != null && baseline.averageSleepHours != null) {
+      topics.add('Review recent sleep shifts (${avgSleepThisWeek.toStringAsFixed(1)}h/night vs ${baseline.averageSleepHours!.toStringAsFixed(1)}h baseline).');
     }
     if (topSymptoms.isNotEmpty) {
       topics.add('Discuss recurring experiences logged: ${topSymptoms.take(2).join(', ')}.');

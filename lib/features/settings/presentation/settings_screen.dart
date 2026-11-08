@@ -13,6 +13,7 @@ import '../../auth/controllers/auth_controller.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/data/cloud_sync_service.dart';
 import '../../profile/presentation/psychological_profile_screen.dart';
+import '../../journal/presentation/widgets/journal_memory_sheet.dart';
 import 'clinical_sharing_history_sheet.dart';
 
 /// The Lab Settings screen: Vercel Luxury Dark & Minimalist Precision.
@@ -963,6 +964,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             // Section 8: Data Transparency & Privacy
             _sectionLabel(strings.dataTransparencyTitle, textSecondary),
+            InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                JournalMemorySheet.show(context);
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: surfaceColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: borderColor, width: 1),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.psychology_outlined, size: 22, color: LabColors.champagneGold),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            strings.isArabic ? 'خزينة الذاكرة' : 'Memory Vault',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: textPrimary),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            strings.isArabic
+                                ? 'عرض ومراجعة المعلومات التي يتذكرها المساعد الذكي عنك'
+                                : 'Review and manage what the AI companion remembers',
+                            style: TextStyle(fontSize: 11.5, color: textSecondary, height: 1.3),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, size: 20, color: textSecondary),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(

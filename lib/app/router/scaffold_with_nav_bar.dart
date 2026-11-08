@@ -11,7 +11,7 @@ import '../theme/lab_colors.dart';
 /// Features:
 /// - Floating 28px rounded capsule bar matching the organic Earth/Sage palette.
 /// - Soft shadow layering and clean vector icons.
-/// - Five tabs: Home, Journal, Investigator, Toolkit, Profile.
+/// - Four tabs: Home, Investigator, Toolkit, Profile.
 /// - Zero emoji clutter, minimum 48px interactive target.
 class ScaffoldWithNavBar extends ConsumerWidget {
   const ScaffoldWithNavBar({
@@ -82,20 +82,9 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     inactiveColor: inactiveColor,
                   ),
 
-                  // 2. Journal
+                  // 2. Investigator (Center Focus)
                   _buildNavItem(
                     index: 1,
-                    currentIndex: currentIndex,
-                    icon: Icons.auto_stories_outlined,
-                    activeIcon: Icons.auto_stories_rounded,
-                    label: strings.navJournal,
-                    activeColor: activeColor,
-                    inactiveColor: inactiveColor,
-                  ),
-
-                  // 3. Investigator (Center Focus)
-                  _buildNavItem(
-                    index: 2,
                     currentIndex: currentIndex,
                     icon: Icons.psychology_outlined,
                     activeIcon: Icons.psychology_rounded,
@@ -106,9 +95,9 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     isDark: isDark,
                   ),
 
-                  // 4. Toolkit (placeholder in v1)
+                  // 3. Toolkit (My Journey & Tools Lab)
                   _buildNavItem(
-                    index: 3,
+                    index: 2,
                     currentIndex: currentIndex,
                     icon: Icons.handyman_outlined,
                     activeIcon: Icons.handyman_rounded,
@@ -117,9 +106,9 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     inactiveColor: inactiveColor,
                   ),
 
-                  // 5. Profile
+                  // 4. Profile
                   _buildNavItem(
-                    index: 4,
+                    index: 3,
                     currentIndex: currentIndex,
                     icon: Icons.person_outline_rounded,
                     activeIcon: Icons.person_rounded,

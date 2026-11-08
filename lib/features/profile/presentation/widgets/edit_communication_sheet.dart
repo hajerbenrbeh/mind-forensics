@@ -333,8 +333,8 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? (isDark ? const Color(0xFF280710) : const Color(0xFFFFF1F2))
-                                  : (isDark ? const Color(0xFF101010) : const Color(0xFFFAFAFA)),
+                                  ? (isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight)
+                                  : (isDark ? LabColors.nightSurfaceSubtle : LabColors.daylightSurfaceSubtle),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
                                 color: isSelected ? LabColors.cherryRed : border,

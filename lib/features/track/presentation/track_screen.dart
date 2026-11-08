@@ -10,6 +10,7 @@ import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/mind_badge.dart';
 import '../../../core/widgets/mind_button.dart';
 import '../../../core/widgets/mind_card.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
 import '../../mind_trace/controllers/mind_trace_controller.dart';
@@ -42,15 +43,15 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
   double _anxietyLevel = 3.0;
   double _sleepHours = 7.5;
   final Set<String> _selectedTriggers = {};
-  final TextEditingController _journalController = TextEditingController();
   bool _isSaving = false;
+  bool _initializedFromTrace = false;
 
-  final List<({String key, IconData icon, String label})> _moodOptions = const [
-    (key: 'calm', icon: Icons.spa_outlined, label: 'Calm'),
-    (key: 'anxious', icon: Icons.bolt_outlined, label: 'Anxious'),
-    (key: 'frustrated', icon: Icons.local_fire_department_outlined, label: 'Frustrated'),
-    (key: 'heavy', icon: Icons.grain_outlined, label: 'Heavy'),
-    (key: 'restless', icon: Icons.air_outlined, label: 'Restless'),
+  final List<({String key, IconData icon})> _moodOptions = const [
+    (key: 'calm', icon: Icons.spa_outlined),
+    (key: 'anxious', icon: Icons.bolt_outlined),
+    (key: 'frustrated', icon: Icons.local_fire_department_outlined),
+    (key: 'heavy', icon: Icons.grain_outlined),
+    (key: 'restless', icon: Icons.air_outlined),
   ];
 
   final List<String> _triggerOptions = const [
@@ -66,36 +67,49 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTab);
-    _populateTodayExisting();
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTab.clamp(0, 2),
+    );
   }
 
-  void _populateTodayExisting() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final today = ref.read(todayTraceProvider);
-      if (today != null && mounted) {
-        setState(() {
-          _selectedMood = today.overallMood;
-          _moodIntensity = today.moodIntensity.toDouble();
-          _energyLevel = today.energyLevel.toDouble();
-          _anxietyLevel = (today.anxietyLevel ?? 3).toDouble();
-          _sleepHours = today.sleepHours ?? 7.5;
-          if (today.journalText != null && today.journalText!.isNotEmpty) {
-            _journalController.text = today.journalText!;
-          }
-          if (today.situation != null && today.situation!.isNotEmpty) {
-            final parts = today.situation!.split(',').map((s) => s.trim());
-            _selectedTriggers.addAll(parts.where((p) => p.isNotEmpty));
-          }
-        });
+  String _getMoodLabel(String key, AppStrings strings) {
+    if (!strings.isArabic && !strings.isFrench) {
+      switch (key) {
+        case 'calm':
+          return 'Calm';
+        case 'anxious':
+          return 'Anxious';
+        case 'frustrated':
+          return 'Frustrated';
+        case 'heavy':
+          return 'Heavy';
+        case 'restless':
+          return 'Restless';
+        default:
+          return key;
       }
-    });
+    }
+    switch (key) {
+      case 'calm':
+        return strings.moodCalm;
+      case 'anxious':
+        return strings.moodAnxious;
+      case 'frustrated':
+        return strings.moodFrustrated;
+      case 'heavy':
+        return strings.moodHeavy;
+      case 'restless':
+        return strings.moodRestless;
+      default:
+        return key;
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _journalController.dispose();
     super.dispose();
   }
 
@@ -107,34 +121,34 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
       final now = DateTime.now();
       final today = ref.read(todayTraceProvider);
       final strings = ref.read(appStringsProvider);
+      final authUser = ref.read(authControllerProvider).user;
+      final userId = authUser?.id ?? 'local_user';
 
       final situationStr = _selectedTriggers.isNotEmpty ? _selectedTriggers.join(', ') : null;
 
       final trace = (today != null)
           ? today.copyWith(
               overallMood: _selectedMood,
+              selectedEmotions: [_selectedMood],
               moodIntensity: _moodIntensity.toInt(),
               energyLevel: _energyLevel.toInt(),
               anxietyLevel: _anxietyLevel.toInt(),
               sleepHours: _sleepHours,
               situation: situationStr,
-              journalText: _journalController.text.trim().isNotEmpty
-                  ? _journalController.text.trim()
-                  : null,
               updatedAt: now,
             )
           : MindTraceModel(
               id: const Uuid().v4(),
+              userId: userId,
               date: DateTime(now.year, now.month, now.day),
               overallMood: _selectedMood,
+              selectedEmotions: [_selectedMood],
               moodIntensity: _moodIntensity.toInt(),
               energyLevel: _energyLevel.toInt(),
               anxietyLevel: _anxietyLevel.toInt(),
               sleepHours: _sleepHours,
               situation: situationStr,
-              journalText: _journalController.text.trim().isNotEmpty
-                  ? _journalController.text.trim()
-                  : null,
+              journalText: null,
               createdAt: now,
               updatedAt: now,
             );
@@ -163,10 +177,43 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
     final tokens = context.tokens;
     final strings = ref.watch(appStringsProvider);
 
+    // Hydrate form state once when today's trace becomes available
+    final todayTrace = ref.watch(todayTraceProvider);
+    if (!_initializedFromTrace && todayTrace != null) {
+      _initializedFromTrace = true;
+      _selectedMood = todayTrace.overallMood;
+      _moodIntensity = todayTrace.moodIntensity.toDouble();
+      _energyLevel = (todayTrace.energyLevel ?? 5).toDouble();
+      _anxietyLevel = (todayTrace.anxietyLevel ?? 3).toDouble();
+      _sleepHours = todayTrace.sleepHours ?? 7.5;
+      if (todayTrace.situation != null &&
+          todayTrace.situation!.isNotEmpty &&
+          _selectedTriggers.isEmpty) {
+        final parts = todayTrace.situation!.split(',').map((s) => s.trim());
+        _selectedTriggers.addAll(parts.where((p) => p.isNotEmpty));
+      }
+    }
+
     return Scaffold(
       backgroundColor: tokens.background,
       appBar: AppBar(
-        title: Text(strings.trackHubTitle),
+        backgroundColor: tokens.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: Navigator.of(context).canPop()
+            ? IconButton(
+                icon: Icon(Icons.arrow_back, color: tokens.textPrimary, size: 20),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+        title: Text(
+          strings.trackHubTitle,
+          style: TextStyle(
+            color: tokens.textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         actions: const [
           SupportButton(),
           SizedBox(width: 8),
@@ -181,7 +228,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
           tabs: [
             Tab(text: strings.quickCheckInTab),
             Tab(text: strings.fullObservationTab),
-            Tab(text: strings.journalTab),
+            Tab(text: strings.traceHistoryTab),
           ],
         ),
       ),
@@ -194,8 +241,8 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
           // 2. Detailed Mind Trace Stepper
           _buildDetailedTraceView(),
 
-          // 3. Journal & Historical Case Vault
-          _buildJournalAndArchiveView(tokens, strings),
+          // 3. Trace History & Past Investigations
+          _buildHistoryView(tokens, strings),
         ],
       ),
     );
@@ -215,7 +262,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
 
           // 1. Mood Selection
           Text(
-            'TODAY\'S CORE STATE',
+            "TODAY'S CORE STATE",
             style: TextStyle(
               color: tokens.textSecondary,
               fontSize: 11,
@@ -227,6 +274,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
           Row(
             children: _moodOptions.map((opt) {
               final isSelected = _selectedMood == opt.key;
+              final label = _getMoodLabel(opt.key, strings);
               return Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 3),
@@ -238,7 +286,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
                       HapticFeedback.selectionClick();
                       setState(() => _selectedMood = opt.key);
                     },
-                    semanticLabel: opt.label,
+                    semanticLabel: label,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -249,7 +297,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          opt.label,
+                          label,
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -361,28 +409,6 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
             }).toList(),
           ),
 
-          const SizedBox(height: 20),
-
-          // 4. Today's Note
-          Text(
-            strings.todaysNoteLabel.toUpperCase(),
-            style: TextStyle(
-              color: tokens.textSecondary,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.1,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _journalController,
-            maxLines: 3,
-            style: TextStyle(color: tokens.textPrimary, fontSize: 13.5),
-            decoration: InputDecoration(
-              hintText: strings.todaysNoteHint,
-            ),
-          ),
-
           const SizedBox(height: 24),
 
           // Save Button
@@ -470,7 +496,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildJournalAndArchiveView(MindTokens tokens, AppStrings strings) {
+  Widget _buildHistoryView(MindTokens tokens, AppStrings strings) {
     return Consumer(
       builder: (context, ref, _) {
         final traces = ref.watch(mindTraceControllerProvider).value ?? [];
@@ -518,7 +544,9 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
             // Daily Mind Traces
             if (traces.isNotEmpty) ...[
               Text(
-                'DAILY OBSERVATIONS',
+                strings.isArabic
+                    ? 'الملاحظات اليومية'
+                    : (strings.isFrench ? 'OBSERVATIONS QUOTIDIENNES' : 'DAILY OBSERVATIONS'),
                 style: TextStyle(
                   color: tokens.textSecondary,
                   fontSize: 11,
@@ -557,7 +585,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    c.incidentDescription.isNotEmpty ? c.incidentDescription : 'Deconstruction Case',
+                    c.incidentDescription.isNotEmpty ? c.incidentDescription : strings.newInvestigation,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -568,7 +596,9 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    c.isCompleted ? 'Resolved Reframe' : 'In Progress',
+                    c.isCompleted
+                        ? (strings.isArabic ? 'مكتمل' : (strings.isFrench ? 'Recadrage résolu' : 'Resolved Reframe'))
+                        : (strings.isArabic ? 'قيد البحث' : (strings.isFrench ? 'En cours' : 'In Progress')),
                     style: TextStyle(color: tokens.textSecondary, fontSize: 11),
                   ),
                 ],
@@ -596,16 +626,16 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
                   t.dateKey,
                   style: TextStyle(color: tokens.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
                 ),
-                MindBadge(label: t.overallMood.toUpperCase()),
+                MindBadge(label: _getMoodLabel(t.overallMood, strings).toUpperCase()),
               ],
             ),
-            if (t.journalText != null && t.journalText!.isNotEmpty) ...[
+            if (t.situation != null && t.situation!.isNotEmpty) ...[
               const SizedBox(height: 6),
               Text(
-                t.journalText!,
+                t.situation!,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: tokens.textPrimary, fontSize: 12.5),
+                style: TextStyle(color: tokens.textSecondary, fontSize: 12),
               ),
             ],
             const SizedBox(height: 6),
@@ -613,10 +643,20 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
               spacing: 12,
               children: [
                 if (t.sleepHours != null)
-                  Text('Sleep: ${t.sleepHours}h', style: TextStyle(color: tokens.textTertiary, fontSize: 11)),
-                Text('Energy: ${t.energyLevel}/10', style: TextStyle(color: tokens.textTertiary, fontSize: 11)),
+                  Text(
+                    '${strings.isArabic ? "النوم" : (strings.isFrench ? "Sommeil" : "Sleep")}: ${t.sleepHours}h',
+                    style: TextStyle(color: tokens.textTertiary, fontSize: 11),
+                  ),
+                if (t.energyLevel != null)
+                  Text(
+                    '${strings.isArabic ? "الطاقة" : (strings.isFrench ? "Énergie" : "Energy")}: ${t.energyLevel}/10',
+                    style: TextStyle(color: tokens.textTertiary, fontSize: 11),
+                  ),
                 if (t.anxietyLevel != null)
-                  Text('Anxiety: ${t.anxietyLevel}/10', style: TextStyle(color: tokens.textTertiary, fontSize: 11)),
+                  Text(
+                    '${strings.isArabic ? "القلق" : (strings.isFrench ? "Anxiété" : "Anxiety")}: ${t.anxietyLevel}/10',
+                    style: TextStyle(color: tokens.textTertiary, fontSize: 11),
+                  ),
               ],
             ),
           ],

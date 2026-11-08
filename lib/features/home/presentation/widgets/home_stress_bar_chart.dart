@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme/lab_colors.dart';
+
 /// A 7-bar weekly mini chart showing stress and activation distribution.
 ///
 /// Strictly renders authentic tracked observations for each day of the week.
@@ -19,13 +21,13 @@ class HomeStressBarChart extends StatelessWidget {
   final double height;
 
   static const List<Color> _barColors = [
-    Color(0xFFFB7185), // Soft rose/coral
-    Color(0xFF91AD9A), // Soft sage
-    Color(0xFFA78BFA), // Soft iris
-    Color(0xFFFB7185), // Soft rose
-    Color(0xFF38BDF8), // Soft sky
-    Color(0xFF91AD9A), // Soft sage
-    Color(0xFFFBBF24), // Soft amber
+    LabColors.moodAnxious,    // Warm Sand / Dune (replaces bright pink)
+    LabColors.moodCalm,       // Soft Sage
+    LabColors.moodHeavy,      // Soft Iris
+    Color(0xFF819D8B),        // Muted Sage Mist
+    LabColors.moodRestless,   // Soft Mineral Sky
+    LabColors.moodCalm,       // Soft Sage
+    LabColors.moodFrustrated, // Soft Amber
   ];
 
   @override

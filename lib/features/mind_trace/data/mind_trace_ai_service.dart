@@ -32,6 +32,22 @@ class MindTraceAiService {
     required String languageCode,
     List<JourneyActivity>? availableActivities,
   }) async {
+    final hasConsent = profile != null &&
+        profile.shareWithAiCompanion &&
+        profile.allowAiPersonalization;
+
+    // Consent Gate: If consent for AI companion or personalization is revoked,
+    // NEVER transmit telemetry to external cloud AI APIs (Gemini).
+    // Instantly route to the 100% on-device local generator with zero historical linkage.
+    if (!hasConsent) {
+      return _generateLocalReflection(
+        currentTrace: currentTrace,
+        history: const [], // Strict privacy: do not access past history without consent
+        profile: profile,
+        languageCode: languageCode,
+      );
+    }
+
     final cleanKey = apiKey?.trim() ?? '';
 
     if (cleanKey.isNotEmpty) {
@@ -63,6 +79,12 @@ class MindTraceAiService {
     required PsychologicalProfileModel? profile,
     required String languageCode,
   }) async {
+    // Defense-in-depth consent check
+    final hasConsent = profile != null &&
+        profile.shareWithAiCompanion &&
+        profile.allowAiPersonalization;
+    if (!hasConsent) return null;
+
     final canProceed = await DailyUsageLimiter.canMakeRequest();
     if (!canProceed) return null;
 
@@ -95,7 +117,9 @@ ${languageCode == 'ar' ? '''
     promptBuffer.writeln('TODAY\'S CHECK-IN DATA:');
     promptBuffer.writeln('- Overall Mood: ${currentTrace.overallMood}');
     promptBuffer.writeln('- Intensity (1-10): ${currentTrace.moodIntensity}');
-    promptBuffer.writeln('- Energy Level (1-10): ${currentTrace.energyLevel}');
+    if (currentTrace.energyLevel != null && currentTrace.energyLevel! >= 1 && currentTrace.energyLevel! <= 10) {
+      promptBuffer.writeln('- Energy Level (1-10): ${currentTrace.energyLevel}');
+    }
     if (currentTrace.anxietyLevel != null) {
       promptBuffer.writeln('- Anxiety Level: ${currentTrace.anxietyLevel}');
     }
@@ -108,14 +132,12 @@ ${languageCode == 'ar' ? '''
     if (currentTrace.physicalTension != null) {
       promptBuffer.writeln('- Physical Tension (1-10): ${currentTrace.physicalTension}');
     }
-    if (currentTrace.journalText != null && currentTrace.journalText!.trim().isNotEmpty) {
-      promptBuffer.writeln('- Journal Reflection: "${currentTrace.journalText!.trim()}"');
-    }
+    // Note: Raw journalText is strictly excluded across all AI prompt builders to protect personal diary privacy.
 
     if (history.isNotEmpty) {
       promptBuffer.writeln('\nPREVIOUS CHECK-INS HISTORY (Past ${history.take(4).length} days):');
       for (final h in history.take(4)) {
-        promptBuffer.writeln('• ${h.dateKey}: Mood=${h.overallMood}, Intensity=${h.moodIntensity}, Energy=${h.energyLevel}');
+        promptBuffer.writeln('• ${h.dateKey}: Mood=${h.overallMood}, Intensity=${h.moodIntensity}${h.energyLevel != null ? ', Energy=${h.energyLevel}' : ''}');
       }
     }
 

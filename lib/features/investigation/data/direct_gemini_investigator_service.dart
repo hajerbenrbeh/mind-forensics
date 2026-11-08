@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../../../core/security/daily_usage_limiter.dart';
+import '../../journal/domain/journal_memory_model.dart';
 import '../../journey/domain/journey_state_model.dart';
 import '../../mind_trace/domain/mind_trace_model.dart';
 import '../../profile/domain/condition_type.dart';
@@ -9,6 +10,7 @@ import '../../profile/domain/psychological_profile_model.dart';
 import '../domain/ai_companion_context_selector.dart';
 import '../domain/ai_companion_system_prompt.dart';
 import '../domain/case_model.dart';
+import '../domain/conversational_pacing_enforcer.dart';
 import '../domain/conversation_mode.dart';
 import '../domain/hypothesis.dart';
 import '../domain/investigator_service.dart';
@@ -30,11 +32,41 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
   DirectGeminiInvestigatorService({
     required this.apiKey,
     this.modelName = 'gemini-3.1-flash-lite',
+    this.clientFactory,
+    this.onRequestAttempted,
   });
 
   final String apiKey;
   final String modelName;
+  final HttpClient Function()? clientFactory;
+  final void Function(Uri url, Map<String, dynamic> payload)? onRequestAttempted;
   final MockInvestigatorService _fallback = MockInvestigatorService();
+
+  /// Counter tracking external network requests attempted.
+  int networkRequestsAttempted = 0;
+
+  /// Centralized Privacy & Consent Gate for AI operations.
+  ///
+  /// Enforces:
+  /// 1. Private case isolation: If [currentCase.isPrivate == true], external AI calls are strictly forbidden.
+  /// 2. Dual-consent requirement: If [checkProfileConsent == true], [profile] must be non-null and
+  ///    both [shareWithAiCompanion] and [allowAiPersonalization] must be true.
+  static bool canTransmitCaseData({
+    required CaseModel currentCase,
+    PsychologicalProfileModel? profile,
+    bool checkProfileConsent = true,
+  }) {
+    if (currentCase.isPrivate) {
+      return false;
+    }
+    if (checkProfileConsent) {
+      if (profile == null) return false;
+      if (!profile.shareWithAiCompanion || !profile.allowAiPersonalization) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   static const List<String> fallbackModels = [
     'gemini-3.1-flash-lite',
@@ -76,7 +108,12 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
           },
         };
 
-        client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
+        networkRequestsAttempted++;
+        onRequestAttempted?.call(url, payload);
+
+        client = clientFactory != null
+            ? clientFactory!()
+            : (HttpClient()..connectionTimeout = const Duration(seconds: 4));
         final request = await client.postUrl(url);
         request.headers.contentType = ContentType.json;
         request.write(jsonEncode(payload));
@@ -163,7 +200,12 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
 
       HttpClient? client;
       try {
-        client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
+        networkRequestsAttempted++;
+        onRequestAttempted?.call(url, payload);
+
+        client = clientFactory != null
+            ? clientFactory!()
+            : (HttpClient()..connectionTimeout = const Duration(seconds: 4));
         final request = await client.postUrl(url);
         request.headers.contentType = ContentType.json;
         request.write(jsonEncode(payload));
@@ -211,7 +253,32 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
     JourneyStateModel? journey,
     ConversationMode? conversationMode,
     MindTraceModel? latestTrace,
+    List<MindTraceModel>? historicalTraces,
+    List<JournalMemoryModel>? compressedMemories,
+    String? sessionSummary,
   }) async {
+    // Privacy and cloud-consent gate:
+    // If case is private OR cloud consent is missing/revoked, route strictly to local fallback.
+    if (!canTransmitCaseData(
+      currentCase: currentCase,
+      profile: profile,
+      checkProfileConsent: true,
+    )) {
+      return _fallback.getNextQuestion(
+        currentCase: currentCase,
+        conversationHistory: conversationHistory,
+        includePastCaseSummaries: includePastCaseSummaries,
+        languageCode: languageCode,
+        profile: profile,
+        journey: journey,
+        conversationMode: conversationMode,
+        latestTrace: latestTrace,
+        historicalTraces: historicalTraces,
+        compressedMemories: compressedMemories,
+        sessionSummary: sessionSummary,
+      );
+    }
+
     final lang = languageCode ?? 'en';
 
     // Format full multi-turn conversational dialogue for Gemini
@@ -277,18 +344,27 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
     final contextualPrompt = AiCompanionContextSelector.buildContext(
       profile: profile,
       latestTrace: latestTrace,
+      historicalTraces: historicalTraces,
       journey: journey,
+      compressedMemories: compressedMemories,
     );
 
-    final conditions = profile?.shareWithAiCompanion == true
-        ? profile?.conditions.map((c) => c.condition).toList() ?? <ConditionType>[]
+    final hasConsent = profile != null &&
+        profile.shareWithAiCompanion &&
+        profile.allowAiPersonalization;
+
+    final conditions = hasConsent
+        ? profile.conditions.map((c) => c.condition).toList()
         : <ConditionType>[];
+
+    final activeSummary = sessionSummary ?? currentCase.sessionSummary;
 
     final systemInstruction = AiCompanionSystemPrompt.buildFullPrompt(
       mode: conversationMode ?? ConversationMode.exploreThought,
       languageCode: lang,
       conditions: conditions,
       contextualUserPrompt: contextualPrompt,
+      sessionSummary: activeSummary,
     );
 
     final result = await _callGeminiContents(
@@ -297,7 +373,35 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
     );
 
     if (result != null && result.trim().isNotEmpty) {
-      return result.trim();
+      final text = result.trim();
+      // Safety exemption check: crisis hotlines, distress phrases, and grounding cues are 100% immune
+      if (ConversationalPacingEnforcer.hasSafetyExemption(text)) {
+        return text;
+      }
+
+      // Check pacing: if within tolerance margin, return complete response without altering
+      final mode = conversationMode ?? ConversationMode.exploreThought;
+      final validation = ConversationalPacingEnforcer.validateResponse(text, mode);
+      if (validation.isValid) {
+        return text;
+      }
+
+      // If response is excessively long (> +2 sentences above target) and has no safety content,
+      // attempt one controlled retry with an explicit brevity prompt.
+      final targetMax = ConversationalPacingEnforcer.targetMaxSentences(mode);
+      if (validation.sentenceCount > targetMax + 2) {
+        final concisePrompt = '$systemInstruction\nIMPORTANT: Keep your response strictly concise ($targetMax sentences max).';
+        final retryResult = await _callGeminiContents(
+          contents: contents,
+          systemInstruction: concisePrompt,
+        );
+        if (retryResult != null && retryResult.trim().isNotEmpty) {
+          return retryResult.trim();
+        }
+      }
+
+      // Non-destructive preservation: Return original complete response rather than discarding it
+      return text;
     }
 
     return _fallback.getNextQuestion(
@@ -308,6 +412,10 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
       profile: profile,
       journey: journey,
       conversationMode: conversationMode,
+      latestTrace: latestTrace,
+      historicalTraces: historicalTraces,
+      compressedMemories: compressedMemories,
+      sessionSummary: sessionSummary,
     );
   }
 
@@ -315,7 +423,20 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
   Future<List<Hypothesis>> generateHypotheses({
     required CaseModel currentCase,
     String? languageCode,
+    PsychologicalProfileModel? profile,
   }) async {
+    if (!canTransmitCaseData(
+      currentCase: currentCase,
+      profile: profile,
+      checkProfileConsent: true,
+    )) {
+      return _fallback.generateHypotheses(
+        currentCase: currentCase,
+        languageCode: languageCode,
+        profile: profile,
+      );
+    }
+
     final lang = languageCode ?? 'en';
     final chain = currentCase.chain;
 
@@ -377,6 +498,7 @@ Output strictly a JSON list containing 3 distinct alternative hypotheses formatt
     return _fallback.generateHypotheses(
       currentCase: currentCase,
       languageCode: languageCode,
+      profile: profile,
     );
   }
 
@@ -385,7 +507,21 @@ Output strictly a JSON list containing 3 distinct alternative hypotheses formatt
     required CaseModel currentCase,
     required Hypothesis hypothesis,
     String? languageCode,
+    PsychologicalProfileModel? profile,
   }) async {
+    if (!canTransmitCaseData(
+      currentCase: currentCase,
+      profile: profile,
+      checkProfileConsent: true,
+    )) {
+      return _fallback.generateCrossExaminationQuestions(
+        currentCase: currentCase,
+        hypothesis: hypothesis,
+        languageCode: languageCode,
+        profile: profile,
+      );
+    }
+
     final lang = languageCode ?? 'en';
     final prompt = '''
 Target Hypothesis: "${hypothesis.title} — ${hypothesis.explanation}"
@@ -420,6 +556,7 @@ Output as a raw JSON list of strings: ["question 1", "question 2", "question 3"]
       currentCase: currentCase,
       hypothesis: hypothesis,
       languageCode: languageCode,
+      profile: profile,
     );
   }
 
@@ -427,7 +564,20 @@ Output as a raw JSON list of strings: ["question 1", "question 2", "question 3"]
   Future<String> summarizeFindings({
     required CaseModel currentCase,
     String? languageCode,
+    PsychologicalProfileModel? profile,
   }) async {
+    if (!canTransmitCaseData(
+      currentCase: currentCase,
+      profile: profile,
+      checkProfileConsent: true,
+    )) {
+      return _fallback.summarizeFindings(
+        currentCase: currentCase,
+        languageCode: languageCode,
+        profile: profile,
+      );
+    }
+
     final lang = languageCode ?? 'en';
     final prompt = '''
 Synthesize findings for:
@@ -451,6 +601,7 @@ Write a 3-bullet structured cognitive summary separating observable facts from a
     return _fallback.summarizeFindings(
       currentCase: currentCase,
       languageCode: languageCode,
+      profile: profile,
     );
   }
 }

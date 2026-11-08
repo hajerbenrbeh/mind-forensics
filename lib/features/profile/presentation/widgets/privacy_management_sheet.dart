@@ -8,6 +8,7 @@ import '../../../../app/theme/lab_theme.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
 import '../../controllers/profile_controller.dart';
 import '../../domain/psychological_profile_model.dart';
+import '../../../journal/presentation/widgets/journal_memory_sheet.dart';
 
 class PrivacyManagementSheet extends ConsumerStatefulWidget {
   const PrivacyManagementSheet({super.key, required this.profile});
@@ -91,15 +92,15 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1F080D) : const Color(0xFFFFF1F2),
+        backgroundColor: isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
-          side: const BorderSide(color: LabColors.cherryRed, width: 1),
+          side: BorderSide(color: isDark ? LabColors.safetyBorderDark : LabColors.safetyBorderLight, width: 1),
         ),
         title: Text(
           strings.isArabic ? 'حذف الملف النفسي بالكامل؟' : 'Delete Psychological Profile?',
-          style: const TextStyle(
-            color: LabColors.cherryRedGlow,
+          style: TextStyle(
+            color: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -265,6 +266,55 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                   ),
                 ),
 
+                const SizedBox(height: 16),
+
+                // Memory Vault Access Tile
+                InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.pop(context);
+                    JournalMemorySheet.show(context);
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF141414) : const Color(0xFFF7F7F9),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: border),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.psychology_outlined, size: 20, color: LabColors.champagneGold),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                strings.isArabic ? 'خزينة الذاكرة' : 'Memory Vault',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                strings.isArabic
+                                    ? 'عرض ومراجعة المعلومات التي يتذكرها المساعد الذكي'
+                                    : 'Review what the AI companion remembers',
+                                style: TextStyle(fontSize: 10.5, color: textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, size: 18, color: textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 24),
 
                 // Management & Reset Actions
@@ -307,17 +357,17 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 11),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E070C) : const Color(0xFFFFF1F2),
+                      color: isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: LabColors.cherryBorderDark),
+                      border: Border.all(color: isDark ? LabColors.safetyBorderDark : LabColors.safetyBorderLight),
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       strings.isArabic ? 'حذف الملف النفسي بالكامل' : 'Delete Psychological Profile',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
-                        color: LabColors.cherryRedGlow,
+                        color: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth,
                       ),
                     ),
                   ),

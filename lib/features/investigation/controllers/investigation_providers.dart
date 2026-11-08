@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../auth/controllers/auth_controller.dart';
+import '../../journal/controllers/journal_memory_controller.dart';
 import '../data/direct_gemini_investigator_service.dart';
 import '../data/local_case_repository.dart';
 import '../data/mock_investigator_service.dart';
@@ -14,6 +15,8 @@ import '../domain/forensic_chain.dart';
 import '../domain/hypothesis.dart';
 import '../domain/investigator_service.dart';
 import '../domain/label_type.dart';
+import '../domain/session_dialogue_compressor.dart';
+import '../domain/session_memory_window.dart';
 import '../domain/statement.dart';
 
 /// Public API key configured for Mind Forensics demo/testing.
@@ -251,6 +254,7 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
     if (current != null && current.id == id) {
       state = const AsyncValue.data(null);
     }
+    ref.read(journalMemoryControllerProvider.notifier).handleEntryDeleted('case:$id');
     ref.invalidate(savedCasesProvider);
   }
 
@@ -259,6 +263,11 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
     final repo = ref.read(caseRepositoryProvider);
     await repo.deleteAllCases();
     state = const AsyncValue.data(null);
+    // Correct bulk deletion: clears case memories by recompressing with an empty case list,
+    // reloading and preserving valid trace-derived memories.
+    await ref
+        .read(journalMemoryControllerProvider.notifier)
+        .recalculateMemories(cases: const []);
     ref.invalidate(savedCasesProvider);
   }
 
@@ -295,10 +304,19 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
     ref.invalidate(savedCasesProvider);
   }
 
-  /// Adds a statement with its forensic label.
-  Future<void> addStatement(String text, StatementSpeaker speaker, {LabelType? label}) async {
+  /// Adds a statement with its forensic label, recomputing session summary deterministically.
+  Future<void> addStatement(
+    String text,
+    StatementSpeaker speaker, {
+    LabelType? label,
+    bool isSafetyStatement = false,
+  }) async {
     final current = state.value;
     if (current == null) return;
+    if (current.isPausedForSafety && !isSafetyStatement) {
+      // Normal dialogue actions cannot bypass a paused case
+      return;
+    }
 
     final newStatement = Statement(
       id: const Uuid().v4(),
@@ -309,14 +327,45 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
     );
 
     final updatedStatements = [...current.statements, newStatement];
+
+    // Partition memory window and recompute structured session summary if older turns exist
+    final window = SessionMemoryWindowManager.partition(updatedStatements);
+    String? newSummary = current.sessionSummary;
+    if (window.olderStatements.isNotEmpty) {
+      newSummary = SessionDialogueCompressor.recomputeSummary(
+        olderStatements: window.olderStatements,
+        currentCase: current.copyWith(statements: updatedStatements),
+      );
+    }
+
     final updated = current.copyWith(
       statements: updatedStatements,
+      sessionSummary: newSummary,
       updatedAt: DateTime.now(),
     );
 
     await ref.read(caseRepositoryProvider).saveCase(updated);
     state = AsyncValue.data(updated);
     ref.invalidate(savedCasesProvider);
+  }
+
+  /// Pauses the active case for safety with fail-closed persistence guarantees.
+  Future<bool> pauseCaseForSafety() async {
+    final current = state.value;
+    if (current == null) return false;
+    try {
+      final paused = current.copyWith(
+        isPausedForSafety: true,
+        updatedAt: DateTime.now(),
+      );
+      await ref.read(caseRepositoryProvider).saveCase(paused);
+      state = AsyncValue.data(paused);
+      ref.invalidate(savedCasesProvider);
+      return true;
+    } catch (_) {
+      // Fail closed: return false on persistence failure
+      return false;
+    }
   }
 
   /// Records the forensic chain (Trigger -> Thought -> Emotion -> Behavior).
@@ -379,6 +428,7 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
 
     await ref.read(caseRepositoryProvider).saveCase(updated);
     state = AsyncValue.data(updated);
+    ref.read(journalMemoryControllerProvider.notifier).recalculateMemories();
     ref.invalidate(savedCasesProvider);
   }
 }

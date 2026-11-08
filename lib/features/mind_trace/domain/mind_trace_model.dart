@@ -15,7 +15,7 @@ class MindTraceModel {
     this.overallMood = 'calm',
     this.selectedEmotions = const [],
     this.moodIntensity = 5,
-    this.energyLevel = 5,
+    this.energyLevel,
     this.anxietyLevel,
     this.sleepHours,
     this.sleepQuality,
@@ -45,7 +45,7 @@ class MindTraceModel {
   final String overallMood;
   final List<String> selectedEmotions;
   final int moodIntensity; // 1 - 10
-  final int energyLevel; // 1 - 10
+  final int? energyLevel; // 0 - 10 (null when unrecorded)
   final int? anxietyLevel; // 0 - 10
   final double? sleepHours;
   final int? sleepQuality; // 1 - 5
@@ -191,7 +191,7 @@ class MindTraceModel {
               .toList() ??
           const [],
       moodIntensity: (json['moodIntensity'] as num?)?.toInt() ?? 5,
-      energyLevel: (json['energyLevel'] as num?)?.toInt() ?? 5,
+      energyLevel: (json['energyLevel'] as num?)?.toInt(),
       anxietyLevel: (json['anxietyLevel'] as num?)?.toInt(),
       sleepHours: (json['sleepHours'] as num?)?.toDouble(),
       sleepQuality: (json['sleepQuality'] as num?)?.toInt(),

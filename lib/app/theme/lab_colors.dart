@@ -64,20 +64,35 @@ class LabColors {
   static const Color nightAccentBlue = Color(0xFF38BDF8);
   static const Color nightAccentSoft = Color(0xFF23322B);
 
-  // Safety & Crisis Warmth
-  static const Color safetyWarmth = Color(0xFFF43F5E);
-  static const Color safetySoftBgLight = Color(0xFFFFF1F2);
-  static const Color safetySoftBgDark = Color(0xFF2B161B);
+  // ===========================================================================
+  // HARMONIZED MOOD PALETTE (Distinct, dignified, grounded in nature)
+  // ===========================================================================
+  static const Color moodCalm = Color(0xFF91AD9A); // Botanical Sage
+  static const Color moodAnxious = Color(0xFFD4976A); // Warm Sand / Desert Dune (replaces bright pink)
+  static const Color moodFrustrated = Color(0xFFFBBF24); // Warm Amber Gold
+  static const Color moodHeavy = Color(0xFFA78BFA); // Soft Iris Slate
+  static const Color moodRestless = Color(0xFF38BDF8); // Mineral Mist / Crisp Sky
+
+  // ===========================================================================
+  // SAFETY & CRISIS WARMTH (Restrained Terracotta / Warm Clay)
+  // Highly visible emergency support without harsh neon red or decorative pink
+  // ===========================================================================
+  static const Color safetyWarmth = Color(0xFFC04B22); // Rich Terracotta (Light contrast 5.2:1)
+  static const Color safetyWarmthDark = Color(0xFFE57A58); // Terracotta Ember (Dark contrast 6.2:1)
+  static const Color safetySoftBgLight = Color(0xFFFDF4EF);
+  static const Color safetySoftBgDark = Color(0xFF2C1D17);
+  static const Color safetyBorderLight = Color(0xFFF5D6C8);
+  static const Color safetyBorderDark = Color(0xFF4D2F23);
   static const Color safetySoftBg = safetySoftBgLight;
 
-  // Secondary Accents & Grounding Tones
-  static const Color cherryRed = Color(0xFFE11D48);
-  static const Color cherryRedGlow = Color(0xFFFB7185);
-  static const Color cherryRedDeep = Color(0xFF9F1239);
-  static const Color cherryBgDark = Color(0xFF28131A);
-  static const Color cherryBorderDark = Color(0xFF541C29);
-  static const Color cherryBgLight = Color(0xFFFFF1F2);
-  static const Color cherryBorderLight = Color(0xFFFECDD3);
+  // Harmonized warm grounding accents (replaces cherry red & bright pink)
+  static const Color cherryRed = Color(0xFFC04B22);
+  static const Color cherryRedGlow = Color(0xFFD4976A); // Warm Sand / Ember (replaces #FB7185)
+  static const Color cherryRedDeep = Color(0xFF8B3A1C);
+  static const Color cherryBgDark = Color(0xFF2C1D17);
+  static const Color cherryBorderDark = Color(0xFF4D2F23);
+  static const Color cherryBgLight = Color(0xFFFDF4EF);
+  static const Color cherryBorderLight = Color(0xFFF5D6C8);
 
   // Warm Cashmere Beige
   static const Color warmBeige = Color(0xFFD9B9A9);

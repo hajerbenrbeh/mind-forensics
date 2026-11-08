@@ -1,3 +1,4 @@
+import '../../journal/domain/journal_memory_model.dart';
 import '../../journey/domain/journey_state_model.dart';
 import '../../mind_trace/domain/mind_trace_model.dart';
 import '../../profile/domain/psychological_profile_model.dart';
@@ -23,6 +24,9 @@ abstract class InvestigatorService {
     JourneyStateModel? journey,
     ConversationMode? conversationMode,
     MindTraceModel? latestTrace,
+    List<MindTraceModel>? historicalTraces,
+    List<JournalMemoryModel>? compressedMemories,
+    String? sessionSummary,
   });
 
   /// Proposes several candidate hypotheses based on evidence gathered.
@@ -30,6 +34,7 @@ abstract class InvestigatorService {
   Future<List<Hypothesis>> generateHypotheses({
     required CaseModel currentCase,
     String? languageCode,
+    PsychologicalProfileModel? profile,
   });
 
   /// Cross-examines a selected hypothesis to test its validity.
@@ -37,11 +42,13 @@ abstract class InvestigatorService {
     required CaseModel currentCase,
     required Hypothesis hypothesis,
     String? languageCode,
+    PsychologicalProfileModel? profile,
   });
 
   /// Produces the structured findings summary.
   Future<String> summarizeFindings({
     required CaseModel currentCase,
     String? languageCode,
+    PsychologicalProfileModel? profile,
   });
 }

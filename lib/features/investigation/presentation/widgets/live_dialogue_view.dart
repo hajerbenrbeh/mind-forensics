@@ -5,7 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/localization/locale_controller.dart';
 import '../../../../app/theme/lab_colors.dart';
+import '../../../../core/safety/crisis_keywords.dart';
+import '../../../../core/safety/safety_interceptor.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
+import '../../../journal/controllers/journal_memory_controller.dart';
 import '../../../journey/controllers/journey_controller.dart';
 import '../../../mind_trace/controllers/mind_trace_controller.dart';
 import '../../../profile/controllers/profile_controller.dart';
@@ -13,6 +16,7 @@ import '../../controllers/investigation_providers.dart';
 import '../../domain/case_model.dart';
 import '../../domain/conversation_mode.dart';
 import '../../domain/label_type.dart';
+import '../../domain/session_memory_window.dart';
 import '../../domain/statement.dart';
 import 'custom_ai_instructions_sheet.dart';
 
@@ -81,6 +85,9 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     final text = (quickText ?? _textController.text).trim();
     if (text.isEmpty || _isInvestigatorTyping) return;
 
+    final activeCase = ref.read(activeCaseControllerProvider).value ?? widget.caseModel;
+    if (activeCase.isPausedForSafety) return;
+
     if (quickText == null) {
       _textController.clear();
     }
@@ -89,6 +96,28 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     final notifier = ref.read(activeCaseControllerProvider.notifier);
     final service = ref.read(investigatorServiceProvider);
     final locale = ref.read(localeControllerProvider);
+
+    // Layer 1 (Offline) Pre-Generation Crisis Scan
+    final safetyLevel = CrisisKeywords.evaluateText(text);
+    if (safetyLevel == 2) {
+      // 1. Persist the incoming statement
+      await notifier.addStatement(
+        text,
+        StatementSpeaker.user,
+        label: LabelType.assumption,
+        isSafetyStatement: true,
+      );
+      // 2. Mark case paused for safety with fail-closed persistence
+      final pausePersisted = await notifier.pauseCaseForSafety();
+      if (!pausePersisted) {
+        // Fail closed: abort all dialogue continuation
+        return;
+      }
+      if (mounted) {
+        SafetyInterceptor.showCrisisPauseDialog(context);
+      }
+      return; // Immediate abort of AI generation
+    }
 
     // If case has no incident description yet, initialize it with this first thought
     if (widget.caseModel.incidentDescription.trim().isEmpty) {
@@ -112,14 +141,22 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
       final currentCase = ref.read(activeCaseControllerProvider).value ?? widget.caseModel;
       final profile = ref.read(profileControllerProvider).value;
       final journey = ref.read(journeyControllerProvider).value;
+      final traces = ref.read(mindTraceControllerProvider).value ?? [];
+      final memories = ref.read(journalMemoryControllerProvider).value ?? [];
+
+      // Partition into verbatim reciprocal window and deterministically recomputed summary
+      final window = SessionMemoryWindowManager.partition(currentCase.statements);
       final reply = await service.getNextQuestion(
         currentCase: currentCase,
-        conversationHistory: currentCase.statements,
+        conversationHistory: window.verbatimStatements,
+        sessionSummary: window.sessionSummary ?? currentCase.sessionSummary,
         languageCode: locale.languageCode,
         profile: profile,
         journey: journey,
         conversationMode: _currentMode,
         latestTrace: ref.read(todayTraceProvider),
+        historicalTraces: traces,
+        compressedMemories: memories,
       );
 
       if (mounted) {
@@ -391,10 +428,12 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
       final strings = ref.read(appStringsProvider);
       final service = ref.read(investigatorServiceProvider);
       final locale = ref.read(localeControllerProvider);
+      final profile = ref.read(profileControllerProvider).value;
 
       final summary = await service.summarizeFindings(
         currentCase: currentCase,
         languageCode: locale.languageCode,
+        profile: profile,
       );
 
       final notifier = ref.read(activeCaseControllerProvider.notifier);
@@ -920,6 +959,9 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     Color textPrimary,
     Color textSecondary,
   ) {
+    final activeCase = ref.watch(activeCaseControllerProvider).value ?? widget.caseModel;
+    final isPaused = activeCase.isPausedForSafety;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
       decoration: BoxDecoration(
@@ -931,14 +973,21 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
           Expanded(
             child: TextField(
               controller: _textController,
+              enabled: !isPaused,
               minLines: 1,
               maxLines: 4,
               textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _sendMessage(),
+              onSubmitted: (_) => isPaused ? null : _sendMessage(),
               style: TextStyle(fontSize: 13, color: textPrimary),
               decoration: InputDecoration(
-                hintText: strings.typeMessageHint,
-                hintStyle: TextStyle(fontSize: 12, color: textSecondary.withValues(alpha: 0.6)),
+                hintText: isPaused
+                    ? 'Session paused for safety'
+                    : strings.typeMessageHint,
+                hintStyle: TextStyle(
+                    fontSize: 12,
+                    color: isPaused
+                        ? LabColors.safetyWarmth
+                        : textSecondary.withValues(alpha: 0.6)),
                 filled: true,
                 fillColor: isDark ? const Color(0xFF121212) : const Color(0xFFF4F4F5),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -959,18 +1008,22 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
           ),
           const SizedBox(width: 8),
           BouncingWidget(
-            onTap: _isInvestigatorTyping ? null : () => _sendMessage(),
+            onTap: isPaused || _isInvestigatorTyping ? null : () => _sendMessage(),
             child: Container(
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: isDark ? Colors.white : Colors.black,
+                color: isPaused
+                    ? (isDark ? const Color(0xFF222222) : const Color(0xFFE5E5E5))
+                    : (isDark ? Colors.white : Colors.black),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
-                Icons.arrow_upward_rounded,
+                isPaused ? Icons.lock_outline_rounded : Icons.arrow_upward_rounded,
                 size: 20,
-                color: isDark ? Colors.black : Colors.white,
+                color: isPaused
+                    ? textSecondary
+                    : (isDark ? Colors.black : Colors.white),
               ),
             ),
           ),

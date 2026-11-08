@@ -37,15 +37,20 @@ class _PebbleArtPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width * 0.44;
 
-    // Organic pebble body path (slightly squashy and rounded)
+    // Organic pebble body path (botanical sage & slate, zero neon pink)
     final bodyPaint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [
-          Color(0xFFFDA4AF), // Soft light rose
-          Color(0xFFF43F5E), // Rose coral
-        ],
+        colors: isDark
+            ? const [
+                Color(0xFF34453C), // Deep calm botanical slate
+                Color(0xFF5A7566), // Muted sage depth
+              ]
+            : const [
+                Color(0xFFD6E3D9), // Soft botanical linen/sage
+                Color(0xFF91AD9A), // Grounded calming sage
+              ],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.fill;
 
@@ -61,14 +66,15 @@ class _PebbleArtPainter extends CustomPainter {
 
     // Subtle inner shadow / depth
     final highlightPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.22)
+      ..color = Colors.white.withValues(alpha: isDark ? 0.12 : 0.28)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     canvas.drawRRect(bodyRect.deflate(2.0), highlightPaint);
 
     // Two calm spiral eyes / mindfulness concentric ripples
+    final strokeColor = isDark ? const Color(0xFFF0F2EC) : const Color(0xFF34443B);
     final strokePaint = Paint()
-      ..color = const Color(0xFF881337)
+      ..color = strokeColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.8
       ..strokeCap = StrokeCap.round;
@@ -81,7 +87,7 @@ class _PebbleArtPainter extends CustomPainter {
 
     // Calm neutral mouth line
     final mouthPaint = Paint()
-      ..color = const Color(0xFF881337)
+      ..color = strokeColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.6
       ..strokeCap = StrokeCap.round;

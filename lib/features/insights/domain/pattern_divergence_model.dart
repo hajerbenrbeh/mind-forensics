@@ -8,6 +8,18 @@ enum DivergenceCategory {
   generalVariation,
 }
 
+/// Distinguishes the scope and nature of an observed difference.
+enum ObservationType {
+  /// A difference observed in a single metric (e.g. sleep duration shifted, energy shifted).
+  individualMetricShift,
+
+  /// A co-occurring difference across two or more metrics (e.g. reduced sleep co-occurring with elevated energy).
+  combinedMetricShift,
+
+  /// A repeated pattern sustained across multiple check-ins (e.g. tension elevated across multiple distinct days).
+  longitudinalPattern,
+}
+
 /// An evidence-based pattern observation comparing recent entries to the user's baseline.
 ///
 /// Mandated clinical boundaries (Part 7.2 & AGENTS.md):
@@ -34,11 +46,13 @@ class PatternDivergence {
     required this.userCheckInQuestion,
     required this.supportPlanPrompt,
     this.therapistPrompt,
+    this.observationType = ObservationType.individualMetricShift,
     required this.detectedAt,
   });
 
   final String id;
   final DivergenceCategory category;
+  final ObservationType observationType;
   final String title;
   final String timeWindow;
   final List<String> contributingObservations;

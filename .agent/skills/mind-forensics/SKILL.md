@@ -58,7 +58,19 @@ This skill defines the technical and clinical architecture of the **Mind Forensi
 
 ---
 
-## 6. Verification Commands
+## 6. Global Low-Cognitive-Load & Options-First Principle
+
+* **Core Mandate:** The product must be **OPTIONS-FIRST, not QUESTION-FIRST**. Using the application must never feel like another mental chore.
+* **Options Before Open Questions:** Present selectable choices first (3–6 clear options: emotion cards, situation chips, suggested replies, sliders).
+* **No Compulsory Blank Text Fields:** Free text is always optional ("Something else", "Add your own", "I prefer to explain", "Skip for now"). Never make an unexplained blank text box the default path.
+* **Progressive Interaction & Cognitive Limit:** One decision at a time; simple language; never penalize incomplete or skipped interactions.
+* **Intelligent Suggestions:** Suggestions may be presented from context, but never auto-submitted or presumed true without explicit confirmation.
+* **AI Companion Interaction:** Not an interrogator; never stack questions; offer quick suggested responses; allow brief replies; respect conversational boundaries.
+* **Safety Non-Compromise:** Crisis and safety queries remain direct, clear, and unambiguous—never oversimplified into vague multiple-choice options.
+
+---
+
+## 7. Verification Commands
 
 Always run both commands after making code changes:
 ```powershell

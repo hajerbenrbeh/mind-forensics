@@ -22,7 +22,6 @@ import 'trace_entry_detail_sheet.dart';
 /// 2. Emotional intensity (1-10 interactive scale)
 /// 3. How is your mind? (Racing thoughts, concentration, intrusive thoughts, mental clarity, disconnection)
 /// 4. How is your body? (Energy level, sleep duration, sleep quality, physical tension)
-/// 5. Personal reflection ("What has been happening in your mind today?", optional/skippable)
 ///
 /// Followed by a dedicated Completion Screen celebrating the recorded trace.
 class DailyMindTraceStepper extends ConsumerStatefulWidget {
@@ -43,7 +42,7 @@ class DailyMindTraceStepper extends ConsumerStatefulWidget {
 }
 
 class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
-  int _currentStep = 0; // 0 to 4: Steps 1-5; 5: Completion Screen
+  int _currentStep = 0; // 0 to 3: Steps 1-4; 4: Completion Screen
   bool _isSaving = false;
 
   // Step 1: Emotions
@@ -66,9 +65,6 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
   double _sleepHours = 7.0;
   int _sleepQuality = 4; // 1-5
   double _physicalTension = 4.0;
-
-  // Step 5: Reflection
-  final TextEditingController _journalController = TextEditingController();
   bool _hasVoiceNote = false;
 
   // Completed saved trace cache
@@ -92,13 +88,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
     _intrusiveThoughts = (trace.intrusiveThoughts ?? 3).toDouble();
     _mentalClarity = (trace.mentalClarity ?? 6).toDouble();
     _emotionalDisconnection = (trace.emotionalDisconnection ?? 2).toDouble();
-    _energyLevel = trace.energyLevel.toDouble();
+    _energyLevel = (trace.energyLevel ?? 5).toDouble();
     _sleepHours = trace.sleepHours ?? 7.0;
     _sleepQuality = trace.sleepQuality ?? 4;
     _physicalTension = (trace.physicalTension ?? 4).toDouble();
-    if (trace.journalText != null) {
-      _journalController.text = trace.journalText!;
-    }
     if (trace.voiceNotePath != null) {
       _hasVoiceNote = true;
     }
@@ -106,7 +99,6 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
 
   @override
   void dispose() {
-    _journalController.dispose();
     for (final c in _dynamicQuestionControllers.values) {
       c.dispose();
     }
@@ -149,9 +141,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
       racingThoughts: _racingThoughts.toInt(),
       intrusiveThoughts: _intrusiveThoughts.toInt(),
       emotionalDisconnection: _emotionalDisconnection.toInt(),
-      journalText: _journalController.text.trim().isNotEmpty
-          ? _journalController.text.trim()
-          : null,
+      journalText: widget.initialTrace?.journalText,
       voiceNotePath: _hasVoiceNote
           ? (widget.initialTrace?.voiceNotePath ??
               'memo_${now.millisecondsSinceEpoch}.m4a')
@@ -171,7 +161,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
       if (mounted) {
         setState(() {
           _completedTrace = trace;
-          _currentStep = 5; // Move to Completion Screen
+          _currentStep = 4; // Move to Completion Screen
         });
       }
     } finally {
@@ -300,7 +290,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
     final textSecondary =
         isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
 
-    if (_currentStep == 5) {
+    if (_currentStep == 4) {
       return _buildCompletionScreen(
         isDark: isDark,
         strings: strings,
@@ -335,7 +325,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 ),
               ),
               Text(
-                '${strings.isArabic ? 'خطوة' : 'STEP'} ${_currentStep + 1}/5',
+                '${strings.isArabic ? 'خطوة' : 'STEP'} ${_currentStep + 1}/4',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -355,9 +345,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
           else if (_currentStep == 2)
             _buildStep3Mind(isDark, strings, surfaceColor, borderColor, textPrimary, textSecondary)
           else if (_currentStep == 3)
-            _buildStep4Body(isDark, strings, surfaceColor, borderColor, textPrimary, textSecondary)
-          else if (_currentStep == 4)
-            _buildStep5Reflection(isDark, strings, surfaceColor, borderColor, textPrimary, textSecondary),
+            _buildStep4Body(isDark, strings, surfaceColor, borderColor, textPrimary, textSecondary),
 
           const SizedBox(height: 28),
 
@@ -371,7 +359,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
   }
 
   Widget _buildProgressBar(bool isDark, Color borderColor) {
-    final progress = (_currentStep + 1) / 5.0;
+    final progress = (_currentStep + 1) / 4.0;
     return Column(
       children: [
         ClipRRect(
@@ -397,8 +385,6 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
         return strings.isArabic ? '3. حالة ذهنك وأفكارك' : '3. How Is Your Mind?';
       case 3:
         return strings.isArabic ? '4. حالة جسدك وطاقتك' : '4. How Is Your Body?';
-      case 4:
-        return strings.isArabic ? '5. تأمل وملاحظة حرة' : '5. Personal Reflection';
       default:
         return '';
     }
@@ -640,7 +626,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF22080F) : const Color(0xFFFFF1F2),
+                    color: isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: LabColors.wineBorder),
                   ),
@@ -1156,147 +1142,6 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
   }
 
   // ===========================================================================
-  // STEP 5: PERSONAL REFLECTION (OPTIONAL WRITING)
-  // ===========================================================================
-  Widget _buildStep5Reflection(
-    bool isDark,
-    AppStrings strings,
-    Color surfaceColor,
-    Color borderColor,
-    Color textPrimary,
-    Color textSecondary,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                strings.isArabic
-                    ? 'شنوة صار في ذهنك اليوم؟'
-                    : 'What has been happening in your mind today?',
-                style: LabTheme.serifStyle(
-                  fontSize: 17,
-                  height: 1.3,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                ),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF181818) : const Color(0xFFF4F4F5),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: borderColor),
-              ),
-              child: Text(
-                strings.isArabic ? 'اختياري' : 'OPTIONAL',
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.4,
-                  color: textSecondary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          strings.isArabic
-              ? 'مساحة شخصية محمية محلياً على جهازك لتفريغ أي فكرة أو موقف.'
-              : 'A secure, unjudged offline space to deconstruct or release thoughts.',
-          style: TextStyle(fontSize: 11.5, color: textSecondary),
-        ),
-        const SizedBox(height: 16),
-
-        TextField(
-          controller: _journalController,
-          maxLines: 6,
-          style: TextStyle(fontSize: 13, color: textPrimary),
-          decoration: InputDecoration(
-            hintText: strings.isArabic
-                ? 'اكتب براحتك... شنوة المواقف أو الخواطر اللي شوشت بالك أو فرحتك؟'
-                : 'Write freely... what thoughts, moments, or situations left an impression?',
-            hintStyle: TextStyle(
-              fontSize: 12,
-              color: textSecondary.withValues(alpha: 0.6),
-            ),
-            filled: true,
-            fillColor: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF9F9FB),
-            contentPadding: const EdgeInsets.all(14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: LabColors.champagneGold),
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-
-        // Optional Voice Journal Reference
-        InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            setState(() => _hasVoiceNote = !_hasVoiceNote);
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: _hasVoiceNote
-                  ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
-                  : surfaceColor,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: _hasVoiceNote ? LabColors.champagneGold : borderColor,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  _hasVoiceNote ? Icons.mic_rounded : Icons.mic_none_rounded,
-                  size: 16,
-                  color: _hasVoiceNote ? LabColors.champagneGold : textSecondary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    _hasVoiceNote
-                        ? (strings.isArabic
-                            ? 'تم إرفاق تسجيل صوتي ليومك'
-                            : 'Voice reflection note attached')
-                        : (strings.isArabic
-                            ? '+ إرفاق تسجيل صوتي (اختياري)'
-                            : '+ Attach optional voice note'),
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: _hasVoiceNote ? textPrimary : textSecondary,
-                    ),
-                  ),
-                ),
-                if (_hasVoiceNote)
-                  const Icon(Icons.check, size: 14, color: LabColors.champagneGold),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ===========================================================================
   // COMPLETION SCREEN
   // ===========================================================================
   Widget _buildCompletionScreen({
@@ -1579,7 +1424,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
     Color textPrimary,
     Color textSecondary,
   ) {
-    final isLastStep = _currentStep == 4;
+    final isLastStep = _currentStep == 3;
 
     return Row(
       children: [
@@ -1613,7 +1458,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
           const SizedBox(width: 8),
         ],
 
-        // Optional Skip button for optional steps (Step 2: Mind, Step 3: Body, Step 4: Reflection)
+        // Optional Skip button for optional steps (Step 2: Mind, Step 3: Body)
         if (_currentStep >= 2 && !isLastStep) ...[
           InkWell(
             onTap: () {

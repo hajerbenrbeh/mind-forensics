@@ -51,14 +51,17 @@ class HomeWeekMoodTracker extends StatelessWidget {
         final recordedColor = recordedMoodDays[dateKey];
         final isRecorded = recordedColor != null;
 
-        // Authentic coloring: only recorded days get the mood tint
+        // Authentic coloring: only recorded days get the mood tint;
+        // selected unrecorded days get a subtle theme-accent tint.
         final circleBg = isRecorded
             ? recordedColor
-            : (isDark ? tokens.surfaceSecondary : const Color(0xFFE5ECE6));
+            : (isSelected
+                ? tokens.accentSoft
+                : tokens.surfaceSecondary);
 
         final textColor = isRecorded
             ? Colors.white
-            : (isToday ? tokens.textPrimary : tokens.textSecondary);
+            : (isSelected || isToday ? tokens.textPrimary : tokens.textSecondary);
 
         return Expanded(
           child: Column(
@@ -68,8 +71,8 @@ class HomeWeekMoodTracker extends StatelessWidget {
                 _dayLetters[index],
                 style: TextStyle(
                   fontSize: 11.5,
-                  fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
-                  color: isToday ? tokens.textPrimary : tokens.textSecondary,
+                  fontWeight: isToday || isSelected ? FontWeight.w800 : FontWeight.w500,
+                  color: isToday || isSelected ? tokens.textPrimary : tokens.textSecondary,
                 ),
               ),
               const SizedBox(height: 7),
@@ -86,13 +89,13 @@ class HomeWeekMoodTracker extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: isSelected
                         ? Border.all(
-                            color: isDark ? Colors.white : tokens.textPrimary,
+                            color: tokens.accent,
                             width: 2.2,
                           )
                         : (isToday
                             ? Border.all(
-                                color: tokens.accent,
-                                width: 2.0,
+                                color: isDark ? const Color(0xFFF0F2EC) : const Color(0xFF34443B),
+                                width: 1.8,
                               )
                             : (isRecorded
                                 ? null
@@ -103,7 +106,7 @@ class HomeWeekMoodTracker extends StatelessWidget {
                     boxShadow: isRecorded
                         ? [
                             BoxShadow(
-                              color: recordedColor.withValues(alpha: 0.28),
+                              color: recordedColor.withValues(alpha: 0.24),
                               blurRadius: 4.0,
                               offset: const Offset(0, 2),
                             ),

@@ -35,9 +35,10 @@ class SupportButton extends ConsumerWidget {
       );
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextButton.icon(
       style: TextButton.styleFrom(
-        foregroundColor: LabColors.safetyWarmth,
+        foregroundColor: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       ),
       icon: const Icon(Icons.shield_outlined, size: 15),
@@ -81,9 +82,9 @@ class SupportModalSheet extends ConsumerWidget {
     final strings = ref.watch(appStringsProvider);
     final resources = CrisisResource.tunisianResources;
 
-    final sheetBg = isDark ? const Color(0xFF0F0F0F) : LabColors.daylightSurface;
-    final cardBg = isDark ? const Color(0xFF161616) : LabColors.daylightBackground;
-    final borderColor = isDark ? const Color(0xFF262626) : LabColors.daylightBorder;
+    final sheetBg = isDark ? LabColors.nightSurface : LabColors.daylightSurface;
+    final cardBg = isDark ? LabColors.nightSurfaceSubtle : LabColors.daylightBackground;
+    final borderColor = isDark ? LabColors.nightBorder : LabColors.daylightBorder;
     final textPrimary = isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary;
     final textSecondary = isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
 
@@ -104,11 +105,11 @@ class SupportModalSheet extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF280710) : LabColors.safetySoftBgLight,
+                  color: isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Icon(Icons.shield_outlined,
-                    color: LabColors.safetyWarmth, size: 18),
+                child: Icon(Icons.shield_outlined,
+                    color: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth, size: 18),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -198,8 +199,8 @@ class SupportModalSheet extends ConsumerWidget {
                       if (hasPhone)
                         FilledButton.icon(
                           style: FilledButton.styleFrom(
-                            backgroundColor: LabColors.safetyWarmth,
-                            foregroundColor: Colors.white,
+                            backgroundColor: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth,
+                            foregroundColor: isDark ? LabColors.nightBackground : Colors.white,
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                           ),

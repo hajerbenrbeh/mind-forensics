@@ -373,7 +373,12 @@ class ThoughtTraceDetailSheet extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _metricSnippet('ENERGY', '${trace.energyLevel}/10', textPrimary, textSecondary),
+                    _metricSnippet(
+                      'ENERGY',
+                      trace.energyLevel != null ? '${trace.energyLevel}/10' : '--',
+                      textPrimary,
+                      textSecondary,
+                    ),
                     _metricSnippet(
                       'TENSION',
                       trace.physicalTension != null ? '${trace.physicalTension}/10' : '--',

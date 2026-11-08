@@ -111,7 +111,7 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
               Expanded(
                 child: _buildStatCard(
                   title: 'AVG ENERGY',
-                  value: _calculateAverage(filtered.map((t) => t.energyLevel)),
+                  value: _calculateAverage(filtered.map((t) => t.energyLevel).whereType<int>()),
                   suffix: '/10',
                   surfaceColor: surfaceColor,
                   borderColor: borderColor,

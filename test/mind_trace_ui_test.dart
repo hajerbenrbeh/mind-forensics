@@ -68,15 +68,10 @@ void main() {
       await tester.tap(find.text('CONTINUE'));
       await tester.pumpAndSettle();
 
-      // Step 4: Body check
+      // Step 4: Body check & final submission (options-first 4-step wizard)
       expect(find.text('4. HOW IS YOUR BODY?'), findsOneWidget);
-      await tester.tap(find.text('CONTINUE'));
-      await tester.pumpAndSettle();
-
-      // Step 5: Personal reflection & submission
-      expect(find.text('5. PERSONAL REFLECTION'), findsOneWidget);
-      expect(find.text('What has been happening in your mind today?'), findsOneWidget);
       expect(find.text('RECORD DAILY THOUGHT TRACE'), findsOneWidget);
+      expect(find.text('5. PERSONAL REFLECTION'), findsNothing);
     });
 
     testWidgets('ThoughtTraceTimelineView renders search, filters, and grouped timeline entries',

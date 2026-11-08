@@ -125,8 +125,10 @@ class ProgressAnalyticsCalculator {
     double? avgPhysicalTension;
 
     if (filteredTraces.isNotEmpty) {
-      final energies = filteredTraces.map((t) => t.energyLevel).toList();
-      avgEnergy = energies.reduce((a, b) => a + b) / energies.length;
+      final energies = filteredTraces.map((t) => t.energyLevel).whereType<int>().toList();
+      if (energies.isNotEmpty) {
+        avgEnergy = energies.reduce((a, b) => a + b) / energies.length;
+      }
 
       final sleeps = filteredTraces.where((t) => t.sleepHours != null).map((t) => t.sleepHours!).toList();
       if (sleeps.isNotEmpty) {
@@ -241,7 +243,7 @@ class ProgressAnalyticsCalculator {
     final allTimeTraceCount = allTraces.length;
     final allTimeReflectionsCount = allReflections.length;
     final allUniqueEmotions = allTraces.expand((t) => t.selectedEmotions).toSet();
-    final validSomaticCount = allTraces.where((t) => t.sleepHours != null && t.energyLevel > 0).length;
+    final validSomaticCount = allTraces.where((t) => t.sleepHours != null && t.energyLevel != null).length;
     final completedCases = allCases.where((c) => c.isCompleted || c.userConclusion != null).length;
     final journeyExplored = journeyState?.totalCompletedCount ?? 0;
     final totalJourneyActivities = journeyState?.activities.length ?? 17;

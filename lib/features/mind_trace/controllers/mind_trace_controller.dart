@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/localization/locale_controller.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../investigation/controllers/investigation_providers.dart';
+import '../../journal/controllers/journal_memory_controller.dart';
 import '../../journey/controllers/journey_controller.dart';
 import '../../profile/controllers/profile_controller.dart';
 import '../data/local_mind_trace_repository.dart';
@@ -61,6 +62,7 @@ class MindTraceNotifier extends AsyncNotifier<List<MindTraceModel>> {
     await repo.saveTrace(toSave);
     final fresh = await repo.getAllTraces();
     state = AsyncValue.data(fresh);
+    ref.read(journalMemoryControllerProvider.notifier).recalculateMemories(traces: fresh);
   }
 
   Future<void> updateCheckIn(MindTraceModel trace) async {
@@ -68,6 +70,7 @@ class MindTraceNotifier extends AsyncNotifier<List<MindTraceModel>> {
     await repo.saveTrace(trace.copyWith(updatedAt: DateTime.now()));
     final fresh = await repo.getAllTraces();
     state = AsyncValue.data(fresh);
+    ref.read(journalMemoryControllerProvider.notifier).recalculateMemories(traces: fresh);
   }
 
   Future<void> deleteCheckIn(String id) async {
@@ -75,12 +78,18 @@ class MindTraceNotifier extends AsyncNotifier<List<MindTraceModel>> {
     await repo.deleteTrace(id);
     final fresh = await repo.getAllTraces();
     state = AsyncValue.data(fresh);
+    ref.read(journalMemoryControllerProvider.notifier).handleEntryDeleted('trace:$id');
   }
 
   Future<void> clearAllTraces() async {
     final repo = ref.read(mindTraceRepositoryProvider);
     await repo.clearAllTraces();
     state = const AsyncValue.data([]);
+    // Correct bulk deletion: clears trace memories by recompressing with an empty trace list,
+    // reloading and preserving valid case-derived memories.
+    await ref
+        .read(journalMemoryControllerProvider.notifier)
+        .recalculateMemories(traces: const []);
   }
 }
 

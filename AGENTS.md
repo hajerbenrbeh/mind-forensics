@@ -70,3 +70,14 @@ Welcome to the **Mind Forensics** codebase. This file provides immediate operati
       flutter test
       ```
     - Both commands must pass with zero issues.
+
+11. **GLOBAL LOW-COGNITIVE-LOAD & OPTIONS-FIRST PRINCIPLE:**
+    - **Philosophy:** Mind Forensics must never feel like another mental task. The product must be **OPTIONS-FIRST, not QUESTION-FIRST**.
+    - **Options Before Open Questions:** Whenever an interaction can be represented through choices, present those first (e.g. emotion selection instead of compulsory essays, situation categories, suggested responses, simple visual scales).
+    - **No Compulsory Blank Text Fields:** Never make a blank text field the default interaction for ordinary user journeys. Text input is always optional ("Something else", "Add your own", "I prefer to explain", "Skip for now").
+    - **Limit Cognitive Effort:** 1 decision at a time, 3–6 relevant options, simple language, no repetitive questioning, easy pause/skip/exit, zero penalty for incomplete sessions.
+    - **Progressive Interaction:** Start simple; only deepen exploration when the user explicitly chooses to continue.
+    - **Intelligent Suggestions:** Context-aware suggestions are offered, but never silently submitted or assumed without explicit user confirmation.
+    - **AI Companion Role:** Do not act like an interrogator; never stack questions; offer suggested replies; allow brief responses; respect when users do not want to elaborate.
+    - **Safety Exception:** Safety/crisis interactions must remain direct, clear, and unambiguous—never oversimplified with ambiguous options.
+    - **Design Review Gate:** Features fail review if the primary interaction is an unexplained blank text box, requires lengthy typing for ordinary tasks, or overwhelms with choices.

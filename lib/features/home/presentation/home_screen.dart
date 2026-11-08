@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../app/localization/app_strings.dart';
+import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/bouncing_widget.dart';
@@ -53,9 +54,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isLoading = true;
   bool _initializedFromTrace = false;
 
-  // Step 6: Daily Check-in & Note State
-  final TextEditingController _todayNoteController = TextEditingController();
-
   final List<({String key, IconData icon})> _moodOptions = const [
     (key: 'calm', icon: Icons.spa_outlined),
     (key: 'anxious', icon: Icons.bolt_outlined),
@@ -72,7 +70,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
-    _todayNoteController.dispose();
     super.dispose();
   }
 
@@ -92,22 +89,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     HapticFeedback.mediumImpact();
     final activeMood = _moodOptions[_selectedMoodIndex].key;
     final intensity = _moodIntensity.toInt();
-    final note = _todayNoteController.text.trim();
     final todayTrace = ref.read(todayTraceProvider);
     final strings = ref.read(appStringsProvider);
 
     if (todayTrace != null) {
-      // 1. Update existing trace for today
+      // 1. Update existing trace for today (preserves any existing historical note)
       final updated = todayTrace.copyWith(
         overallMood: activeMood,
         moodIntensity: intensity,
-        journalText: note.isNotEmpty ? note : null,
         selectedEmotions: [activeMood],
         updatedAt: DateTime.now(),
       );
       await ref.read(mindTraceControllerProvider.notifier).updateCheckIn(updated);
     } else {
-      // 2. Create new trace for today
+      // 2. Create new options-first trace for today
       final now = DateTime.now();
       final newTrace = MindTraceModel(
         id: 'trace_${now.millisecondsSinceEpoch}',
@@ -117,7 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         moodIntensity: intensity,
         energyLevel: (10 - intensity).clamp(1, 9),
         selectedEmotions: [activeMood],
-        journalText: note.isNotEmpty ? note : null,
+        journalText: null,
         createdAt: now,
         updatedAt: now,
       );
@@ -128,7 +123,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('mf_last_checkin_mood', activeMood);
     await prefs.setInt('mf_last_checkin_intensity', intensity);
-    await prefs.setString('mf_last_checkin_note', note);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -173,17 +167,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Color _getMoodColor(String key) {
     switch (key) {
       case 'calm':
-        return const Color(0xFF91AD9A);
+        return LabColors.moodCalm;
       case 'anxious':
-        return const Color(0xFFFB7185);
+        return LabColors.moodAnxious; // Warm Sand / Desert Dune (replaces bright pink)
       case 'frustrated':
-        return const Color(0xFFFBBF24);
+        return LabColors.moodFrustrated; // Warm Amber
       case 'heavy':
-        return const Color(0xFFA78BFA);
+        return LabColors.moodHeavy; // Soft Iris
       case 'restless':
-        return const Color(0xFF38BDF8);
+        return LabColors.moodRestless; // Mineral Mist
       default:
-        return const Color(0xFF91AD9A);
+        return LabColors.moodCalm;
     }
   }
 
@@ -208,9 +202,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final moodIdx = _moodOptions.indexWhere((m) => m.key == todayTrace.overallMood);
       if (moodIdx != -1) _selectedMoodIndex = moodIdx;
       _moodIntensity = todayTrace.moodIntensity.toDouble();
-      if (todayTrace.journalText != null && _todayNoteController.text.isEmpty) {
-        _todayNoteController.text = todayTrace.journalText!;
-      }
     }
 
     // Build authentic map of dateKey -> moodColor from real user traces
@@ -452,7 +443,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           t.date.month == targetDate.month &&
           t.date.day == targetDate.day).firstOrNull;
       if (dayTrace == null) return null;
-      return (dayTrace.anxietyLevel ?? (10 - dayTrace.energyLevel)).toDouble();
+      return (dayTrace.anxietyLevel ?? (10 - (dayTrace.energyLevel ?? 5))).toDouble();
     });
 
     String stressHeadline;
@@ -891,45 +882,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 );
               }),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Free-text "Today's Note"
-          Text(
-            strings.todaysNoteLabel.toUpperCase(),
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              color: tokens.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _todayNoteController,
-            maxLines: 2,
-            minLines: 1,
-            style: TextStyle(fontSize: 13, color: tokens.textPrimary),
-            decoration: InputDecoration(
-              hintText: strings.todaysNoteHint,
-              hintStyle: TextStyle(fontSize: 12.5, color: tokens.textSecondary.withValues(alpha: 0.7)),
-              filled: true,
-              fillColor: isDark ? const Color(0xFF151B19) : const Color(0xFFF7F8F5),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: tokens.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: tokens.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: tokens.accent, width: 1.5),
-              ),
             ),
           ),
 
@@ -1413,7 +1365,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Icon(
             c.isCompleted ? Icons.check_circle_outline_rounded : Icons.pending_outlined,
             size: 18,
-            color: c.isCompleted ? tokens.accent : const Color(0xFFFB7185),
+            color: c.isCompleted ? tokens.accent : tokens.textSecondary,
           ),
         ),
         title: Text(

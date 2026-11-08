@@ -391,12 +391,12 @@ class _ToolsScreenState extends ConsumerState<ToolsScreen> {
                         decoration: BoxDecoration(
                           color: (_selectedAnswer == currentDrill['correct'])
                               ? (isDark ? const Color(0xFF0F1F17) : const Color(0xFFF0FDF4))
-                              : (isDark ? const Color(0xFF280710) : const Color(0xFFFFF1F2)),
+                              : (isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: (_selectedAnswer == currentDrill['correct'])
                                 ? (isDark ? const Color(0xFF166534) : const Color(0xFF86EFAC))
-                                : (isDark ? const Color(0xFF9F1239) : const Color(0xFFFECDD3)),
+                                : (isDark ? LabColors.safetyBorderDark : LabColors.safetyBorderLight),
                             width: 1,
                           ),
                         ),
@@ -523,11 +523,11 @@ class _ToolsScreenState extends ConsumerState<ToolsScreen> {
                           Container(
                             padding: const EdgeInsets.all(7),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF280710) : LabColors.safetySoftBgLight,
+                              color: isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Icon(Icons.phone_in_talk_outlined,
-                                color: LabColors.safetyWarmth, size: 16),
+                            child: Icon(Icons.phone_in_talk_outlined,
+                                color: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth, size: 16),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -554,8 +554,8 @@ class _ToolsScreenState extends ConsumerState<ToolsScreen> {
                           ),
                           FilledButton(
                             style: FilledButton.styleFrom(
-                              backgroundColor: LabColors.safetyWarmth,
-                              foregroundColor: Colors.white,
+                              backgroundColor: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth,
+                              foregroundColor: isDark ? LabColors.nightBackground : Colors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                             ),
@@ -624,9 +624,9 @@ class _ToolsScreenState extends ConsumerState<ToolsScreen> {
         border = isDark ? const Color(0xFF166534) : const Color(0xFF86EFAC);
         fg = LabColors.factBlue;
       } else if (isSelected) {
-        bg = isDark ? const Color(0xFF280710) : const Color(0xFFFFF1F2);
-        border = isDark ? const Color(0xFF9F1239) : const Color(0xFFFECDD3);
-        fg = LabColors.safetyWarmth;
+        bg = isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight;
+        border = isDark ? LabColors.safetyBorderDark : LabColors.safetyBorderLight;
+        fg = isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth;
       }
     } else if (isSelected) {
       bg = isDark ? const Color(0xFF222222) : const Color(0xFFE4E4E7);

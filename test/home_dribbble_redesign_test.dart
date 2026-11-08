@@ -139,13 +139,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Enter a note in today's check-in
-      final noteField = find.byType(TextField);
-      await tester.ensureVisible(noteField);
-      await tester.enterText(noteField, 'Authentic validation entry from Home');
-      await tester.pumpAndSettle();
-
-      // Tap Log Daily Check-in
+      // Tap Log Daily Check-in (options-first, zero compulsory typing)
       final saveBtn = find.text('Log Daily Check-in');
       await tester.ensureVisible(saveBtn);
       await tester.tap(saveBtn);
@@ -154,7 +148,7 @@ void main() {
       // Verify trace was added into the central MindTraceNotifier state
       final traces = container.read(mindTraceControllerProvider).value ?? [];
       expect(traces.isNotEmpty, isTrue);
-      expect(traces.first.journalText, equals('Authentic validation entry from Home'));
+      expect(traces.first.overallMood, equals('calm'));
 
       // Verify todayTraceProvider is now populated
       final todayTrace = container.read(todayTraceProvider);

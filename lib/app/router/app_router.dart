@@ -6,7 +6,6 @@ import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/insights/presentation/insights_screen.dart';
 import '../../features/investigation/presentation/flash_case_screen.dart';
-import '../../features/journal/presentation/journal_screen.dart';
 import '../../features/journey/presentation/journey_screen.dart';
 import '../../features/mind_trace/presentation/mind_trace_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
@@ -16,8 +15,8 @@ import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/track/presentation/track_screen.dart';
 import 'scaffold_with_nav_bar.dart';
 
-/// App router configuration using GoRouter with 5 persistent bottom tabs:
-/// Home, Journal, Investigator, Toolkit (placeholder in v1), Profile.
+/// App router configuration using GoRouter with 4 persistent bottom tabs:
+/// Home, Investigator, Toolkit, Profile.
 /// Insights lives inside Home until v2.
 class AppRouter {
   static const String onboarding = '/onboarding';
@@ -110,6 +109,10 @@ class AppRouter {
 
       // Route aliases for backward compatibility
       GoRoute(
+        path: '/journal',
+        redirect: (context, state) => home,
+      ),
+      GoRoute(
         path: '/check-in',
         redirect: (context, state) => mindTrace,
       ),
@@ -122,8 +125,8 @@ class AppRouter {
         redirect: (context, state) => profile,
       ),
 
-      // Persistent 5-Tab Bottom Navigation Shell:
-      // Home, Journal, Investigator, Toolkit (placeholder in v1), Profile.
+      // Persistent 4-Tab Bottom Navigation Shell:
+      // Home, Investigator, Toolkit, Profile.
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavBar(navigationShell: navigationShell);
@@ -140,18 +143,7 @@ class AppRouter {
             ],
           ),
 
-          // Branch 1: Journal Archive
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: journal,
-                name: 'journal',
-                builder: (context, state) => const JournalScreen(),
-              ),
-            ],
-          ),
-
-          // Branch 2: Investigator (Flash Case / Cognitive Deconstruction)
+          // Branch 1: Investigator (Flash Case / Cognitive Deconstruction)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -162,7 +154,7 @@ class AppRouter {
             ],
           ),
 
-          // Branch 3: Toolkit (My Journey & Tools Lab)
+          // Branch 2: Toolkit (My Journey & Tools Lab)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -173,7 +165,7 @@ class AppRouter {
             ],
           ),
 
-          // Branch 4: Profile & Clinical Settings
+          // Branch 3: Profile & Clinical Settings
           StatefulShellBranch(
             routes: [
               GoRoute(

@@ -14,6 +14,8 @@ class MindTokens extends ThemeExtension<MindTokens> {
     required this.textTertiary,
     required this.accent,
     required this.accentSoft,
+    required this.safetyWarmth,
+    required this.safetyWarmthSoft,
     required this.cardRadius,
     required this.buttonRadius,
     required this.chipRadius,
@@ -28,6 +30,8 @@ class MindTokens extends ThemeExtension<MindTokens> {
   final Color textTertiary;
   final Color accent;
   final Color accentSoft;
+  final Color safetyWarmth;
+  final Color safetyWarmthSoft;
   final double cardRadius;
   final double buttonRadius;
   final double chipRadius;
@@ -42,6 +46,8 @@ class MindTokens extends ThemeExtension<MindTokens> {
     textTertiary: Color(0xFF7A8D81),
     accent: LabColors.daylightAccent,
     accentSoft: LabColors.daylightAccentSoft,
+    safetyWarmth: LabColors.safetyWarmth,
+    safetyWarmthSoft: LabColors.safetySoftBgLight,
     cardRadius: 20.0,
     buttonRadius: 20.0,
     chipRadius: 24.0,
@@ -57,6 +63,8 @@ class MindTokens extends ThemeExtension<MindTokens> {
     textTertiary: LabColors.textTertiary,
     accent: LabColors.nightAccent,
     accentSoft: LabColors.nightAccentSoft,
+    safetyWarmth: LabColors.safetyWarmthDark,
+    safetyWarmthSoft: LabColors.safetySoftBgDark,
     cardRadius: 20.0,
     buttonRadius: 20.0,
     chipRadius: 24.0,
@@ -73,6 +81,8 @@ class MindTokens extends ThemeExtension<MindTokens> {
     Color? textTertiary,
     Color? accent,
     Color? accentSoft,
+    Color? safetyWarmth,
+    Color? safetyWarmthSoft,
     double? cardRadius,
     double? buttonRadius,
     double? chipRadius,
@@ -87,6 +97,8 @@ class MindTokens extends ThemeExtension<MindTokens> {
       textTertiary: textTertiary ?? this.textTertiary,
       accent: accent ?? this.accent,
       accentSoft: accentSoft ?? this.accentSoft,
+      safetyWarmth: safetyWarmth ?? this.safetyWarmth,
+      safetyWarmthSoft: safetyWarmthSoft ?? this.safetyWarmthSoft,
       cardRadius: cardRadius ?? this.cardRadius,
       buttonRadius: buttonRadius ?? this.buttonRadius,
       chipRadius: chipRadius ?? this.chipRadius,
@@ -106,6 +118,8 @@ class MindTokens extends ThemeExtension<MindTokens> {
       textTertiary: Color.lerp(textTertiary, other.textTertiary, t) ?? textTertiary,
       accent: Color.lerp(accent, other.accent, t) ?? accent,
       accentSoft: Color.lerp(accentSoft, other.accentSoft, t) ?? accentSoft,
+      safetyWarmth: Color.lerp(safetyWarmth, other.safetyWarmth, t) ?? safetyWarmth,
+      safetyWarmthSoft: Color.lerp(safetyWarmthSoft, other.safetyWarmthSoft, t) ?? safetyWarmthSoft,
       cardRadius: cardRadius + (other.cardRadius - cardRadius) * t,
       buttonRadius: buttonRadius + (other.buttonRadius - buttonRadius) * t,
       chipRadius: chipRadius + (other.chipRadius - chipRadius) * t,

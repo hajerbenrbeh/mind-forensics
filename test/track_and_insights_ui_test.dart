@@ -41,7 +41,7 @@ void main() {
       // Verify TabBar
       expect(find.text('Quick Check-in'), findsOneWidget);
       expect(find.text('Detailed Trace'), findsOneWidget);
-      expect(find.text('Journal & Archive'), findsOneWidget);
+      expect(find.text('Trace History'), findsOneWidget);
 
       // Verify Core State Options
       expect(find.text("TODAY'S CORE STATE"), findsOneWidget);

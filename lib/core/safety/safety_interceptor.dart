@@ -54,11 +54,11 @@ class SafetyInterceptor {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF280710) : LabColors.safetySoftBgLight,
+                color: isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.shield_outlined,
-                  color: LabColors.safetyWarmth, size: 20),
+              child: Icon(Icons.shield_outlined,
+                  color: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -116,8 +116,8 @@ class SafetyInterceptor {
           ),
           FilledButton.icon(
             style: FilledButton.styleFrom(
-              backgroundColor: LabColors.safetyWarmth,
-              foregroundColor: Colors.white,
+              backgroundColor: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth,
+              foregroundColor: isDark ? LabColors.nightBackground : Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             icon: const Icon(Icons.shield_outlined, size: 15),

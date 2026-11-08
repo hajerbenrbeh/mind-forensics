@@ -159,11 +159,13 @@ class InsightsScreen extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               MindBadge(
-                label: baseline.hasSufficientData
-                    ? 'Baseline Established (${baseline.totalRecordedDays}d)'
-                    : 'Calibrating (${baseline.totalRecordedDays}/3d)',
-                backgroundColor: baseline.hasSufficientData ? tokens.accentSoft : tokens.surfaceSecondary,
-                textColor: baseline.hasSufficientData ? tokens.accent : tokens.textSecondary,
+                label: baseline.statusLabel,
+                backgroundColor: baseline.hasEstablishedBaseline
+                    ? tokens.accentSoft
+                    : tokens.surfaceSecondary,
+                textColor: baseline.hasEstablishedBaseline
+                    ? tokens.accent
+                    : (baseline.hasSufficientData ? tokens.textPrimary : tokens.textSecondary),
               ),
             ],
           ),
@@ -181,9 +183,21 @@ class InsightsScreen extends ConsumerWidget {
             const SizedBox(height: 14),
             Row(
               children: [
-                _buildStatColumn('TYPICAL SLEEP', '${baseline.averageSleepHours}h', tokens),
-                _buildStatColumn('TYPICAL ENERGY', '${baseline.averageEnergyLevel}/10', tokens),
-                _buildStatColumn('MOOD INTENSITY', '${baseline.averageMoodIntensity}/10', tokens),
+                _buildStatColumn(
+                  'TYPICAL SLEEP',
+                  baseline.averageSleepHours != null ? '${baseline.averageSleepHours}h' : '—',
+                  tokens,
+                ),
+                _buildStatColumn(
+                  'TYPICAL ENERGY',
+                  baseline.averageEnergyLevel != null ? '${baseline.averageEnergyLevel}/10' : '—',
+                  tokens,
+                ),
+                _buildStatColumn(
+                  'MOOD INTENSITY',
+                  baseline.averageMoodIntensity != null ? '${baseline.averageMoodIntensity}/10' : '—',
+                  tokens,
+                ),
               ],
             ),
             if (baseline.commonEmotions.isNotEmpty) ...[
