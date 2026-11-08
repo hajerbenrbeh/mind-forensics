@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,21 +27,134 @@ class AuthService {
 
   final Uuid _uuid = const Uuid();
 
-  /// Computes salted SHA-256 hash for secure credential storage.
-  static String _hashPassword(String password, String salt) {
-    final bytes = utf8.encode('$salt:$password');
-    return sha256.convert(bytes).toString();
+  static const int kPbkdf2Iterations = 10000;
+  static const int kPbkdf2KeyLength = 32;
+  static const String kPbkdf2Prefix = 'pbkdf2_sha256';
+
+  /// Generates 16 cryptographically secure random bytes for salting.
+  static Uint8List generateSecureSalt([int length = 16]) {
+    final random = Random.secure();
+    final values = Uint8List(length);
+    for (var i = 0; i < length; i++) {
+      values[i] = random.nextInt(256);
+    }
+    return values;
   }
 
-  /// Verifies password against stored salted hash with legacy migration support.
-  static bool _verifyPassword(String password, String storedRecord) {
-    if (!storedRecord.contains(':')) {
-      return storedRecord == password;
+  /// Implements standard RFC 8018 PBKDF2 with HMAC-SHA256.
+  static Uint8List _pbkdf2HmacSha256({
+    required List<int> password,
+    required List<int> salt,
+    required int iterations,
+    required int keyLength,
+  }) {
+    final hmac = Hmac(sha256, password);
+    const hLen = 32;
+    final l = (keyLength / hLen).ceil();
+    final r = keyLength - (l - 1) * hLen;
+
+    final derivedKey = Uint8List(keyLength);
+    var outOffset = 0;
+
+    for (var i = 1; i <= l; i++) {
+      final blockIndexBytes = ByteData(4)..setUint32(0, i, Endian.big);
+      final initialData = Uint8List(salt.length + 4)
+        ..setRange(0, salt.length, salt)
+        ..setRange(salt.length, salt.length + 4, blockIndexBytes.buffer.asUint8List());
+
+      var u = Uint8List.fromList(hmac.convert(initialData).bytes);
+      final ti = Uint8List.fromList(u);
+
+      for (var j = 1; j < iterations; j++) {
+        u = Uint8List.fromList(hmac.convert(u).bytes);
+        for (var k = 0; k < hLen; k++) {
+          ti[k] ^= u[k];
+        }
+      }
+
+      final bytesToCopy = (i == l) ? r : hLen;
+      derivedKey.setRange(outOffset, outOffset + bytesToCopy, ti.sublist(0, bytesToCopy));
+      outOffset += bytesToCopy;
     }
-    final colonIndex = storedRecord.indexOf(':');
-    final salt = storedRecord.substring(0, colonIndex);
-    final expectedHash = storedRecord.substring(colonIndex + 1);
-    return _hashPassword(password, salt) == expectedHash;
+
+    return derivedKey;
+  }
+
+  /// Constant-time comparison to prevent timing attacks.
+  static bool constantTimeEquals(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    var result = 0;
+    for (var i = 0; i < a.length; i++) {
+      result |= a[i] ^ b[i];
+    }
+    return result == 0;
+  }
+
+  /// Hashes a password using PBKDF2-HMAC-SHA256 with a cryptographically secure random salt.
+  /// Formatted as: pbkdf2_sha256${iterations}${saltBase64}${derivedKeyBase64}
+  static String hashPassword(String password, {Uint8List? explicitSalt, int iterations = kPbkdf2Iterations}) {
+    final salt = explicitSalt ?? generateSecureSalt(16);
+    final derivedKey = _pbkdf2HmacSha256(
+      password: utf8.encode(password),
+      salt: salt,
+      iterations: iterations,
+      keyLength: kPbkdf2KeyLength,
+    );
+    final saltB64 = base64Url.encode(salt);
+    final keyB64 = base64Url.encode(derivedKey);
+    return '$kPbkdf2Prefix\$$iterations\$$saltB64\$$keyB64';
+  }
+
+  /// Verifies a password against a stored record with support for:
+  /// - Format 3: PBKDF2-HMAC-SHA256 (Current)
+  /// - Format 2: Salted SHA-256 (Legacy Stage 2: salt:hash)
+  /// - Format 1: Plaintext (Legacy Stage 1)
+  /// Returns a record: (isValid: bool, needsRehash: bool)
+  static ({bool isValid, bool needsRehash}) verifyPasswordWithMigration(String password, String storedRecord) {
+    if (storedRecord.isEmpty) {
+      return (isValid: false, needsRehash: false);
+    }
+
+    // Format 3: PBKDF2-HMAC-SHA256
+    if (storedRecord.startsWith('$kPbkdf2Prefix\$')) {
+      final parts = storedRecord.split('\$');
+      if (parts.length != 4) {
+        return (isValid: false, needsRehash: false);
+      }
+      final iterations = int.tryParse(parts[1]);
+      if (iterations == null || iterations <= 0) {
+        return (isValid: false, needsRehash: false);
+      }
+      try {
+        final salt = base64Url.decode(parts[2]);
+        final expectedKey = base64Url.decode(parts[3]);
+        final derived = _pbkdf2HmacSha256(
+          password: utf8.encode(password),
+          salt: salt,
+          iterations: iterations,
+          keyLength: expectedKey.length,
+        );
+        final isValid = constantTimeEquals(derived, expectedKey);
+        final needsRehash = iterations < kPbkdf2Iterations;
+        return (isValid: isValid, needsRehash: needsRehash);
+      } catch (_) {
+        return (isValid: false, needsRehash: false);
+      }
+    }
+
+    // Format 2: Legacy Stage 2 (salt:sha256Hash)
+    if (storedRecord.contains(':')) {
+      final colonIndex = storedRecord.indexOf(':');
+      final salt = storedRecord.substring(0, colonIndex);
+      final expectedHash = storedRecord.substring(colonIndex + 1);
+      final actualHash = sha256.convert(utf8.encode('$salt:$password')).toString();
+      final isValid = constantTimeEquals(utf8.encode(actualHash), utf8.encode(expectedHash));
+      return (isValid: isValid, needsRehash: true);
+    }
+
+    // Format 1: Legacy Stage 1 Plaintext
+    final isValid = constantTimeEquals(utf8.encode(password), utf8.encode(storedRecord));
+    return (isValid: isValid, needsRehash: true);
   }
 
   /// Generates a randomized default user alias.
@@ -115,10 +229,8 @@ class AuthService {
       throw const FormatException('An account with this email already exists.');
     }
 
-    // Save salted hash instead of plaintext
-    final salt = _uuid.v4();
-    final hash = _hashPassword(cleanPassword, salt);
-    credentials[cleanEmail] = '$salt:$hash';
+    // Save PBKDF2-HMAC-SHA256 hash with unique cryptographically secure salt
+    credentials[cleanEmail] = hashPassword(cleanPassword);
     await prefs.setString(_keyUserCredentials, json.encode(credentials));
 
     final user = AuthUser(
@@ -143,7 +255,7 @@ class AuthService {
     return user;
   }
 
-  /// Signs in to an existing Account with email and password verification.
+  /// Signs in to an existing Account with PBKDF2 verification and legacy re-hashing.
   Future<AuthUser> signInWithEmail(String email, String password) async {
     final cleanEmail = email.trim().toLowerCase();
     final cleanPassword = password.trim();
@@ -152,9 +264,23 @@ class AuthService {
     final credsRaw = prefs.getString(_keyUserCredentials) ?? '{}';
     final Map<String, dynamic> credentials = json.decode(credsRaw);
 
-    if (!credentials.containsKey(cleanEmail) ||
-        !_verifyPassword(cleanPassword, credentials[cleanEmail].toString())) {
+    if (!credentials.containsKey(cleanEmail)) {
       throw const FormatException('Invalid email or password.');
+    }
+
+    final verifyResult = verifyPasswordWithMigration(
+      cleanPassword,
+      credentials[cleanEmail].toString(),
+    );
+
+    if (!verifyResult.isValid) {
+      throw const FormatException('Invalid email or password.');
+    }
+
+    // Transparently upgrade legacy format credentials to PBKDF2-HMAC-SHA256
+    if (verifyResult.needsRehash) {
+      credentials[cleanEmail] = hashPassword(cleanPassword);
+      await prefs.setString(_keyUserCredentials, json.encode(credentials));
     }
 
     final usersRaw = prefs.getString(_keyRegisteredUsers) ?? '{}';
@@ -198,10 +324,8 @@ class AuthService {
       throw const FormatException('An account with this email already exists.');
     }
 
-    // Save salted hash
-    final salt = _uuid.v4();
-    final hash = _hashPassword(cleanPassword, salt);
-    credentials[cleanEmail] = '$salt:$hash';
+    // Save PBKDF2-HMAC-SHA256 hash
+    credentials[cleanEmail] = hashPassword(cleanPassword);
     await prefs.setString(_keyUserCredentials, json.encode(credentials));
 
     final updatedUser = (current ??

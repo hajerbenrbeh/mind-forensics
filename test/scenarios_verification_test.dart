@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mind_forensics/features/auth/controllers/auth_controller.dart';
 import 'package:mind_forensics/features/auth/data/auth_service.dart';
+import 'package:mind_forensics/features/auth/domain/auth_state.dart';
+import 'package:mind_forensics/features/auth/domain/auth_user.dart';
 import 'package:mind_forensics/features/backup/data/unified_backup_service.dart';
 import 'package:mind_forensics/features/investigation/controllers/investigation_providers.dart';
 import 'package:mind_forensics/features/investigation/domain/case_model.dart';
@@ -310,9 +312,9 @@ void main() {
       final credsRaw = prefs.getString('mf_auth_user_credentials') ?? '{}';
       final Map<String, dynamic> creds = jsonDecode(credsRaw);
 
-      // Verify the plaintext password was never stored
+      // Verify the plaintext password was never stored and uses PBKDF2
       expect(creds['secure@example.com'], isNot(equals('SuperSecret99!')));
-      expect(creds['secure@example.com'], contains(':')); // Salt:Hash format
+      expect((creds['secure@example.com'] as String).startsWith('pbkdf2_sha256\$10000\$'), isTrue);
 
       // Verify successful sign in using the salted hash
       final user = await service.signInWithEmail('secure@example.com', 'SuperSecret99!');
@@ -413,5 +415,104 @@ void main() {
 
       container.dispose();
     });
+
+    test('TEST I: Account switching and backup restoration into a distinct account preserves isolation without polluting other accounts', () async {
+      SharedPreferences.setMockInitialValues({});
+      final authService = AuthService();
+
+      // 1. Alice creates account and a trace
+      final alice = await authService.signUpWithEmail('alice_isolation@clinic.org', 'Pass123456!');
+      final aliceRepo = LocalMindTraceRepository(userId: alice.id);
+      final now = DateTime.now();
+      await aliceRepo.saveTrace(
+        MindTraceModel(
+          id: 'alice_isolated_trace',
+          userId: alice.id,
+          date: now,
+          overallMood: 'optimistic',
+          moodIntensity: 9,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+
+      // Verify Alice has 1 trace
+      expect((await aliceRepo.getAllTraces()).length, equals(1));
+
+      // 2. Bob registers and signs in
+      final bob = await authService.signUpWithEmail('bob_isolation@clinic.org', 'Pass123456!');
+      final bobRepo = LocalMindTraceRepository(userId: bob.id);
+
+      // Verify Bob starts completely empty
+      expect((await bobRepo.getAllTraces()).isEmpty, isTrue);
+
+      // 3. Bob imports a backup payload
+      final containerBob = ProviderContainer(
+        overrides: [
+          authControllerProvider.overrideWith(
+            () => _MockAuthenticatedAuthController(bob),
+          ),
+        ],
+      );
+
+      final backupService = containerBob.read(unifiedBackupServiceProvider);
+      final importedDate = now.subtract(const Duration(days: 2));
+      final bobBackup = jsonEncode({
+        'app': 'Mind Forensics',
+        'schemaVersion': '2.0.0',
+        'traces': [
+          {
+            'id': 'bob_imported_trace',
+            'date': importedDate.toIso8601String(),
+            'overallMood': 'reflective',
+            'moodIntensity': 6,
+            'createdAt': importedDate.toIso8601String(),
+            'updatedAt': importedDate.toIso8601String(),
+          }
+        ],
+      });
+
+      final restoreResult = await backupService.restoreFromBackupJson(bobBackup);
+      expect(restoreResult.success, isTrue);
+      expect(restoreResult.tracesCount, equals(1));
+
+      // Verify Bob's store now has exactly 1 trace (his imported one)
+      final bobTraces = await bobRepo.getAllTraces();
+      expect(bobTraces.length, equals(1));
+      expect(bobTraces.first.id, equals('bob_imported_trace'));
+
+      // Verify Alice's store remains 100% UNTOUCHED
+      final aliceTraces = await aliceRepo.getAllTraces();
+      expect(aliceTraces.length, equals(1));
+      expect(aliceTraces.first.id, equals('alice_isolated_trace'));
+      expect(aliceTraces.first.overallMood, equals('optimistic'));
+
+      // 4. Bob deletes his account
+      await authService.deleteAccount(); // Deletes Bob's active account and partitions
+
+      // Verify Bob's store is purged
+      expect((await bobRepo.getAllTraces()).isEmpty, isTrue);
+
+      // Verify Alice's store is STILL 100% intact
+      final aliceTracesAfterBobDeletion = await aliceRepo.getAllTraces();
+      expect(aliceTracesAfterBobDeletion.length, equals(1));
+      expect(aliceTracesAfterBobDeletion.first.id, equals('alice_isolated_trace'));
+
+      containerBob.dispose();
+    });
   });
+}
+
+class _MockAuthenticatedAuthController extends AuthController {
+  _MockAuthenticatedAuthController(this._user);
+  final AuthUser _user;
+
+  @override
+  AuthState build() {
+    return AuthState(
+      status: AuthStatus.authenticated,
+      user: _user,
+      hasCompletedOnboarding: true,
+    );
+  }
 }

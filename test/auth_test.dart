@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,6 +17,142 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
     GoogleFonts.config.allowRuntimeFetching = false;
+  });
+
+  group('PBKDF2 Cryptographic Security & Password Migration Tests', () {
+    test('New account registration produces standard PBKDF2-HMAC-SHA256 hash', () async {
+      final service = AuthService();
+      await service.signUpWithEmail('doctor@clinic.org', 'StrongPassword123!');
+
+      final prefs = await SharedPreferences.getInstance();
+      final credsRaw = prefs.getString('mf_auth_user_credentials') ?? '{}';
+      final Map<String, dynamic> creds = jsonDecode(credsRaw);
+      final storedHash = creds['doctor@clinic.org'] as String;
+
+      expect(storedHash.startsWith('pbkdf2_sha256\$10000\$'), isTrue);
+      final parts = storedHash.split('\$');
+      expect(parts.length, equals(4)); // prefix, iterations, salt, key
+      expect(parts[1], equals('10000'));
+      expect(parts[2].isNotEmpty, isTrue); // saltBase64
+      expect(parts[3].isNotEmpty, isTrue); // keyBase64
+    });
+
+    test('Different cryptographically secure salts generated for identical passwords', () async {
+      final service = AuthService();
+      await service.signUpWithEmail('usera@clinic.org', 'IdenticalPassword99!');
+      await service.signUpWithEmail('userb@clinic.org', 'IdenticalPassword99!');
+
+      final prefs = await SharedPreferences.getInstance();
+      final credsRaw = prefs.getString('mf_auth_user_credentials') ?? '{}';
+      final Map<String, dynamic> creds = jsonDecode(credsRaw);
+
+      final hashA = creds['usera@clinic.org'] as String;
+      final hashB = creds['userb@clinic.org'] as String;
+
+      expect(hashA, isNot(equals(hashB))); // Unique salts produce different hashes
+      final saltA = hashA.split('\$')[2];
+      final saltB = hashB.split('\$')[2];
+      expect(saltA, isNot(equals(saltB)));
+    });
+
+    test('Constant-time password verification confirms matching and rejects incorrect', () async {
+      final service = AuthService();
+      await service.signUpWithEmail('tester@clinic.org', 'CorrectPassword456!');
+
+      // Valid password passes
+      final user = await service.signInWithEmail('tester@clinic.org', 'CorrectPassword456!');
+      expect(user.email, equals('tester@clinic.org'));
+
+      // Incorrect password fails
+      expect(
+        () => service.signInWithEmail('tester@clinic.org', 'IncorrectPassword456!'),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('Legacy Stage 2 SHA-256 credentials verify and automatically upgrade to PBKDF2', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final salt = 'test-salt-uuid-v4';
+      final legacySha256 = sha256.convert(utf8.encode('$salt:LegacyPass789!')).toString();
+
+      // Seed legacy credential record
+      await prefs.setString(
+        'mf_auth_user_credentials',
+        jsonEncode({'legacy@clinic.org': '$salt:$legacySha256'}),
+      );
+      await prefs.setString(
+        'mf_auth_registered_users',
+        jsonEncode({
+          'legacy@clinic.org': {
+            'id': 'legacy-user-uuid',
+            'codename': 'LegacyUser',
+            'email': 'legacy@clinic.org',
+            'authType': 'emailPassword',
+            'createdAt': DateTime.now().toIso8601String(),
+          }
+        }),
+      );
+
+      final service = AuthService();
+
+      // Sign in with legacy password succeeds
+      final user = await service.signInWithEmail('legacy@clinic.org', 'LegacyPass789!');
+      expect(user.email, equals('legacy@clinic.org'));
+
+      // Verify that stored credential was transparently upgraded to PBKDF2
+      final updatedCredsRaw = prefs.getString('mf_auth_user_credentials') ?? '{}';
+      final Map<String, dynamic> updatedCreds = jsonDecode(updatedCredsRaw);
+      final upgradedHash = updatedCreds['legacy@clinic.org'] as String;
+
+      expect(upgradedHash.startsWith('pbkdf2_sha256\$10000\$'), isTrue);
+
+      // Subsequent sign in verifies with the new PBKDF2 hash
+      final userAgain = await service.signInWithEmail('legacy@clinic.org', 'LegacyPass789!');
+      expect(userAgain.email, equals('legacy@clinic.org'));
+    });
+
+    test('Legacy Stage 1 plaintext credentials verify and automatically upgrade to PBKDF2', () async {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Seed plaintext credential
+      await prefs.setString(
+        'mf_auth_user_credentials',
+        jsonEncode({'plain@clinic.org': 'RawPlaintextSecret!'}),
+      );
+      await prefs.setString(
+        'mf_auth_registered_users',
+        jsonEncode({
+          'plain@clinic.org': {
+            'id': 'plain-user-uuid',
+            'codename': 'PlainUser',
+            'email': 'plain@clinic.org',
+            'authType': 'emailPassword',
+            'createdAt': DateTime.now().toIso8601String(),
+          }
+        }),
+      );
+
+      final service = AuthService();
+
+      // Sign in succeeds
+      final user = await service.signInWithEmail('plain@clinic.org', 'RawPlaintextSecret!');
+      expect(user.email, equals('plain@clinic.org'));
+
+      // Plaintext was removed and upgraded to PBKDF2
+      final updatedCredsRaw = prefs.getString('mf_auth_user_credentials') ?? '{}';
+      final Map<String, dynamic> updatedCreds = jsonDecode(updatedCredsRaw);
+      final upgradedHash = updatedCreds['plain@clinic.org'] as String;
+
+      expect(upgradedHash.startsWith('pbkdf2_sha256\$10000\$'), isTrue);
+      expect(upgradedHash, isNot(contains('RawPlaintextSecret!')));
+    });
+
+    test('Invalid, corrupted, or truncated credential records fail gracefully', () {
+      expect(AuthService.verifyPasswordWithMigration('pass', '').isValid, isFalse);
+      expect(AuthService.verifyPasswordWithMigration('pass', 'pbkdf2_sha256\$corrupted').isValid, isFalse);
+      expect(AuthService.verifyPasswordWithMigration('pass', 'pbkdf2_sha256\$-10\$bad\$salt').isValid, isFalse);
+      expect(AuthService.verifyPasswordWithMigration('pass', 'pbkdf2_sha256\$10000\$notBase64!@#\$badKey').isValid, isFalse);
+    });
   });
 
   group('AuthService Unit Tests', () {
