@@ -31,7 +31,7 @@ import 'mock_investigator_service.dart';
 class DirectGeminiInvestigatorService implements InvestigatorService {
   DirectGeminiInvestigatorService({
     required this.apiKey,
-    this.modelName = 'gemini-2.0-flash',
+    this.modelName = 'gemini-3.5-flash',
     this.clientFactory,
     this.onRequestAttempted,
   });
@@ -75,9 +75,10 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
       key.trim().isEmpty || key.trim() == kDevMockKey;
 
   static const List<String> fallbackModels = [
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-2.5-flash',
+    'gemini-3.5-flash',
+    'gemini-3.8-flash',
+    'gemini-3.1-flash-lite',
+    'gemini-flash-latest',
   ];
 
   /// Tests the validity of the provided API key with a minimal query.

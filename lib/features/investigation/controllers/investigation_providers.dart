@@ -35,7 +35,7 @@ class AiConfigState {
   const AiConfigState({
     this.apiKey = kPublicGeminiApiKey,
     this.useLiveAi = true,
-    this.modelName = 'gemini-2.0-flash',
+    this.modelName = 'gemini-3.5-flash',
   });
 
   final String apiKey;
@@ -71,14 +71,18 @@ class AiConfigNotifier extends Notifier<AiConfigState> {
   Future<void> _loadFromSecureStorage() async {
     final keyManager = ref.read(secureKeyManagerProvider);
     final prefs = await SharedPreferences.getInstance();
-    final secureKey = await keyManager.getGeminiApiKey();
+    var secureKey = await keyManager.getGeminiApiKey();
+    if (secureKey.isEmpty && kPublicGeminiApiKey != kDevMockGeminiKey && kPublicGeminiApiKey.isNotEmpty) {
+      await keyManager.saveGeminiApiKey(kPublicGeminiApiKey);
+      secureKey = kPublicGeminiApiKey;
+    }
     if (!ref.mounted) return;
     final effectiveKey = secureKey.isNotEmpty ? secureKey : kPublicGeminiApiKey;
     final useLive = prefs.getBool(_prefUseLive) ?? true;
     state = AiConfigState(
       apiKey: effectiveKey,
       useLiveAi: useLive,
-      modelName: 'gemini-2.0-flash',
+      modelName: 'gemini-3.5-flash',
     );
   }
 

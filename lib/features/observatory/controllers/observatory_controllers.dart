@@ -13,7 +13,7 @@ final observatoryAiServiceProvider = Provider<ObservatoryAiService>((ref) {
   final aiConfig = ref.watch(aiConfigProvider);
   return ObservatoryAiService(
     apiKey: aiConfig.apiKey,
-    modelName: 'gemini-2.0-flash',
+    modelName: 'gemini-3.5-flash',
   );
 });
 
