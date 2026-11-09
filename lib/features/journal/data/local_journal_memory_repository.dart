@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/security/encrypted_storage_helper.dart';
+import '../../../core/security/secure_key_manager.dart';
 import '../domain/journal_memory_model.dart';
 
 abstract class JournalMemoryRepository {
@@ -16,16 +18,19 @@ abstract class JournalMemoryRepository {
   Future<void> clearSuppressedKeys();
 }
 
-/// Sovereign local repository storing compressed journal memories in SharedPreferences.
+/// Sovereign local repository storing compressed journal memories with AES-256-GCM encryption.
 ///
 /// Section 8 & Step 3.2:
 /// - 100% on-device offline storage.
 /// - Isolated per user ID (`mf_journal_memories_${userId}`).
+/// - Encrypted at rest via authenticated AES-GCM.
 /// - Catches JSON errors gracefully to prevent crashes.
 class LocalJournalMemoryRepository implements JournalMemoryRepository {
-  LocalJournalMemoryRepository({this.userId});
+  LocalJournalMemoryRepository({this.userId, SecureKeyManager? keyManager})
+      : _keyManager = keyManager ?? SecureKeyManager();
 
   final String? userId;
+  final SecureKeyManager _keyManager;
 
   static const String _legacyKey = 'mf_journal_memories_v1';
   static const String _legacySuppressedKey = 'mf_journal_suppressed_keys_v1';
@@ -47,10 +52,21 @@ class LocalJournalMemoryRepository implements JournalMemoryRepository {
   @override
   Future<List<JournalMemoryModel>> getAllMemories() async {
     final prefs = await SharedPreferences.getInstance();
-    var raw = prefs.getString(_storageKey);
+    final cipher = await _keyManager.getCipherForUser(userId);
 
-    if ((raw == null || raw.isEmpty) && _storageKey != _legacyKey) {
-      raw = prefs.getString(_legacyKey);
+    var raw = await EncryptedStorageHelper.readAndMigrate(
+      prefs: prefs,
+      key: _storageKey,
+      cipher: cipher,
+    );
+
+    if ((raw == null || raw.isEmpty) && _storageKey != _legacyKey && (userId == null || userId == 'local_user')) {
+      final legacyCipher = await _keyManager.getCipherForUser(null);
+      raw = await EncryptedStorageHelper.readAndMigrate(
+        prefs: prefs,
+        key: _legacyKey,
+        cipher: legacyCipher,
+      );
     }
 
     if (raw == null || raw.isEmpty) return [];
@@ -110,19 +126,38 @@ class LocalJournalMemoryRepository implements JournalMemoryRepository {
   @override
   Future<Set<String>> getSuppressedKeys() async {
     final prefs = await SharedPreferences.getInstance();
-    var list = prefs.getStringList(_suppressedKey);
-    if ((list == null || list.isEmpty) && _suppressedKey != _legacySuppressedKey) {
-      list = prefs.getStringList(_legacySuppressedKey);
+    final cipher = await _keyManager.getCipherForUser(userId);
+
+    final raw = await EncryptedStorageHelper.readAndMigrate(
+      prefs: prefs,
+      key: _suppressedKey,
+      cipher: cipher,
+    );
+
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(raw) as List<dynamic>;
+        return decoded.map((e) => e.toString()).toSet();
+      } catch (_) {}
     }
+
+    // Fallback to legacy string list if present
+    final list = prefs.getStringList(_suppressedKey);
     return (list ?? []).toSet();
   }
 
   @override
   Future<void> suppressKey(String dedupKey) async {
     final prefs = await SharedPreferences.getInstance();
+    final cipher = await _keyManager.getCipherForUser(userId);
     final current = await getSuppressedKeys();
     current.add(dedupKey);
-    await prefs.setStringList(_suppressedKey, current.toList());
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: _suppressedKey,
+      plaintext: jsonEncode(current.toList()),
+      cipher: cipher,
+    );
   }
 
   @override
@@ -136,7 +171,13 @@ class LocalJournalMemoryRepository implements JournalMemoryRepository {
 
   Future<void> _persist(List<JournalMemoryModel> memories) async {
     final prefs = await SharedPreferences.getInstance();
+    final cipher = await _keyManager.getCipherForUser(userId);
     final raw = jsonEncode(memories.map((m) => m.toJson()).toList());
-    await prefs.setString(_storageKey, raw);
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: _storageKey,
+      plaintext: raw,
+      cipher: cipher,
+    );
   }
 }

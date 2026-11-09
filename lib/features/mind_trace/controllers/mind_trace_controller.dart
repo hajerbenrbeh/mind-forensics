@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/localization/locale_controller.dart';
+import '../../../core/security/secure_key_manager.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../journal/controllers/journal_memory_controller.dart';
@@ -13,7 +14,11 @@ import '../domain/trace_milestone.dart';
 
 final mindTraceRepositoryProvider = Provider<MindTraceRepository>((ref) {
   final authUser = ref.watch(authControllerProvider).user;
-  return LocalMindTraceRepository(userId: authUser?.id);
+  final keyManager = ref.watch(secureKeyManagerProvider);
+  return LocalMindTraceRepository(
+    userId: authUser?.id,
+    keyManager: keyManager,
+  );
 });
 
 final mindTraceAiServiceProvider = Provider<MindTraceAiService>((ref) {

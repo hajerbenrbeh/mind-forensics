@@ -2,17 +2,21 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/security/encrypted_storage_helper.dart';
+import '../../../core/security/secure_key_manager.dart';
 import '../domain/case_model.dart';
 import '../domain/case_repository.dart';
 
-/// Persistent local repository implementation using SharedPreferences.
+/// Persistent local repository implementation with AES-256-GCM encryption at rest.
 ///
 /// Keeps user cases and AI Companion conversations stored securely and offline
-/// on the device across sessions, with multi-user isolation by [userId].
+/// on the device across sessions, with multi-user isolation and authenticated encryption.
 class LocalCaseRepository implements CaseRepository {
-  LocalCaseRepository({this.userId});
+  LocalCaseRepository({this.userId, SecureKeyManager? keyManager})
+      : _keyManager = keyManager ?? SecureKeyManager();
 
   final String? userId;
+  final SecureKeyManager _keyManager;
 
   static const String _legacyKeyCases = 'mind_forensics_cases_store_v1';
   static const String _keyCounter = 'mind_forensics_case_counter_v1';
@@ -37,13 +41,24 @@ class LocalCaseRepository implements CaseRepository {
   Future<Map<String, CaseModel>> _loadFromStorage() async {
     final cache = <String, CaseModel>{};
     final prefs = await SharedPreferences.getInstance();
-    String? rawJson = prefs.getString(_storageKey);
+    final cipher = await _keyManager.getCipherForUser(userId);
+
+    String? rawJson = await EncryptedStorageHelper.readAndMigrate(
+      prefs: prefs,
+      key: _storageKey,
+      cipher: cipher,
+    );
 
     // Backward-compatibility: fallback to legacy key ONLY if user is anonymous or local default
     if ((rawJson == null || rawJson.isEmpty) &&
         _storageKey != _legacyKeyCases &&
         (userId == null || userId == 'local_user')) {
-      rawJson = prefs.getString(_legacyKeyCases);
+      final legacyCipher = await _keyManager.getCipherForUser(null);
+      rawJson = await EncryptedStorageHelper.readAndMigrate(
+        prefs: prefs,
+        key: _legacyKeyCases,
+        cipher: legacyCipher,
+      );
     }
 
     if (rawJson != null && rawJson.isNotEmpty) {
@@ -67,8 +82,14 @@ class LocalCaseRepository implements CaseRepository {
   Future<void> _persist() async {
     if (_cache == null) return;
     final prefs = await SharedPreferences.getInstance();
+    final cipher = await _keyManager.getCipherForUser(userId);
     final list = _cache!.values.map((c) => c.toJson()).toList();
-    await prefs.setString(_storageKey, jsonEncode(list));
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: _storageKey,
+      plaintext: jsonEncode(list),
+      cipher: cipher,
+    );
   }
 
   @override

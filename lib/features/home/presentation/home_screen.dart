@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,8 @@ import '../../../app/localization/app_strings.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/mind_tokens.dart';
+import '../../../core/security/encrypted_storage_helper.dart';
+import '../../../core/security/secure_key_manager.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/bouncing_widget.dart';
 import '../../../core/widgets/fingerprint_thread_signature.dart';
@@ -93,6 +96,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _saveDailyCheckIn() async {
     HapticFeedback.mediumImpact();
+    final now = DateTime.now();
     final activeMood = _moodOptions[_selectedMoodIndex].key;
     final intensity = _moodIntensity.toInt();
     final todayTrace = ref.read(todayTraceProvider);
@@ -104,12 +108,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         overallMood: activeMood,
         moodIntensity: intensity,
         selectedEmotions: [activeMood],
-        updatedAt: DateTime.now(),
+        updatedAt: now,
       );
       await ref.read(mindTraceControllerProvider.notifier).updateCheckIn(updated);
     } else {
       // 2. Create new options-first trace for today
-      final now = DateTime.now();
       final newTrace = MindTraceModel(
         id: 'trace_${now.millisecondsSinceEpoch}',
         userId: ref.read(authControllerProvider).user?.id ?? 'local_user',
@@ -125,10 +128,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       await ref.read(mindTraceControllerProvider.notifier).recordCheckIn(newTrace, generateAi: false);
     }
 
-    // 3. Keep cache synchronized for backwards compatibility
+    // 3. Keep cache synchronized with authenticated encryption at rest
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('mf_last_checkin_mood', activeMood);
-    await prefs.setInt('mf_last_checkin_intensity', intensity);
+    final keyManager = ref.read(secureKeyManagerProvider);
+    final authState = ref.read(authControllerProvider);
+    final cipher = await keyManager.getCipherForUser(authState.user?.id);
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: 'mf_last_checkin_cache_v1',
+      plaintext: jsonEncode({
+        'mood': activeMood,
+        'intensity': intensity,
+        'timestamp': now.toIso8601String(),
+      }),
+      cipher: cipher,
+    );
+    await prefs.remove('mf_last_checkin_mood');
+    await prefs.remove('mf_last_checkin_intensity');
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

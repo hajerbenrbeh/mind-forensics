@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/security/secure_key_manager.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../data/local_journey_repository.dart';
 import '../domain/journey_activity.dart';
@@ -7,7 +8,11 @@ import '../domain/journey_state_model.dart';
 
 final journeyRepositoryProvider = Provider<JourneyRepository>((ref) {
   final userId = ref.watch(authControllerProvider.select((s) => s.user?.id));
-  return LocalJourneyRepository(userId: userId);
+  final keyManager = ref.watch(secureKeyManagerProvider);
+  return LocalJourneyRepository(
+    userId: userId,
+    keyManager: keyManager,
+  );
 });
 
 class JourneyNotifier extends AsyncNotifier<JourneyStateModel> {

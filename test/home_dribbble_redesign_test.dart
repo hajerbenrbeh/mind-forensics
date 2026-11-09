@@ -80,12 +80,16 @@ void main() {
       addTearDown(container.dispose);
 
       final now = DateTime.now();
-      // Add 3 authentic traces
+      final monday = now.subtract(Duration(days: now.weekday - 1));
+      final weekMonday = DateTime(monday.year, monday.month, monday.day, 10, 0);
+      final weekTuesday = weekMonday.add(const Duration(days: 1));
+
+      // Add 2 authentic traces on different days of the current calendar week
       final repo = container.read(mindTraceRepositoryProvider);
       await repo.saveTrace(MindTraceModel(
         id: 'trace_test_1',
         userId: 'test_user',
-        date: now.subtract(const Duration(days: 2)),
+        date: weekMonday,
         overallMood: 'calm',
         moodIntensity: 6,
         energyLevel: 7,
@@ -96,7 +100,7 @@ void main() {
       await repo.saveTrace(MindTraceModel(
         id: 'trace_test_2',
         userId: 'test_user',
-        date: now.subtract(const Duration(days: 1)),
+        date: weekTuesday,
         overallMood: 'calm',
         moodIntensity: 6,
         energyLevel: 8,
@@ -117,7 +121,7 @@ void main() {
 
       // Now with 2+ stable entries (variance 0), it derives real "Mood stable"
       expect(find.text('Mood stable'), findsOneWidget);
-      expect(find.textContaining('entries'), findsOneWidget);
+      expect(find.textContaining('2 entries'), findsOneWidget);
       // And authentic average stress percentage
       expect(find.textContaining('% in a week'), findsOneWidget);
     });

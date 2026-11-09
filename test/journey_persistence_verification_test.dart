@@ -126,10 +126,10 @@ void main() {
       }
     });
 
-    test('4. Data survives authentication transitions without loss or reset', () async {
+    test('4. Anonymous data does not silently leak into newly authenticated accounts (strict partition isolation)', () async {
       final prefs = await SharedPreferences.getInstance();
 
-      // Start unauthenticated (legacy key)
+      // Start unauthenticated (anonymous partition)
       final repoAnon = LocalJourneyRepository(userId: null);
       final anonInitial = await repoAnon.getJourneyState();
 
@@ -150,23 +150,100 @@ void main() {
         activities: [anonDiscovery, ...anonInitial.activities],
       ));
 
-      // User creates/links sovereign vault -> userId = 'user_vault_456'
+      // User creates/links a new authenticated account -> userId = 'user_vault_456'
+      // Security Invariant: Anonymous data must NOT automatically transfer into newly authenticated accounts.
       final repoVault = LocalJourneyRepository(userId: 'user_vault_456');
       final vaultLoaded = await repoVault.getJourneyState();
 
-      // Verify migration from legacy key happened seamlessly
-      expect(vaultLoaded.activities.any((a) => a.id == 'disc_anon_saved'), isTrue);
-      final migratedDiscovery = vaultLoaded.activities.firstWhere((a) => a.id == 'disc_anon_saved');
-      expect(migratedDiscovery.title, 'Anonymous Discovery');
-      expect(migratedDiscovery.personalNotes, 'Captured before creating account.');
+      // Verify anonymous records do NOT silently appear in a newly created account
+      expect(vaultLoaded.activities.any((a) => a.id == 'disc_anon_saved'), isFalse);
 
-      // Save in vault
-      await repoVault.saveJourneyState(vaultLoaded);
+      // Authenticated account creates its own discovery
+      final authDiscovery = JourneyActivity(
+        id: 'disc_auth_saved',
+        phase: JourneyPhase.phase2UnderstandingPatterns,
+        title: 'Authenticated Discovery',
+        purpose: 'Cognitive Restructuring',
+        shortExplanation: 'Saved in user vault',
+        guidedInstructions: const [],
+        reflectionQuestions: const [],
+        isCompleted: true,
+        completedAt: DateTime.now(),
+        personalNotes: 'Private notes in authenticated account.',
+      );
 
-      // Verify vault key now has the data saved
+      await repoVault.saveJourneyState(vaultLoaded.copyWith(
+        activities: [authDiscovery, ...vaultLoaded.activities],
+      ));
+
+      // Verify journey persistence through repository API with correct decryption
+      final freshRepoVault = LocalJourneyRepository(userId: 'user_vault_456');
+      final reloadedVault = await freshRepoVault.getJourneyState();
+      expect(reloadedVault.activities.any((a) => a.id == 'disc_auth_saved'), isTrue);
+      final fetched = reloadedVault.activities.firstWhere((a) => a.id == 'disc_auth_saved');
+      expect(fetched.title, equals('Authenticated Discovery'));
+      expect(fetched.personalNotes, equals('Private notes in authenticated account.'));
+
+      // Verify data is stored encrypted under AES-256-GCM and never as raw plaintext
       final rawVault = prefs.getString('mf_journey_progress_user_vault_456');
       expect(rawVault, isNotNull);
-      expect(rawVault, contains('disc_anon_saved'));
+      expect(rawVault!.startsWith('enc:v1\$'), isTrue);
+      expect(rawVault.contains('disc_auth_saved'), isFalse, reason: 'Plaintext entity ID must not appear in encrypted store');
+    });
+
+    test('5. Multi-user isolation prevents account cross-contamination and preserves anonymous partition', () async {
+      // 1. Seed user_alpha journey
+      final repoAlpha = LocalJourneyRepository(userId: 'user_alpha');
+      final alphaInitial = await repoAlpha.getJourneyState();
+      final alphaDiscovery = JourneyActivity(
+        id: 'disc_alpha',
+        phase: JourneyPhase.phase1SelfDiscovery,
+        title: 'Alpha Discovery',
+        purpose: 'Alpha Purpose',
+        shortExplanation: 'Alpha Note',
+        guidedInstructions: const [],
+        reflectionQuestions: const [],
+        isCompleted: true,
+        completedAt: DateTime.now(),
+      );
+      await repoAlpha.saveJourneyState(alphaInitial.copyWith(
+        activities: [alphaDiscovery, ...alphaInitial.activities],
+      ));
+
+      // 2. Seed anonymous user journey
+      final repoAnon = LocalJourneyRepository(userId: null);
+      final anonInitial = await repoAnon.getJourneyState();
+      final anonDiscovery = JourneyActivity(
+        id: 'disc_anon',
+        phase: JourneyPhase.phase1SelfDiscovery,
+        title: 'Anon Discovery',
+        purpose: 'Anon Purpose',
+        shortExplanation: 'Anon Note',
+        guidedInstructions: const [],
+        reflectionQuestions: const [],
+        isCompleted: true,
+        completedAt: DateTime.now(),
+      );
+      await repoAnon.saveJourneyState(anonInitial.copyWith(
+        activities: [anonDiscovery, ...anonInitial.activities],
+      ));
+
+      // 3. User beta logs in: cannot see alpha or anon
+      final repoBeta = LocalJourneyRepository(userId: 'user_beta');
+      final betaLoaded = await repoBeta.getJourneyState();
+
+      expect(betaLoaded.activities.any((a) => a.id == 'disc_alpha'), isFalse);
+      expect(betaLoaded.activities.any((a) => a.id == 'disc_anon'), isFalse);
+
+      // 4. Verify alpha still has only alpha
+      final alphaLoaded = await repoAlpha.getJourneyState();
+      expect(alphaLoaded.activities.any((a) => a.id == 'disc_alpha'), isTrue);
+      expect(alphaLoaded.activities.any((a) => a.id == 'disc_anon'), isFalse);
+
+      // 5. Verify anon still has only anon
+      final anonState = await repoAnon.getJourneyState();
+      expect(anonState.activities.any((a) => a.id == 'disc_anon'), isTrue);
+      expect(anonState.activities.any((a) => a.id == 'disc_alpha'), isFalse);
     });
   });
 }

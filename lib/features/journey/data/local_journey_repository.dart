@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/security/encrypted_storage_helper.dart';
+import '../../../core/security/secure_key_manager.dart';
 import '../domain/journey_state_model.dart';
 import 'default_journey_curriculum.dart';
 
@@ -10,9 +12,11 @@ abstract class JourneyRepository {
 }
 
 class LocalJourneyRepository implements JourneyRepository {
-  LocalJourneyRepository({this.userId});
+  LocalJourneyRepository({this.userId, SecureKeyManager? keyManager})
+      : _keyManager = keyManager ?? SecureKeyManager();
 
   final String? userId;
+  final SecureKeyManager _keyManager;
 
   static const String _legacyJourneyKey = 'mf_journey_progress_v1';
 
@@ -27,11 +31,24 @@ class LocalJourneyRepository implements JourneyRepository {
   Future<JourneyStateModel> getJourneyState() async {
     final defaultActivities = DefaultJourneyCurriculum.getActivities();
     final prefs = await SharedPreferences.getInstance();
-    var raw = prefs.getString(_prefJourneyKey);
+    final cipher = await _keyManager.getCipherForUser(userId);
+
+    var raw = await EncryptedStorageHelper.readAndMigrate(
+      prefs: prefs,
+      key: _prefJourneyKey,
+      cipher: cipher,
+    );
 
     // Backward-compatibility: fallback to legacy key if user-specific key is fresh
-    if ((raw == null || raw.trim().isEmpty) && _prefJourneyKey != _legacyJourneyKey) {
-      raw = prefs.getString(_legacyJourneyKey);
+    if ((raw == null || raw.trim().isEmpty) &&
+        _prefJourneyKey != _legacyJourneyKey &&
+        (userId == null || userId == 'local_user')) {
+      final legacyCipher = await _keyManager.getCipherForUser(null);
+      raw = await EncryptedStorageHelper.readAndMigrate(
+        prefs: prefs,
+        key: _legacyJourneyKey,
+        cipher: legacyCipher,
+      );
     }
 
     if (raw == null || raw.trim().isEmpty) {
@@ -55,7 +72,13 @@ class LocalJourneyRepository implements JourneyRepository {
   @override
   Future<void> saveJourneyState(JourneyStateModel state) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefJourneyKey, jsonEncode(state.toJson()));
+    final cipher = await _keyManager.getCipherForUser(userId);
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: _prefJourneyKey,
+      plaintext: jsonEncode(state.toJson()),
+      cipher: cipher,
+    );
   }
 
   @override

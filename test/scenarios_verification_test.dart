@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mind_forensics/core/security/local_data_cipher.dart';
 import 'package:mind_forensics/features/auth/controllers/auth_controller.dart';
 import 'package:mind_forensics/features/auth/data/auth_service.dart';
 import 'package:mind_forensics/features/auth/domain/auth_state.dart';
@@ -499,6 +500,131 @@ void main() {
       expect(aliceTracesAfterBobDeletion.first.id, equals('alice_isolated_trace'));
 
       containerBob.dispose();
+    });
+
+    test('TEST J: Password-encrypted backup roundtrip, tamper resistance, and iteration migration', () async {
+      SharedPreferences.setMockInitialValues({});
+      final container1 = ProviderContainer();
+      addTearDown(container1.dispose);
+
+      final now = DateTime.now();
+      await container1.read(mindTraceRepositoryProvider).saveTrace(
+            MindTraceModel(
+              id: 'trace_encrypted_backup_01',
+              date: now,
+              overallMood: 'restless',
+              moodIntensity: 7,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          );
+
+      final backupService1 = container1.read(unifiedBackupServiceProvider);
+
+      // 1. Create password-encrypted backup with 100,000 iterations
+      final backupResult = await backupService1.createPasswordEncryptedBackup('SecureMasterKey123!');
+      expect(backupResult.success, isTrue);
+      expect(backupResult.rawJson, isNotNull);
+
+      final backupPayload = jsonDecode(backupResult.rawJson!) as Map<String, dynamic>;
+      expect(backupPayload['encrypted'], isTrue);
+      expect(backupPayload['iterations'], equals(100000));
+      expect(backupPayload['kdf'], equals('pbkdf2_sha256'));
+      expect(backupPayload['salt'], isNotNull);
+      expect(backupPayload['ciphertext'], startsWith('enc:v1\$'));
+
+      // Assert zero plaintext trace data is exposed in the serialized payload
+      expect(backupResult.rawJson!.contains('restless'), isFalse);
+      expect(backupResult.rawJson!.contains('trace_encrypted_backup_01'), isFalse);
+
+      // 2. Clear store to simulate new device restore and reject incorrect password
+      SharedPreferences.setMockInitialValues({});
+      final container2 = ProviderContainer();
+      addTearDown(container2.dispose);
+      final backupService2 = container2.read(unifiedBackupServiceProvider);
+
+      final wrongPasswordResult = await backupService2.restoreFromPasswordEncryptedBackup(
+        backupResult.rawJson!,
+        'WrongPassword999!',
+      );
+      expect(wrongPasswordResult.success, isFalse);
+      expect(wrongPasswordResult.message, contains('Decryption failed'));
+
+      // 3. Reject tampered ciphertext
+      final tamperedCiphertext = backupPayload['ciphertext'].toString().replaceRange(15, 20, 'AAAAA');
+      final tamperedPayload = Map<String, dynamic>.from(backupPayload);
+      tamperedPayload['ciphertext'] = tamperedCiphertext;
+      final tamperedJson = jsonEncode(tamperedPayload);
+
+      final tamperedResult = await backupService2.restoreFromPasswordEncryptedBackup(
+        tamperedJson,
+        'SecureMasterKey123!',
+      );
+      expect(tamperedResult.success, isFalse);
+      expect(tamperedResult.message, contains('Decryption failed'));
+
+      // 4. Restore with correct password
+      final successResult = await backupService2.restoreFromPasswordEncryptedBackup(
+        backupResult.rawJson!,
+        'SecureMasterKey123!',
+      );
+      expect(successResult.success, isTrue);
+      expect(successResult.tracesCount, equals(1));
+
+      final restoredTraces = await container2.read(mindTraceRepositoryProvider).getAllTraces();
+      expect(restoredTraces.length, equals(1));
+      expect(restoredTraces.first.id, equals('trace_encrypted_backup_01'));
+      expect(restoredTraces.first.overallMood, equals('restless'));
+
+      // 5. Backwards compatibility: verify restoration of 10,000-iteration backup
+      final salt10k = AuthService.generateSecureSalt(16);
+      final derived10kHash = AuthService.hashPassword(
+        'LegacyKey123!',
+        explicitSalt: salt10k,
+        iterations: 10000,
+      );
+      final derived10kKeyBytes = base64Url.decode(derived10kHash.split('\$')[3]);
+      final cipher10k = LocalDataCipher(secretKeyBytes: derived10kKeyBytes);
+
+      final innerPayloadJson = jsonEncode({
+        'schemaVersion': '2.0.0',
+        'app': 'Mind Forensics',
+        'timestamp': DateTime.now().toIso8601String(),
+        'traces': [
+          {
+            'id': 'trace_legacy_10k',
+            'userId': 'legacy_user',
+            'date': DateTime.now().toIso8601String(),
+            'overallMood': 'calm',
+            'moodIntensity': 8,
+            'createdAt': DateTime.now().toIso8601String(),
+            'updatedAt': DateTime.now().toIso8601String(),
+          }
+        ],
+        'sessions': [],
+        'memories': [],
+      });
+      final ciphertext10k = await cipher10k.encryptString(innerPayloadJson);
+
+      final legacyPayload = {
+        'app': 'Mind Forensics',
+        'encrypted': true,
+        'schemaVersion': '2.0.0',
+        'kdf': 'pbkdf2_sha256',
+        'iterations': 10000,
+        'salt': base64Url.encode(salt10k),
+        'ciphertext': ciphertext10k,
+      };
+
+      final legacyRestoreResult = await backupService2.restoreFromPasswordEncryptedBackup(
+        jsonEncode(legacyPayload),
+        'LegacyKey123!',
+      );
+      expect(legacyRestoreResult.success, isTrue);
+      expect(legacyRestoreResult.tracesCount, equals(1));
+
+      final legacyTraces = await container2.read(mindTraceRepositoryProvider).getAllTraces();
+      expect(legacyTraces.any((t) => t.id == 'trace_legacy_10k'), isTrue);
     });
   });
 }

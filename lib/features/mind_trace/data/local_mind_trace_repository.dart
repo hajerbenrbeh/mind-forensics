@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/security/encrypted_storage_helper.dart';
+import '../../../core/security/secure_key_manager.dart';
 import '../domain/mind_trace_model.dart';
 
 abstract class MindTraceRepository {
@@ -12,9 +14,11 @@ abstract class MindTraceRepository {
 }
 
 class LocalMindTraceRepository implements MindTraceRepository {
-  LocalMindTraceRepository({this.userId});
+  LocalMindTraceRepository({this.userId, SecureKeyManager? keyManager})
+      : _keyManager = keyManager ?? SecureKeyManager();
 
   final String? userId;
+  final SecureKeyManager _keyManager;
 
   static const String _legacyStorageKey = 'mf_mind_traces_v1';
 
@@ -28,13 +32,24 @@ class LocalMindTraceRepository implements MindTraceRepository {
   @override
   Future<List<MindTraceModel>> getAllTraces() async {
     final prefs = await SharedPreferences.getInstance();
-    var raw = prefs.getString(_storageKey);
+    final cipher = await _keyManager.getCipherForUser(userId);
+
+    var raw = await EncryptedStorageHelper.readAndMigrate(
+      prefs: prefs,
+      key: _storageKey,
+      cipher: cipher,
+    );
 
     // Fallback check to legacy key ONLY if user is anonymous or local default
     if ((raw == null || raw.isEmpty) &&
         _storageKey != _legacyStorageKey &&
         (userId == null || userId == 'local_user')) {
-      raw = prefs.getString(_legacyStorageKey);
+      final legacyCipher = await _keyManager.getCipherForUser(null);
+      raw = await EncryptedStorageHelper.readAndMigrate(
+        prefs: prefs,
+        key: _legacyStorageKey,
+        cipher: legacyCipher,
+      );
     }
 
     if (raw == null || raw.isEmpty) return [];
@@ -73,6 +88,7 @@ class LocalMindTraceRepository implements MindTraceRepository {
   @override
   Future<void> saveTrace(MindTraceModel trace) async {
     final prefs = await SharedPreferences.getInstance();
+    final cipher = await _keyManager.getCipherForUser(userId);
     final effectiveUser = userId ?? trace.userId;
     final updatedTrace = trace.copyWith(userId: effectiveUser);
     final all = await getAllTraces();
@@ -87,17 +103,28 @@ class LocalMindTraceRepository implements MindTraceRepository {
     }
 
     final raw = jsonEncode(all.map((t) => t.toJson()).toList());
-    await prefs.setString(_storageKey, raw);
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: _storageKey,
+      plaintext: raw,
+      cipher: cipher,
+    );
   }
 
   @override
   Future<void> deleteTrace(String id) async {
     final prefs = await SharedPreferences.getInstance();
+    final cipher = await _keyManager.getCipherForUser(userId);
     final all = await getAllTraces();
     all.removeWhere((t) => t.id == id);
 
     final raw = jsonEncode(all.map((t) => t.toJson()).toList());
-    await prefs.setString(_storageKey, raw);
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: _storageKey,
+      plaintext: raw,
+      cipher: cipher,
+    );
   }
 
   @override

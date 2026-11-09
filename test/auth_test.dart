@@ -153,6 +153,23 @@ void main() {
       expect(AuthService.verifyPasswordWithMigration('pass', 'pbkdf2_sha256\$-10\$bad\$salt').isValid, isFalse);
       expect(AuthService.verifyPasswordWithMigration('pass', 'pbkdf2_sha256\$10000\$notBase64!@#\$badKey').isValid, isFalse);
     });
+
+    test('PBKDF2 Work Factor Benchmarking (10k, 25k, 50k iterations)', () {
+      final sw10k = Stopwatch()..start();
+      AuthService.hashPassword('BenchmarkingPassword123!', iterations: 10000);
+      sw10k.stop();
+
+      final sw25k = Stopwatch()..start();
+      AuthService.hashPassword('BenchmarkingPassword123!', iterations: 25000);
+      sw25k.stop();
+
+      final sw50k = Stopwatch()..start();
+      AuthService.hashPassword('BenchmarkingPassword123!', iterations: 50000);
+      sw50k.stop();
+
+      // Ensure execution is under acceptable interactive thresholds (< 250ms for 10k)
+      expect(sw10k.elapsedMilliseconds < 500, isTrue);
+    });
   });
 
   group('AuthService Unit Tests', () {

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/security/secure_key_manager.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
@@ -10,7 +11,11 @@ import '../domain/journal_memory_model.dart';
 
 final journalMemoryRepositoryProvider = Provider<JournalMemoryRepository>((ref) {
   final authUser = ref.watch(authControllerProvider).user;
-  return LocalJournalMemoryRepository(userId: authUser?.id);
+  final keyManager = ref.watch(secureKeyManagerProvider);
+  return LocalJournalMemoryRepository(
+    userId: authUser?.id,
+    keyManager: keyManager,
+  );
 });
 
 final journalMemoryCompressionServiceProvider = Provider<JournalMemoryCompressionService>((ref) {

@@ -1,15 +1,22 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/security/encrypted_storage_helper.dart';
+import '../../../core/security/secure_key_manager.dart';
 import '../domain/default_symptom_library.dart';
 import '../domain/symptom_entry.dart';
 import '../domain/symptom_report.dart';
 
 final symptomRepositoryProvider = Provider<LocalSymptomRepository>((ref) {
-  return LocalSymptomRepository();
+  final keyManager = ref.watch(secureKeyManagerProvider);
+  return LocalSymptomRepository(keyManager: keyManager);
 });
 
 class LocalSymptomRepository {
+  LocalSymptomRepository({SecureKeyManager? keyManager})
+      : _keyManager = keyManager ?? SecureKeyManager();
+
+  final SecureKeyManager _keyManager;
   static const String _customSymptomsKey = 'mf_custom_symptoms_v1';
   static const String _reportsKey = 'mf_symptom_reports_v1';
 
@@ -24,7 +31,12 @@ class LocalSymptomRepository {
 
   Future<List<SymptomEntry>> getCustomSymptoms() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_customSymptomsKey);
+    final cipher = await _keyManager.getCipherForUser('observatory_symptoms');
+    final raw = await EncryptedStorageHelper.readAndMigrate(
+      prefs: prefs,
+      key: _customSymptomsKey,
+      cipher: cipher,
+    );
     if (raw == null || raw.isEmpty) return [];
 
     try {
@@ -47,9 +59,12 @@ class LocalSymptomRepository {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _customSymptomsKey,
-      jsonEncode(custom.map((s) => s.toJson()).toList()),
+    final cipher = await _keyManager.getCipherForUser('observatory_symptoms');
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: _customSymptomsKey,
+      plaintext: jsonEncode(custom.map((s) => s.toJson()).toList()),
+      cipher: cipher,
     );
   }
 
@@ -58,9 +73,12 @@ class LocalSymptomRepository {
     custom.removeWhere((s) => s.id == id);
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _customSymptomsKey,
-      jsonEncode(custom.map((s) => s.toJson()).toList()),
+    final cipher = await _keyManager.getCipherForUser('observatory_symptoms');
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: _customSymptomsKey,
+      plaintext: jsonEncode(custom.map((s) => s.toJson()).toList()),
+      cipher: cipher,
     );
   }
 
@@ -70,7 +88,12 @@ class LocalSymptomRepository {
 
   Future<List<SymptomReport>> getAllReports() async {
     final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_reportsKey);
+    final cipher = await _keyManager.getCipherForUser('observatory_reports');
+    final raw = await EncryptedStorageHelper.readAndMigrate(
+      prefs: prefs,
+      key: _reportsKey,
+      cipher: cipher,
+    );
     if (raw == null || raw.isEmpty) return [];
 
     try {
@@ -95,9 +118,12 @@ class LocalSymptomRepository {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _reportsKey,
-      jsonEncode(reports.map((r) => r.toJson()).toList()),
+    final cipher = await _keyManager.getCipherForUser('observatory_reports');
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: _reportsKey,
+      plaintext: jsonEncode(reports.map((r) => r.toJson()).toList()),
+      cipher: cipher,
     );
   }
 
@@ -106,9 +132,12 @@ class LocalSymptomRepository {
     reports.removeWhere((r) => r.id == id);
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _reportsKey,
-      jsonEncode(reports.map((r) => r.toJson()).toList()),
+    final cipher = await _keyManager.getCipherForUser('observatory_reports');
+    await EncryptedStorageHelper.writeEncrypted(
+      prefs: prefs,
+      key: _reportsKey,
+      plaintext: jsonEncode(reports.map((r) => r.toJson()).toList()),
+      cipher: cipher,
     );
   }
 

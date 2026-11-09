@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/security/secure_key_manager.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../data/local_profile_repository.dart';
 import '../domain/condition_type.dart';
@@ -7,7 +8,8 @@ import '../domain/diagnostic_status.dart';
 import '../domain/psychological_profile_model.dart';
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
-  return LocalProfileRepository();
+  final keyManager = ref.watch(secureKeyManagerProvider);
+  return LocalProfileRepository(keyManager: keyManager);
 });
 
 class ProfileNotifier extends AsyncNotifier<PsychologicalProfileModel> {

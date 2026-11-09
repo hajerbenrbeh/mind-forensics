@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/security/secure_key_manager.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../journal/controllers/journal_memory_controller.dart';
 import '../data/direct_gemini_investigator_service.dart';
@@ -60,20 +61,19 @@ class AiConfigState {
 
 class AiConfigNotifier extends Notifier<AiConfigState> {
   static const String _prefUseLive = 'mf_use_live_gemini';
-  static const String _prefApiKey = 'mf_gemini_api_key';
 
   @override
   AiConfigState build() {
-    _loadFromPrefs();
+    _loadFromSecureStorage();
     return const AiConfigState();
   }
 
-  Future<void> _loadFromPrefs() async {
+  Future<void> _loadFromSecureStorage() async {
+    final keyManager = ref.read(secureKeyManagerProvider);
     final prefs = await SharedPreferences.getInstance();
-    final savedKey = prefs.getString(_prefApiKey)?.trim();
-    final effectiveKey = (savedKey != null && savedKey.isNotEmpty)
-        ? savedKey
-        : kPublicGeminiApiKey;
+    final secureKey = await keyManager.getGeminiApiKey();
+    if (!ref.mounted) return;
+    final effectiveKey = secureKey.isNotEmpty ? secureKey : kPublicGeminiApiKey;
     final useLive = prefs.getBool(_prefUseLive) ?? true;
     state = AiConfigState(
       apiKey: effectiveKey,
@@ -85,17 +85,15 @@ class AiConfigNotifier extends Notifier<AiConfigState> {
   Future<void> toggleLiveMode(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_prefUseLive, enabled);
+    if (!ref.mounted) return;
     state = state.copyWith(useLiveAi: enabled);
   }
 
   Future<void> setApiKey(String key) async {
-    final prefs = await SharedPreferences.getInstance();
+    final keyManager = ref.read(secureKeyManagerProvider);
     final clean = key.trim();
-    if (clean.isNotEmpty && clean != kDevMockGeminiKey) {
-      await prefs.setString(_prefApiKey, clean);
-    } else {
-      await prefs.remove(_prefApiKey);
-    }
+    await keyManager.saveGeminiApiKey(clean);
+    if (!ref.mounted) return;
     state = state.copyWith(
       apiKey: clean.isNotEmpty ? clean : kPublicGeminiApiKey,
       useLiveAi: true,
@@ -103,9 +101,11 @@ class AiConfigNotifier extends Notifier<AiConfigState> {
   }
 
   Future<void> clearApiKey() async {
+    final keyManager = ref.read(secureKeyManagerProvider);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_prefApiKey);
+    await keyManager.clearGeminiApiKey();
     await prefs.setBool(_prefUseLive, false);
+    if (!ref.mounted) return;
     state = const AiConfigState(
       apiKey: '',
       useLiveAi: false,
@@ -119,7 +119,11 @@ final aiConfigProvider =
 /// Provider for Case persistence with user-level isolation.
 final caseRepositoryProvider = Provider<CaseRepository>((ref) {
   final authState = ref.watch(authControllerProvider);
-  return LocalCaseRepository(userId: authState.user?.id);
+  final keyManager = ref.watch(secureKeyManagerProvider);
+  return LocalCaseRepository(
+    userId: authState.user?.id,
+    keyManager: keyManager,
+  );
 });
 
 /// Provider for loading all saved sessions/conversations.

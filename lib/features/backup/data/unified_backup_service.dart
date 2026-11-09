@@ -2,7 +2,11 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/security/encrypted_storage_helper.dart';
+import '../../../core/security/local_data_cipher.dart';
+import '../../../core/security/secure_key_manager.dart';
 import '../../auth/controllers/auth_controller.dart';
+import '../../auth/data/auth_service.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
 import '../../journal/controllers/journal_memory_controller.dart';
@@ -132,10 +136,18 @@ class UnifiedBackupService {
 
       final jsonStr = const JsonEncoder.withIndent('  ').convert(backupData);
 
-      // Persist snapshot to local backup slot
+      // Persist snapshot to local backup slot encrypted with user-partition key
       final prefs = await SharedPreferences.getInstance();
+      final keyManager = _ref.read(secureKeyManagerProvider);
+      final cipher = await keyManager.getCipherForUser(userId);
+
       await prefs.setString(prefLastBackupTime, now.toIso8601String());
-      await prefs.setString(prefLastBackupJson, jsonStr);
+      await EncryptedStorageHelper.writeEncrypted(
+        prefs: prefs,
+        key: prefLastBackupJson,
+        plaintext: jsonStr,
+        cipher: cipher,
+      );
       await prefs.setInt(prefLastBackupCount, traces.length + cases.length + memories.length);
 
       return BackupOperationResult(
@@ -270,6 +282,116 @@ class UnifiedBackupService {
       return BackupOperationResult(
         success: false,
         message: 'Restoration failed: $e',
+      );
+    }
+  }
+
+  /// Retrieves and decrypts the locally cached backup snapshot.
+  Future<String?> getLastCachedBackup() async {
+    final prefs = await SharedPreferences.getInstance();
+    final authUser = _ref.read(authControllerProvider).user;
+    final userId = authUser?.id ?? 'local_user';
+    final keyManager = _ref.read(secureKeyManagerProvider);
+    final cipher = await keyManager.getCipherForUser(userId);
+
+    return await EncryptedStorageHelper.readAndMigrate(
+      prefs: prefs,
+      key: prefLastBackupJson,
+      cipher: cipher,
+    );
+  }
+
+  /// High-security work factor for user-initiated backup encryption (OWASP recommendation).
+  static const int kBackupPbkdf2Iterations = 100000;
+
+  /// Generates an optional password-encrypted backup package using AES-256-GCM.
+  Future<BackupOperationResult> createPasswordEncryptedBackup(String password) async {
+    final rawResult = await createFullBackup();
+    if (!rawResult.success || rawResult.rawJson == null) {
+      return rawResult;
+    }
+
+    try {
+      final salt = AuthService.generateSecureSalt(16);
+      final derivedHashRecord = AuthService.hashPassword(
+        password,
+        explicitSalt: salt,
+        iterations: kBackupPbkdf2Iterations,
+      );
+      final parts = derivedHashRecord.split('\$');
+      final derivedKeyBytes = base64Url.decode(parts[3]);
+
+      final cipher = LocalDataCipher(secretKeyBytes: derivedKeyBytes);
+      final ciphertext = await cipher.encryptString(rawResult.rawJson!);
+
+      final encryptedPayload = {
+        'app': 'Mind Forensics',
+        'encrypted': true,
+        'schemaVersion': '2.0.0',
+        'kdf': 'pbkdf2_sha256',
+        'iterations': kBackupPbkdf2Iterations,
+        'salt': base64Url.encode(salt),
+        'ciphertext': ciphertext,
+      };
+
+      final jsonStr = const JsonEncoder.withIndent('  ').convert(encryptedPayload);
+
+      return BackupOperationResult(
+        success: true,
+        message: 'Password-encrypted backup created successfully.',
+        tracesCount: rawResult.tracesCount,
+        sessionsCount: rawResult.sessionsCount,
+        memoriesCount: rawResult.memoriesCount,
+        timestamp: rawResult.timestamp,
+        rawJson: jsonStr,
+      );
+    } catch (e) {
+      return BackupOperationResult(
+        success: false,
+        message: 'Encryption failed: $e',
+      );
+    }
+  }
+
+  /// Restores from an optional password-encrypted backup package.
+  Future<BackupOperationResult> restoreFromPasswordEncryptedBackup(
+    String encryptedJson,
+    String password,
+  ) async {
+    try {
+      final Map<String, dynamic> data = jsonDecode(encryptedJson) as Map<String, dynamic>;
+      if (data['encrypted'] != true || data['ciphertext'] == null) {
+        return await restoreFromBackupJson(encryptedJson);
+      }
+
+      final saltB64 = data['salt'] as String?;
+      final ciphertext = data['ciphertext'] as String?;
+      final iterations = data['iterations'] as int? ?? AuthService.kPbkdf2Iterations;
+
+      if (saltB64 == null || ciphertext == null) {
+        return const BackupOperationResult(
+          success: false,
+          message: 'Invalid encrypted backup: missing salt or ciphertext.',
+        );
+      }
+
+      final salt = base64Url.decode(saltB64);
+      final derivedHashRecord = AuthService.hashPassword(
+        password,
+        explicitSalt: salt,
+        iterations: iterations,
+      );
+      final parts = derivedHashRecord.split('\$');
+      final derivedKeyBytes = base64Url.decode(parts[3]);
+
+      final cipher = LocalDataCipher(secretKeyBytes: derivedKeyBytes);
+      final decryptedPlaintext = await cipher.decryptString(ciphertext);
+
+      return await restoreFromBackupJson(decryptedPlaintext);
+    } catch (e) {
+      return const BackupOperationResult(
+        success: false,
+        message: 'Decryption failed: Incorrect password or tampered backup payload.',
       );
     }
   }
