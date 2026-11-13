@@ -124,7 +124,12 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                   children: [
                     // 1. Tone
                     Text(
-                      (strings.isArabic ? 'النبرة وأسلوب الحوار' : 'COMPANION TONE').toUpperCase(),
+                      (strings.isArabic
+                              ? 'النبرة وأسلوب الحوار'
+                              : (strings.isFrench
+                                  ? 'TON DU COMPAGNON'
+                                  : 'COMPANION TONE'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -185,7 +190,12 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
 
                     // 2. Response Length
                     Text(
-                      (strings.isArabic ? 'طول الشروحات والردود' : 'RESPONSE LENGTH').toUpperCase(),
+                      (strings.isArabic
+                              ? 'طول الشروحات والردود'
+                              : (strings.isFrench
+                                  ? 'LONGUEUR DES RÉPONSES'
+                                  : 'RESPONSE LENGTH'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -238,7 +248,12 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
 
                     // 3. When distressed
                     Text(
-                      (strings.isArabic ? 'عندما أشعر بالتوتر أو الضيق، أفضّل' : 'WHEN I FEEL DISTRESSED, I PREFER').toUpperCase(),
+                      (strings.isArabic
+                              ? 'عندما أشعر بالتوتر أو الضيق، أفضّل'
+                              : (strings.isFrench
+                                  ? 'EN CAS DE DÉTRESSE, JE PRÉFÈRE'
+                                  : 'WHEN I FEEL DISTRESSED, I PREFER'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -303,7 +318,12 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
 
                     // 4. What I dislike
                     Text(
-                      (strings.isArabic ? 'أساليب أنفر منها ولا تناسبني' : 'WHAT I DISLIKE / AVOID').toUpperCase(),
+                      (strings.isArabic
+                              ? 'أساليب أنفر منها ولا تناسبني'
+                              : (strings.isFrench
+                                  ? 'CE QUE JE PRÉFÈRE ÉVITER'
+                                  : 'WHAT I DISLIKE / AVOID'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -382,7 +402,12 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    (strings.isArabic ? 'حفظ تفضيلات التواصل' : 'SAVE PREFERENCES').toUpperCase(),
+                    (strings.isArabic
+                            ? 'حفظ تفضيلات التواصل'
+                            : (strings.isFrench
+                                ? 'ENREGISTRER LES PRÉFÉRENCES'
+                                : 'SAVE PREFERENCES'))
+                        .toUpperCase(),
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,

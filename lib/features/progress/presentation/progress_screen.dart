@@ -421,7 +421,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   ],
                 ),
                 Text(
-                  '${traces.length} ${strings.isArabic ? 'أثر' : 'Traces'}',
+                  '${traces.length} ${strings.isArabic ? 'أثر' : (strings.isFrench ? 'Empreintes' : 'Traces')}',
                   style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: textSecondary),
                 ),
               ],
@@ -583,7 +583,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   onPressed: () => context.push(AppRouter.mindTrace),
                   icon: Icon(Icons.timeline_rounded, size: 14, color: context.tokens.accent),
                   label: Text(
-                    strings.isArabic ? 'فتح الخط الزمني الكامل لأثر الأفكار' : 'OPEN FULL THOUGHT TRACE TIMELINE',
+                    strings.isArabic
+                        ? 'فتح الخط الزمني الكامل لأثر الأفكار'
+                        : (strings.isFrench
+                            ? 'OUVRIR LA CHRONOLOGIE COMPLÈTE'
+                            : 'OPEN FULL THOUGHT TRACE TIMELINE'),
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w700,
@@ -614,7 +618,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
           child: _buildMetricTile(
             title: strings.totalEntriesMetric,
             value: '${analytics.totalEntries}',
-            subtitle: strings.isArabic ? 'تدوينات مسجلة' : 'Logged entries',
+            subtitle: strings.isArabic
+                ? 'تدوينات مسجلة'
+                : (strings.isFrench ? 'Entrées enregistrées' : 'Logged entries'),
             surfaceColor: surfaceColor,
             borderColor: borderColor,
             textPrimary: textPrimary,
@@ -626,7 +632,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
           child: _buildMetricTile(
             title: strings.uniqueDaysMetric,
             value: '${analytics.uniqueDaysCount}',
-            subtitle: strings.isArabic ? 'أيام مميزة' : 'Unique days',
+            subtitle: strings.isArabic
+                ? 'أيام مميزة'
+                : (strings.isFrench ? 'Jours distincts' : 'Unique days'),
             surfaceColor: surfaceColor,
             borderColor: borderColor,
             textPrimary: textPrimary,
@@ -638,7 +646,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
           child: _buildMetricTile(
             title: strings.emotionSelectionsMetric,
             value: '${analytics.totalEmotionSelections}',
-            subtitle: strings.isArabic ? 'تحديدات للمشاعر' : 'Emotion tags',
+            subtitle: strings.isArabic
+                ? 'تحديدات للمشاعر'
+                : (strings.isFrench ? 'Étiquettes émotionnelles' : 'Emotion tags'),
             surfaceColor: surfaceColor,
             borderColor: borderColor,
             textPrimary: textPrimary,
@@ -737,7 +747,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                 ),
               ),
               Text(
-                '${analytics.emotionalVarietyCount} ${strings.isArabic ? 'مشاعر مختلفة' : 'Identified'}',
+                '${analytics.emotionalVarietyCount} ${strings.isArabic ? 'مشاعر مختلفة' : (strings.isFrench ? 'Identifiées' : 'Identified')}',
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
@@ -751,7 +761,9 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
             Text(
               strings.isArabic
                   ? 'لا توجد مشاعر مفصلة مسجلة في هذه الفترة الزمنية.'
-                  : 'No specific emotions tagged in this timeframe.',
+                  : (strings.isFrench
+                      ? 'Aucune émotion spécifique enregistrée sur cette période.'
+                      : 'No specific emotions tagged in this timeframe.'),
               style: TextStyle(fontSize: 11.5, color: textSecondary),
             )
           else
@@ -925,7 +937,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
           // Micro timeline bars
           if (analytics.intensityTimeline.isEmpty)
             Text(
-              strings.isArabic ? 'لا توجد بيانات كافية لعرض المنحنى.' : 'No intensity data in this timeframe.',
+              strings.isArabic
+                  ? 'لا توجد بيانات كافية لعرض المنحنى.'
+                  : (strings.isFrench
+                      ? 'Aucune donnée d’intensité sur cette période.'
+                      : 'No intensity data in this timeframe.'),
               style: TextStyle(fontSize: 11.5, color: textSecondary),
             )
           else ...[
@@ -1499,7 +1515,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
         // 2. Timeline List of Recorded Traces in this Month
         Text(
-          strings.isArabic ? 'سجل تدوينات هذا الشهر' : 'RECORDED TRACES THIS MONTH',
+          strings.isArabic
+              ? 'سجل تدوينات هذا الشهر'
+              : (strings.isFrench
+                  ? 'TRACES ENREGISTRÉES CE MOIS-CI'
+                  : 'RECORDED TRACES THIS MONTH'),
           style: TextStyle(
             fontSize: 10.5,
             fontWeight: FontWeight.w800,

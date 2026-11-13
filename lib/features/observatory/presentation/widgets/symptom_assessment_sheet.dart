@@ -236,7 +236,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
             const CircularProgressIndicator(strokeWidth: 2, color: LabColors.sageGreen),
             const SizedBox(height: 16),
             Text(
-              strings.isArabic ? 'جاري استخلاص النمط التأملي...' : 'Formulating reflective synthesis...',
+              strings.isArabic
+                  ? 'جاري استخلاص النمط التأملي...'
+                  : (strings.isFrench
+                      ? 'Formulation de la synthèse réflexive...'
+                      : 'Formulating reflective synthesis...'),
               style: TextStyle(fontSize: 13, color: textSecondary, fontWeight: FontWeight.w600),
             ),
           ],
@@ -302,7 +306,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              isAr ? 'شدة التجربة الحالية:' : 'Current Intensity:',
+              isAr
+                  ? 'شدة التجربة الحالية:'
+                  : (strings.isFrench
+                      ? 'Intensité actuelle :'
+                      : 'Current Intensity:'),
               style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: textSecondary),
             ),
             Text(
@@ -330,7 +338,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
 
         // Somatic manifestation
         Text(
-          isAr ? 'هل يتركز هذا الإحساس في موضع جسدي معين؟' : 'Any prominent somatic manifestation?',
+          isAr
+              ? 'هل يتركز هذا الإحساس في موضع جسدي معين؟'
+              : (strings.isFrench
+                  ? 'Une manifestation corporelle particulière ?'
+                  : 'Any prominent somatic manifestation?'),
           style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: textSecondary),
         ),
         const SizedBox(height: 8),
@@ -338,11 +350,42 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
           spacing: 8,
           runSpacing: 8,
           children: [
-            (id: 'chest', label: isAr ? 'ضيق في الصدر/التنفس' : 'Chest / Breath tightness'),
-            (id: 'jaw_neck', label: isAr ? 'شد في الفك/الرقبة' : 'Jaw / Neck stiffness'),
-            (id: 'stomach', label: isAr ? 'انقباض في المعدة' : 'Stomach knots'),
-            (id: 'fatigue', label: isAr ? 'ثقل وإرهاق عام' : 'Diffuse heaviness'),
-            (id: 'none', label: isAr ? 'لا يوجد تركيز جسدي بارز' : 'No notable somatic focus'),
+            (
+              id: 'chest',
+              label: isAr
+                  ? 'ضيق في الصدر/التنفس'
+                  : (strings.isFrench
+                      ? 'Oppression thoracique / souffle court'
+                      : 'Chest / Breath tightness')
+            ),
+            (
+              id: 'jaw_neck',
+              label: isAr
+                  ? 'شد في الفك/الرقبة'
+                  : (strings.isFrench
+                      ? 'Raideur mâchoire / nuque'
+                      : 'Jaw / Neck stiffness')
+            ),
+            (
+              id: 'stomach',
+              label: isAr
+                  ? 'انقباض في المعدة'
+                  : (strings.isFrench ? 'Nœud à l’estomac' : 'Stomach knots')
+            ),
+            (
+              id: 'fatigue',
+              label: isAr
+                  ? 'ثقل وإرهاق عام'
+                  : (strings.isFrench ? 'Lourdeur diffuse' : 'Diffuse heaviness')
+            ),
+            (
+              id: 'none',
+              label: isAr
+                  ? 'لا يوجد تركيز جسدي بارز'
+                  : (strings.isFrench
+                      ? 'Aucun point corporel notable'
+                      : 'No notable somatic focus')
+            ),
           ].map((item) {
             final isSelected = _selectedSomatic == item.id;
             return ChoiceChip(
@@ -368,7 +411,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
 
         // Context trigger
         Text(
-          isAr ? 'السياق المحفز أو المصاحب:' : 'Contextual catalyst or environment:',
+          isAr
+              ? 'السياق المحفز أو المصاحب:'
+              : (strings.isFrench
+                  ? 'Contexte ou déclencheur associé :'
+                  : 'Contextual catalyst or environment:'),
           style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: textSecondary),
         ),
         const SizedBox(height: 8),
@@ -376,11 +423,42 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
           spacing: 8,
           runSpacing: 8,
           children: [
-            (id: 'work_study', label: isAr ? 'ضغط عمل / دراسة' : 'Work / Academic pressure'),
-            (id: 'interpersonal', label: isAr ? 'موقف أو حوار مع شخص' : 'Interpersonal interaction'),
-            (id: 'sleep_deficit', label: isAr ? 'قلة نوم أو إرهاق' : 'Sleep deficit'),
-            (id: 'solitude', label: isAr ? 'وحدة وهدوء مفاجئ' : 'Solitude / Quiet space'),
-            (id: 'unclear', label: isAr ? 'تسلل تدريجي بدون سبب' : 'Emerged gradually / Unclear'),
+            (
+              id: 'work_study',
+              label: isAr
+                  ? 'ضغط عمل / دراسة'
+                  : (strings.isFrench
+                      ? 'Pression travail / études'
+                      : 'Work / Academic pressure')
+            ),
+            (
+              id: 'interpersonal',
+              label: isAr
+                  ? 'موقف أو حوار مع شخص'
+                  : (strings.isFrench
+                      ? 'Interaction interpersonnelle'
+                      : 'Interpersonal interaction')
+            ),
+            (
+              id: 'sleep_deficit',
+              label: isAr
+                  ? 'قلة نوم أو إرهاق'
+                  : (strings.isFrench ? 'Manque de sommeil' : 'Sleep deficit')
+            ),
+            (
+              id: 'solitude',
+              label: isAr
+                  ? 'وحدة وهدوء مفاجئ'
+                  : (strings.isFrench ? 'Solitude / Calme' : 'Solitude / Quiet space')
+            ),
+            (
+              id: 'unclear',
+              label: isAr
+                  ? 'تسلل تدريجي بدون سبب'
+                  : (strings.isFrench
+                      ? 'Apparu progressivement / Flou'
+                      : 'Emerged gradually / Unclear')
+            ),
           ].map((item) {
             final isSelected = _selectedContext == item.id;
             return ChoiceChip(
@@ -415,7 +493,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: Text(
-              isAr ? 'متابعة الاستكشاف' : 'Continue Exploration',
+              isAr
+                  ? 'متابعة الاستكشاف'
+                  : (strings.isFrench
+                      ? 'Poursuivre l’exploration'
+                      : 'Continue Exploration'),
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
             ),
           ),
@@ -490,7 +572,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
         const SizedBox(height: 16),
 
         Text(
-          isAr ? 'خيارات سريعة (Options-First):' : 'Suggested responses (Options-First):',
+          isAr
+              ? 'خيارات سريعة (Options-First):'
+              : (strings.isFrench
+                  ? 'Réponses suggérées :'
+                  : 'Suggested responses (Options-First):'),
           style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: textSecondary),
         ),
         const SizedBox(height: 8),
@@ -532,7 +618,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
           controller: _customAnswerController,
           style: TextStyle(color: textPrimary, fontSize: 12.5),
           decoration: InputDecoration(
-            hintText: isAr ? 'أو عبّر بكلماتك باختصار (اختياري)...' : 'Or add a brief note (optional)...',
+            hintText: isAr
+                ? 'أو عبّر بكلماتك باختصار (اختياري)...'
+                : (strings.isFrench
+                    ? 'Ou ajoutez une courte note (optionnel)...'
+                    : 'Or add a brief note (optional)...'),
             hintStyle: TextStyle(color: textSecondary.withValues(alpha: 0.6), fontSize: 11.5),
             filled: true,
             fillColor: isDark ? LabColors.nightBackground : LabColors.daylightBackground,
@@ -559,7 +649,7 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
                   side: BorderSide(color: borderColor),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: Text(isAr ? 'رجوع' : 'Back'),
+                child: Text(isAr ? 'رجوع' : (strings.isFrench ? 'Retour' : 'Back')),
               ),
             ),
             const SizedBox(width: 10),
@@ -573,7 +663,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
                 child: Text(
-                  isAr ? 'استخلاص التحليل الفوري' : 'Generate Immediate Analysis',
+                  isAr
+                      ? 'استخلاص التحليل الفوري'
+                      : (strings.isFrench
+                          ? 'Générer l’analyse immédiate'
+                          : 'Generate Immediate Analysis'),
                   style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                 ),
               ),
@@ -618,7 +712,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
                   Icon(Icons.insights_outlined, size: 16, color: LabColors.sageGreen),
                   const SizedBox(width: 8),
                   Text(
-                    isAr ? 'التحليل التأملي الفوري' : 'IMMEDIATE REFLECTIVE SYNTHESIS',
+                    isAr
+                        ? 'التحليل التأملي الفوري'
+                        : (strings.isFrench
+                            ? 'SYNTHÈSE RÉFLEXIVE IMMÉDIATE'
+                            : 'IMMEDIATE REFLECTIVE SYNTHESIS'),
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
@@ -655,7 +753,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      isAr ? 'استراتيجية التثبيت الموصى بها:' : 'RECOMMENDED STABILIZING STRATEGY:',
+                      isAr
+                          ? 'استراتيجية التثبيت الموصى بها:'
+                          : (strings.isFrench
+                              ? 'STRATÉGIE D’APAISEMENT RECOMMANDÉE :'
+                              : 'RECOMMENDED STABILIZING STRATEGY:'),
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -672,7 +774,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
                         );
                       },
                       child: Text(
-                        isAr ? 'فتح الدعم الفوري →' : 'Open Support →',
+                        isAr
+                            ? 'فتح الدعم الفوري →'
+                            : (strings.isFrench
+                                ? 'Ouvrir l’aide →'
+                                : 'Open Support →'),
                         style: const TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w700,
@@ -711,7 +817,9 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
                   child: Text(
                     isAr
                         ? 'المرجع الشخصي: ${baseline.totalRecordedDays} أيام ملاحظة'
-                        : 'Personal Baseline: ${baseline.totalRecordedDays} calibrated days',
+                        : (strings.isFrench
+                            ? 'Référence personnelle : ${baseline.totalRecordedDays} jours calibrés'
+                            : 'Personal Baseline: ${baseline.totalRecordedDays} calibrated days'),
                     style: TextStyle(fontSize: 11.5, color: textSecondary),
                   ),
                 ),
@@ -732,7 +840,11 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
             child: Text(
-              isAr ? 'توثيق التقرير في أرشيف المرصد' : 'Log to Observatory Timeline',
+              isAr
+                  ? 'توثيق التقرير في أرشيف المرصد'
+                  : (strings.isFrench
+                      ? 'Enregistrer dans l’Observatoire'
+                      : 'Log to Observatory Timeline'),
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
             ),
           ),

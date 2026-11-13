@@ -259,7 +259,11 @@ class PsychologicalProfileView extends ConsumerWidget {
               const FingerprintThreadSignature(size: 20, animated: false),
               const SizedBox(width: 8),
               Text(
-                strings.isArabic ? 'نظرة عامة على الملف' : 'PROFILE OVERVIEW',
+                strings.isArabic
+                    ? 'نظرة عامة على الملف'
+                    : (strings.isFrench
+                        ? 'APERÇU DU PROFIL'
+                        : 'PROFILE OVERVIEW'),
                 style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
@@ -514,7 +518,11 @@ class PsychologicalProfileView extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            strings.isArabic ? 'انقر لإضافة وتخصيص تجاربك وحالاتك...' : 'Tap to select and customize your experiences...',
+            strings.isArabic
+                ? 'انقر لإضافة وتخصيص تجاربك وحالاتك...'
+                : (strings.isFrench
+                    ? 'Touchez pour sélectionner et personnaliser vos expériences...'
+                    : 'Tap to select and customize your experiences...'),
             style: TextStyle(fontSize: 11, color: textSecondary, fontStyle: FontStyle.italic),
           ),
         ],

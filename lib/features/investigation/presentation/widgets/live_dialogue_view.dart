@@ -326,7 +326,9 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                           Navigator.pop(ctx);
                         },
                         child: Text(
-                          strings.isArabic ? 'إزالة' : 'Clear',
+                          strings.isArabic
+                              ? 'إزالة'
+                              : (strings.isFrench ? 'Effacer' : 'Clear'),
                           style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
                         ),
                       ),
@@ -610,7 +612,11 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                               color: hasCustom ? context.tokens.accent : textSecondary,
                             ),
                             label: Text(
-                              strings.isArabic ? 'تعليمات' : 'Instructions',
+                              strings.isArabic
+                                  ? 'تعليمات'
+                                  : (strings.isFrench
+                                      ? 'Instructions'
+                                      : 'Instructions'),
                               style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: hasCustom ? FontWeight.w800 : FontWeight.w600,
@@ -679,13 +685,25 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     final profile = ref.watch(profileControllerProvider).value;
     final userName = profile?.preferredName.isNotEmpty == true
         ? profile!.preferredName
-        : (strings.isArabic ? 'صديقي' : 'Hajer');
+        : (strings.isArabic ? 'صديقي' : (strings.isFrench ? 'Ami' : 'Hajer'));
 
-    final starters = [
-      'Why do I feel anxious?',
-      'Am I in a mood episode?',
-      'Help me understand my thoughts',
-    ];
+    final starters = strings.isArabic
+        ? const [
+            'علاش حاسس بالقلق اليوم؟',
+            'ياخي أنا في موجة مزاج متبدّلة؟',
+            'عاوني نفهم أفكاري أكثر',
+          ]
+        : (strings.isFrench
+            ? const [
+                'Pourquoi je me sens anxieux ?',
+                'Suis-je dans une phase de variation ?',
+                'Aide-moi à comprendre mes pensées',
+              ]
+            : const [
+                'Why do I feel anxious?',
+                'Am I in a mood episode?',
+                'Help me understand my thoughts',
+              ]);
 
     return Center(
       child: SingleChildScrollView(
@@ -718,7 +736,11 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
 
             // 2. Headline & Subtitle matching Phone 7
             Text(
-              "I'm here for you, $userName",
+              strings.isArabic
+                  ? 'أنا هنا معاك، $userName'
+                  : (strings.isFrench
+                      ? 'Je suis là pour vous, $userName'
+                      : "I'm here for you, $userName"),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'serif',
@@ -730,7 +752,11 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
             ),
             const SizedBox(height: 6),
             Text(
-              "Talk about what's on your mind,\nor ask anything you need.",
+              strings.isArabic
+                  ? 'احكيلي على اللي في بالك،\nأو اسألني على أي حاجة تحتاجها.'
+                  : (strings.isFrench
+                      ? 'Parlez de ce qui vous préoccupe,\nou demandez ce dont vous avez besoin.'
+                      : "Talk about what's on your mind,\nor ask anything you need."),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,

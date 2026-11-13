@@ -223,8 +223,16 @@ class _BreathingExerciseCardState extends ConsumerState<BreathingExerciseCard> {
               ),
               child: Text(
                 _isActive
-                    ? (strings.isArabic ? 'إيقاف التنفس' : 'Pause Exercise')
-                    : (strings.isArabic ? 'بدء تنفس 4-4-4-4' : 'Begin 4-4-4-4 Breathing'),
+                    ? (strings.isArabic
+                        ? 'إيقاف التنفس'
+                        : (strings.isFrench
+                            ? 'Mettre en pause'
+                            : 'Pause Exercise'))
+                    : (strings.isArabic
+                        ? 'بدء تنفس 4-4-4-4'
+                        : (strings.isFrench
+                            ? 'Commencer la respiration 4-4-4-4'
+                            : 'Begin 4-4-4-4 Breathing')),
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
             ),

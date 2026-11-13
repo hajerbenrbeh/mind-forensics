@@ -428,7 +428,11 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
       loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       error: (e, st) => Center(
         child: Text(
-          strings.isArabic ? 'تعذر تحميل الاكتشافات' : 'Unable to load discoveries',
+          strings.isArabic
+              ? 'تعذر تحميل الاكتشافات'
+              : (strings.isFrench
+                  ? 'Impossible de charger les découvertes'
+                  : 'Unable to load discoveries'),
           style: TextStyle(color: textSecondary),
         ),
       ),
@@ -456,7 +460,11 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
                     onPressed: () => AddDiscoverySheet.show(context),
                     icon: const Icon(Icons.add_rounded, size: 16),
                     label: Text(
-                      strings.isArabic ? 'إضافة خلاصة' : 'Add Discovery',
+                      strings.isArabic
+                          ? 'إضافة خلاصة'
+                          : (strings.isFrench
+                              ? 'Ajouter une découverte'
+                              : 'Add Discovery'),
                       style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
                     ),
                     style: TextButton.styleFrom(
@@ -470,7 +478,9 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
               Text(
                 strings.isArabic
                     ? 'أرشيف لخلاصاتك وملاحظاتك الشخصية. لا وجود لمستويات خطية؛ التقدم في الفهم النفسي مسار فريد خاص بك.'
-                : 'Your archive of personal insights and reflections. No artificial levels; psychological understanding is non-linear.',
+                    : (strings.isFrench
+                        ? 'Votre archive personnelle d’idées et de réflexions. Aucun niveau artificiel ; la compréhension psychologique est unique.'
+                        : 'Your archive of personal insights and reflections. No artificial levels; psychological understanding is non-linear.'),
                 style: TextStyle(fontSize: 12.5, color: textSecondary, height: 1.4),
               ),
               const SizedBox(height: 16),
@@ -492,7 +502,11 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        strings.isArabic ? 'لا توجد خلاصات محفوظة بعد' : 'No saved reflections yet',
+                        strings.isArabic
+                            ? 'لا توجد خلاصات محفوظة بعد'
+                            : (strings.isFrench
+                                ? 'Aucune réflexion enregistrée'
+                                : 'No saved reflections yet'),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -503,7 +517,9 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
                       Text(
                         strings.isArabic
                             ? 'كلما استكشفت زاوية نظر أو أنجزت خطوة ميكرو-بسيطة، ستظهر خلاصاتك هنا.'
-                            : 'When you explore perspectives or try strategies, your personal notes will appear here.',
+                            : (strings.isFrench
+                                ? 'Lorsque vous explorez des perspectives ou testez des stratégies, vos notes apparaîtront ici.'
+                                : 'When you explore perspectives or try strategies, your personal notes will appear here.'),
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 12, color: textSecondary),
                       ),
@@ -665,7 +681,11 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        strings.isArabic ? 'فحص التناغم الذاتي السريع' : 'Self-Attunement Check',
+                        strings.isArabic
+                            ? 'فحص التناغم الذاتي السريع'
+                            : (strings.isFrench
+                                ? 'Bilan d’écoute intérieure'
+                                : 'Self-Attunement Check'),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,

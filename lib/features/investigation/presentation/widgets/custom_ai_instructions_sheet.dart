@@ -296,7 +296,11 @@ class _CustomAiInstructionsSheetState
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : Text(
-                      strings.isArabic ? 'حفظ التعليمات' : 'SAVE INSTRUCTIONS',
+                      strings.isArabic
+                          ? 'حفظ التعليمات'
+                          : (strings.isFrench
+                              ? 'ENREGISTRER LES INSTRUCTIONS'
+                              : 'SAVE INSTRUCTIONS'),
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 11.5,

@@ -230,7 +230,11 @@ class _EditSymptomsSheetState extends ConsumerState<EditSymptomsSheet> {
                             controller: _customSymptomController,
                             style: TextStyle(fontSize: 12, color: textPrimary),
                             decoration: InputDecoration(
-                              hintText: strings.isArabic ? '+ إضافة تجربة أو صعوبة خاصة...' : '+ Add custom experience...',
+                              hintText: strings.isArabic
+                                  ? '+ إضافة تجربة أو صعوبة خاصة...'
+                                  : (strings.isFrench
+                                      ? '+ Ajouter une expérience personnalisée...'
+                                      : '+ Add custom experience...'),
                               hintStyle: TextStyle(fontSize: 11, color: textSecondary.withValues(alpha: 0.6)),
                               filled: true,
                               fillColor: context.tokens.surfaceSecondary,
@@ -254,7 +258,12 @@ class _EditSymptomsSheetState extends ConsumerState<EditSymptomsSheet> {
 
                     // Free-text field: "What has been difficult for you lately?"
                     Text(
-                      (strings.isArabic ? 'ما الذي كان صعباً أو مؤلماً مؤخراً؟' : 'WHAT HAS BEEN DIFFICULT LATELY?').toUpperCase(),
+                      (strings.isArabic
+                              ? 'ما الذي كان صعباً أو مؤلماً مؤخراً؟'
+                              : (strings.isFrench
+                                  ? 'QU’EST-CE QUI A ÉTÉ DIFFICILE RÉCEMMENT ?'
+                                  : 'WHAT HAS BEEN DIFFICULT LATELY?'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -270,7 +279,9 @@ class _EditSymptomsSheetState extends ConsumerState<EditSymptomsSheet> {
                       decoration: InputDecoration(
                         hintText: strings.isArabic
                             ? 'دوّن بحرية أي تفاصيل أو صعوبات تود توثيقها...'
-                            : 'Describe any patterns, triggers, or challenges without pressure...',
+                            : (strings.isFrench
+                                ? 'Décrivez vos déclencheurs ou défis sans pression...'
+                                : 'Describe any patterns, triggers, or challenges without pressure...'),
                         hintStyle: TextStyle(fontSize: 11.5, color: textSecondary.withValues(alpha: 0.6)),
                         filled: true,
                         fillColor: context.tokens.surfaceSecondary,
@@ -300,7 +311,12 @@ class _EditSymptomsSheetState extends ConsumerState<EditSymptomsSheet> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    (strings.isArabic ? 'حفظ الصعوبات والأعراض' : 'SAVE SYMPTOMS & DIFFICULTIES').toUpperCase(),
+                    (strings.isArabic
+                            ? 'حفظ الصعوبات والأعراض'
+                            : (strings.isFrench
+                                ? 'ENREGISTRER LES DIFFICULTÉS'
+                                : 'SAVE SYMPTOMS & DIFFICULTIES'))
+                        .toUpperCase(),
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,

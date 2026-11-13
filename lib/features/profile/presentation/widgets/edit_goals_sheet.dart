@@ -185,7 +185,12 @@ class _EditGoalsSheetState extends ConsumerState<EditGoalsSheet> {
 
                     // Custom Goal Input
                     Text(
-                      (strings.isArabic ? 'هدف شخصي مخصص' : 'CUSTOM PERSONAL GOAL').toUpperCase(),
+                      (strings.isArabic
+                              ? 'هدف شخصي مخصص'
+                              : (strings.isFrench
+                                  ? 'OBJECTIF PERSONNEL PERSONNALISÉ'
+                                  : 'CUSTOM PERSONAL GOAL'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -200,7 +205,9 @@ class _EditGoalsSheetState extends ConsumerState<EditGoalsSheet> {
                       decoration: InputDecoration(
                         hintText: strings.isArabic
                             ? 'أضف هدفاً إضافياً خاصاً بك...'
-                            : 'Enter any other goal meaningful to you...',
+                            : (strings.isFrench
+                                ? 'Saisissez tout autre objectif important pour vous...'
+                                : 'Enter any other goal meaningful to you...'),
                         hintStyle: TextStyle(fontSize: 11.5, color: textSecondary.withValues(alpha: 0.6)),
                         filled: true,
                         fillColor: context.tokens.surfaceSecondary,
@@ -230,7 +237,12 @@ class _EditGoalsSheetState extends ConsumerState<EditGoalsSheet> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    (strings.isArabic ? 'حفظ الأهداف' : 'SAVE GOALS').toUpperCase(),
+                    (strings.isArabic
+                            ? 'حفظ الأهداف'
+                            : (strings.isFrench
+                                ? 'ENREGISTRER LES OBJECTIFS'
+                                : 'SAVE GOALS'))
+                        .toUpperCase(),
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,

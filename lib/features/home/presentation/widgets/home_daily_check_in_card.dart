@@ -98,7 +98,10 @@ class HomeDailyCheckInCard extends StatelessWidget {
                   InkWell(
                     onTap: () => context.push('/mind-trace'),
                     child: Text(
-                      (strings.isArabic ? 'عرض' : 'VIEW').toUpperCase(),
+                      (strings.isArabic
+                              ? 'عرض'
+                              : (strings.isFrench ? 'VOIR' : 'VIEW'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,

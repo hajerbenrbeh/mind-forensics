@@ -1547,7 +1547,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: Row(
               children: [
                 ChoiceChip(
-                  label: Text(strings.isArabic ? 'الكل' : 'All'),
+                  label: Text(
+                    strings.isArabic
+                        ? 'الكل'
+                        : (strings.isFrench ? 'Tout' : 'All'),
+                  ),
                   selected: _activeSymptomDomain == null,
                   onSelected: (_) =>
                       setState(() => _activeSymptomDomain = null),

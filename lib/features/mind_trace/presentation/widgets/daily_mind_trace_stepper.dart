@@ -241,7 +241,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  strings.isArabic ? 'إضافة شعور مخصص' : 'Custom Emotion',
+                  strings.isArabic
+                      ? 'إضافة شعور مخصص'
+                      : (strings.isFrench ? 'Émotion personnalisée' : 'Custom Emotion'),
                   style: LabTheme.serifStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -256,7 +258,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                   decoration: InputDecoration(
                     hintText: strings.isArabic
                         ? 'دوّن الإحساس بدقة (مثال: حنين، سكينة)...'
-                        : 'Enter nuanced feeling (e.g. yearning, grounded)...',
+                        : (strings.isFrench
+                            ? 'Précisez le ressenti (ex. nostalgie, sérénité)...'
+                            : 'Enter nuanced feeling (e.g. yearning, grounded)...'),
                     hintStyle: TextStyle(
                       color: isDark ? Colors.grey : Colors.grey.shade600,
                       fontSize: 12,
@@ -284,7 +288,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
                       child: Text(
-                        strings.isArabic ? 'إلغاء' : 'Cancel',
+                        strings.isArabic
+                            ? 'إلغاء'
+                            : (strings.isFrench ? 'Annuler' : 'Cancel'),
                         style: TextStyle(color: ctx.tokens.textSecondary),
                       ),
                     ),
@@ -306,7 +312,11 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                         }
                         Navigator.pop(ctx);
                       },
-                      child: Text(strings.isArabic ? 'إضافة' : 'Add Emotion'),
+                      child: Text(
+                        strings.isArabic
+                            ? 'إضافة'
+                            : (strings.isFrench ? 'Ajouter' : 'Add Emotion'),
+                      ),
                     ),
                   ],
                 ),
@@ -368,7 +378,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 ),
               ),
               Text(
-                '${strings.isArabic ? 'خطوة' : 'STEP'} ${_currentStep + 1}/4',
+                '${strings.isArabic ? 'خطوة' : (strings.isFrench ? 'ÉTAPE' : 'STEP')} ${_currentStep + 1}/4',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
@@ -421,13 +431,23 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
   String _getStepTitle(int step, AppStrings strings) {
     switch (step) {
       case 0:
-        return strings.isArabic ? '1. كيف تشعر اليوم؟' : '1. How Are You Feeling?';
+        return strings.isArabic
+            ? '1. كيف تشعر اليوم؟'
+            : (strings.isFrench
+                ? '1. Comment vous sentez-vous ?'
+                : '1. How Are You Feeling?');
       case 1:
-        return strings.isArabic ? '2. شدة المشاعر' : '2. Emotional Intensity';
+        return strings.isArabic
+            ? '2. شدة المشاعر'
+            : (strings.isFrench ? '2. Intensité émotionnelle' : '2. Emotional Intensity');
       case 2:
-        return strings.isArabic ? '3. حالة ذهنك وأفكارك' : '3. How Is Your Mind?';
+        return strings.isArabic
+            ? '3. حالة ذهنك وأفكارك'
+            : (strings.isFrench ? '3. Comment va votre esprit ?' : '3. How Is Your Mind?');
       case 3:
-        return strings.isArabic ? '4. حالة جسدك وطاقتك' : '4. How Is Your Body?';
+        return strings.isArabic
+            ? '4. حالة جسدك وطاقتك'
+            : (strings.isFrench ? '4. Comment va votre corps ?' : '4. How Is Your Body?');
       default:
         return '';
     }
@@ -604,18 +624,28 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
     Color textSecondary,
   ) {
     final intensityVal = _moodIntensity.toInt();
-    String intensityDesc = strings.isArabic ? 'متوسط / معتاد' : 'Moderate / Present';
+    String intensityDesc = strings.isArabic
+        ? 'متوسط / معتاد'
+        : (strings.isFrench ? 'Modéré / Présent' : 'Moderate / Present');
     if (intensityVal <= 3) {
-      intensityDesc = strings.isArabic ? 'خفيف / هادئ' : 'Mild / Low Arousal';
+      intensityDesc = strings.isArabic
+          ? 'خفيف / هادئ'
+          : (strings.isFrench ? 'Léger / Calme' : 'Mild / Low Arousal');
     } else if (intensityVal >= 8) {
-      intensityDesc = strings.isArabic ? 'مرتفع / شديد' : 'High / Intense Arousal';
+      intensityDesc = strings.isArabic
+          ? 'مرتفع / شديد'
+          : (strings.isFrench ? 'Élevé / Intense' : 'High / Intense Arousal');
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          strings.isArabic ? 'ما مدى شدة هذه المشاعر الآن؟' : 'How intensely do you feel this right now?',
+          strings.isArabic
+              ? 'ما مدى شدة هذه المشاعر الآن؟'
+              : (strings.isFrench
+                  ? 'Avec quelle intensité ressentez-vous cela ?'
+                  : 'How intensely do you feel this right now?'),
           style: LabTheme.serifStyle(
             fontSize: 16,
             height: 1.3,
@@ -797,7 +827,11 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
           children: [
             Expanded(
               child: Text(
-                strings.isArabic ? 'كيف تبدو وتيرة أفكارك اليوم؟' : 'How is your mind operating today?',
+                strings.isArabic
+                    ? 'كيف تبدو وتيرة أفكارك اليوم؟'
+                    : (strings.isFrench
+                        ? 'Comment fonctionne votre esprit aujourd’hui ?'
+                        : 'How is your mind operating today?'),
                 style: LabTheme.serifStyle(
                   fontSize: 16,
                   height: 1.3,
@@ -814,7 +848,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 border: Border.all(color: borderColor),
               ),
               child: Text(
-                strings.isArabic ? 'اختياري' : 'OPTIONAL',
+                strings.isArabic
+                    ? 'اختياري'
+                    : (strings.isFrench ? 'OPTIONNEL' : 'OPTIONAL'),
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
@@ -829,15 +865,23 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
         Text(
           strings.isArabic
               ? 'ملاحظة الأفكار التلقائية وسرعتها وتشتتها دون إصدار أحكام.'
-              : 'Observe cognitive speed, focus, and clarity without judgment.',
+              : (strings.isFrench
+                  ? 'Observez le rythme, la concentration et la clarté mentale sans jugement.'
+                  : 'Observe cognitive speed, focus, and clarity without judgment.'),
           style: TextStyle(fontSize: 11.5, color: textSecondary),
         ),
         const SizedBox(height: 20),
 
         // 1. Racing thoughts
         _buildMetricSlider(
-          label: strings.isArabic ? 'تسارع وتزاحم الأفكار' : 'Racing Thoughts',
-          subtitle: strings.isArabic ? 'أفكار متسارعة يصعب إيقافها' : 'Thoughts racing rapidly',
+          label: strings.isArabic
+              ? 'تسارع وتزاحم الأفكار'
+              : (strings.isFrench ? 'Pensées rapides' : 'Racing Thoughts'),
+          subtitle: strings.isArabic
+              ? 'أفكار متسارعة يصعب إيقافها'
+              : (strings.isFrench
+                  ? 'Pensées défilant rapidement'
+                  : 'Thoughts racing rapidly'),
           value: _racingThoughts,
           onChanged: (v) => setState(() => _racingThoughts = v),
           isDark: isDark,
@@ -849,8 +893,12 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
 
         // 2. Concentration
         _buildMetricSlider(
-          label: strings.isArabic ? 'التركيز والقدرة على الانتباه' : 'Concentration & Focus',
-          subtitle: strings.isArabic ? 'سهولة البقاء في مهمة واحدة' : 'Ability to stay on task',
+          label: strings.isArabic
+              ? 'التركيز والقدرة على الانتباه'
+              : (strings.isFrench ? 'Concentration & Attention' : 'Concentration & Focus'),
+          subtitle: strings.isArabic
+              ? 'سهولة البقاء في مهمة واحدة'
+              : (strings.isFrench ? 'Capacité à rester concentré' : 'Ability to stay on task'),
           value: _concentrationLevel,
           onChanged: (v) => setState(() => _concentrationLevel = v),
           isDark: isDark,
@@ -862,8 +910,14 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
 
         // 3. Intrusive thoughts
         _buildMetricSlider(
-          label: strings.isArabic ? 'الأفكار المتسللة المزعجة' : 'Intrusive Thoughts',
-          subtitle: strings.isArabic ? 'أفكار غير مرغوبة تلح على الذهن' : 'Unwanted repetitive thoughts',
+          label: strings.isArabic
+              ? 'الأفكار المتسللة المزعجة'
+              : (strings.isFrench ? 'Pensées intrusives' : 'Intrusive Thoughts'),
+          subtitle: strings.isArabic
+              ? 'أفكار غير مرغوبة تلح على الذهن'
+              : (strings.isFrench
+                  ? 'Pensées répétitives non souhaitées'
+                  : 'Unwanted repetitive thoughts'),
           value: _intrusiveThoughts,
           onChanged: (v) => setState(() => _intrusiveThoughts = v),
           isDark: isDark,
@@ -875,8 +929,14 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
 
         // 4. Mental clarity
         _buildMetricSlider(
-          label: strings.isArabic ? 'الوضوح الذهني' : 'Mental Clarity',
-          subtitle: strings.isArabic ? 'صفاء التفكير وغياب الضبابية' : 'Clarity versus brain fog',
+          label: strings.isArabic
+              ? 'الوضوح الذهني'
+              : (strings.isFrench ? 'Clarté mentale' : 'Mental Clarity'),
+          subtitle: strings.isArabic
+              ? 'صفاء التفكير وغياب الضبابية'
+              : (strings.isFrench
+                  ? 'Clarté contre brouillard mental'
+                  : 'Clarity versus brain fog'),
           value: _mentalClarity,
           onChanged: (v) => setState(() => _mentalClarity = v),
           isDark: isDark,
@@ -888,8 +948,12 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
 
         // 5. Emotional disconnection
         _buildMetricSlider(
-          label: strings.isArabic ? 'الانفصال الذهني أو الشعوري' : 'Emotional Disconnection',
-          subtitle: strings.isArabic ? 'الشعور بالتبلد أو الغربة عن الواقع' : 'Numbness or detachment',
+          label: strings.isArabic
+              ? 'الانفصال الذهني أو الشعوري'
+              : (strings.isFrench ? 'Déconnexion émotionnelle' : 'Emotional Disconnection'),
+          subtitle: strings.isArabic
+              ? 'الشعور بالتبلد أو الغربة عن الواقع'
+              : (strings.isFrench ? 'Engourdissement ou détachement' : 'Numbness or detachment'),
           value: _emotionalDisconnection,
           onChanged: (v) => setState(() => _emotionalDisconnection = v),
           isDark: isDark,
@@ -902,7 +966,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
         if (dynamicQuestions.isNotEmpty) ...[
           const SizedBox(height: 20),
           Text(
-            strings.isArabic ? 'أسئلة استبصار مخصصة' : 'TAILORED INQUIRIES',
+            strings.isArabic
+                ? 'أسئلة استبصار مخصصة'
+                : (strings.isFrench ? 'QUESTIONS ADAPTÉES' : 'TAILORED INQUIRIES'),
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
@@ -990,7 +1056,11 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
           children: [
             Expanded(
               child: Text(
-                strings.isArabic ? 'ماذا يخبرك جسدك اليوم؟' : 'What is your body communicating?',
+                strings.isArabic
+                    ? 'ماذا يخبرك جسدك اليوم؟'
+                    : (strings.isFrench
+                        ? 'Que communique votre corps ?'
+                        : 'What is your body communicating?'),
                 style: LabTheme.serifStyle(
                   fontSize: 16,
                   height: 1.3,
@@ -1007,7 +1077,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 border: Border.all(color: borderColor),
               ),
               child: Text(
-                strings.isArabic ? 'اختياري' : 'OPTIONAL',
+                strings.isArabic
+                    ? 'اختياري'
+                    : (strings.isFrench ? 'OPTIONNEL' : 'OPTIONAL'),
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w800,
@@ -1022,15 +1094,23 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
         Text(
           strings.isArabic
               ? 'مستويات النشاط، جودة النوم، والتوتر العضلي.'
-              : 'Physical energy, sleep metrics, and somatic tension.',
+              : (strings.isFrench
+                  ? 'Énergie physique, sommeil et tension corporelle.'
+                  : 'Physical energy, sleep metrics, and somatic tension.'),
           style: TextStyle(fontSize: 11.5, color: textSecondary),
         ),
         const SizedBox(height: 20),
 
         // 1. Energy level
         _buildMetricSlider(
-          label: strings.isArabic ? 'مستوى الطاقة والنشاط' : 'Energy Level',
-          subtitle: strings.isArabic ? 'من الإرهاق التام إلى الحيوية العالية' : 'Exhausted to high vitality',
+          label: strings.isArabic
+              ? 'مستوى الطاقة والنشاط'
+              : (strings.isFrench ? 'Niveau d’énergie' : 'Energy Level'),
+          subtitle: strings.isArabic
+              ? 'من الإرهاق التام إلى الحيوية العالية'
+              : (strings.isFrench
+                  ? 'De l’épuisement à la pleine vitalité'
+                  : 'Exhausted to high vitality'),
           value: _energyLevel,
           onChanged: (v) => setState(() => _energyLevel = v),
           isDark: isDark,
@@ -1055,7 +1135,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    strings.isArabic ? 'مدة النوم الليلة الماضية' : 'Sleep Duration',
+                    strings.isArabic
+                        ? 'مدة النوم الليلة الماضية'
+                        : (strings.isFrench ? 'Durée du sommeil' : 'Sleep Duration'),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -1063,7 +1145,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                     ),
                   ),
                   Text(
-                    '${_sleepHours.toStringAsFixed(1)} ${strings.isArabic ? 'ساعة' : 'hours'}',
+                    '${_sleepHours.toStringAsFixed(1)} ${strings.isArabic ? 'ساعة' : (strings.isFrench ? 'heures' : 'hours')}',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -1112,7 +1194,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    strings.isArabic ? 'جودة النوم' : 'Sleep Quality',
+                    strings.isArabic
+                        ? 'جودة النوم'
+                        : (strings.isFrench ? 'Qualité du sommeil' : 'Sleep Quality'),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -1174,8 +1258,14 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
 
         // 4. Physical tension
         _buildMetricSlider(
-          label: strings.isArabic ? 'التوتر الجسدي الملحوظ' : 'Physical Tension',
-          subtitle: strings.isArabic ? 'تشنج العضلات أو ثقل الصدر' : 'Muscle clenching or body tightness',
+          label: strings.isArabic
+              ? 'التوتر الجسدي الملحوظ'
+              : (strings.isFrench ? 'Tension corporelle' : 'Physical Tension'),
+          subtitle: strings.isArabic
+              ? 'تشنج العضلات أو ثقل الصدر'
+              : (strings.isFrench
+                  ? 'Contraction musculaire ou oppression'
+                  : 'Muscle clenching or body tightness'),
           value: _physicalTension,
           onChanged: (v) => setState(() => _physicalTension = v),
           isDark: isDark,
@@ -1278,7 +1368,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      (strings.isArabic ? 'الحالة المعاشة' : 'LIVED STATE').toUpperCase(),
+                      (strings.isArabic
+                              ? 'الحالة المعاشة'
+                              : (strings.isFrench ? 'ÉTAT VÉCU' : 'LIVED STATE'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -1294,7 +1387,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                         border: Border.all(color: borderColor),
                       ),
                       child: Text(
-                        '${strings.isArabic ? 'الشدة' : 'Intensity'}: $intensity/10',
+                        '${strings.isArabic ? 'الشدة' : (strings.isFrench ? 'Intensité' : 'Intensity')}: $intensity/10',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1345,7 +1438,12 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
 
                 // Grounding Reflection (No fabricated AI diagnostics)
                 Text(
-                  (strings.isArabic ? 'تأمل ورسوّ' : 'GROUNDED REFLECTION').toUpperCase(),
+                  (strings.isArabic
+                          ? 'تأمل ورسوّ'
+                          : (strings.isFrench
+                              ? 'RÉFLEXION ANCRÉE'
+                              : 'GROUNDED REFLECTION'))
+                      .toUpperCase(),
                   style: TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
@@ -1359,7 +1457,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                       ? '“$journal”'
                       : (strings.isArabic
                           ? '«ملاحظتك لمشاعرك وتسميتها دون لوم ذاتي هو أول خطوة لاستعادة التوازن والوضوح الإدراكي. أثرك مسجل بأمان.»'
-                          : '“Noticing and naming your emotional experiences creates valuable space between impulse and response. Your trace is safely preserved.”'),
+                          : (strings.isFrench
+                              ? '« Observer et nommer vos émotions crée un espace précieux entre impulsion et réponse. Votre empreinte est préservée. »'
+                              : '“Noticing and naming your emotional experiences creates valuable space between impulse and response. Your trace is safely preserved.”')),
                   style: LabTheme.editorialSerif(
                     fontSize: 13,
                     fontStyle: FontStyle.italic,
@@ -1396,7 +1496,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                   Text(
                     (strings.isArabic
                             ? 'استكشاف أثر الأفكار'
-                            : 'VIEW IN THE THOUGHT TRACE')
+                            : (strings.isFrench
+                                ? 'VOIR DANS LA CHRONOLOGIE'
+                                : 'VIEW IN THE THOUGHT TRACE'))
                         .toUpperCase(),
                     style: TextStyle(
                       fontSize: 11.5,
@@ -1428,7 +1530,11 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  (strings.isArabic ? 'مراجعة تفاصيل الأثر' : 'REVIEW ENTRY DETAILS')
+                  (strings.isArabic
+                          ? 'مراجعة تفاصيل الأثر'
+                          : (strings.isFrench
+                              ? 'REVOIR LES DÉTAILS'
+                              : 'REVIEW ENTRY DETAILS'))
                       .toUpperCase(),
                   style: TextStyle(
                     fontSize: 11,
@@ -1447,7 +1553,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
             TextButton(
               onPressed: widget.onReturnHome,
               child: Text(
-                strings.isArabic ? 'العودة إلى الصفحة الرئيسية' : 'Return to Home',
+                strings.isArabic
+                    ? 'العودة إلى الصفحة الرئيسية'
+                    : (strings.isFrench ? 'Retour à l’accueil' : 'Return to Home'),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -1491,7 +1599,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  strings.isArabic ? 'السابق' : 'BACK',
+                  strings.isArabic
+                      ? 'السابق'
+                      : (strings.isFrench ? 'RETOUR' : 'BACK'),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -1517,7 +1627,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
               padding: const EdgeInsets.symmetric(horizontal: 14),
               alignment: Alignment.center,
               child: Text(
-                strings.isArabic ? 'تخطي' : 'Skip',
+                strings.isArabic
+                    ? 'تخطي'
+                    : (strings.isFrench ? 'Passer' : 'Skip'),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -1562,7 +1674,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                   : Text(
                       isLastStep
                           ? strings.recordTraceBtn
-                          : (strings.isArabic ? 'متابعة' : 'CONTINUE')
+                          : (strings.isArabic
+                                  ? 'متابعة'
+                                  : (strings.isFrench ? 'CONTINUER' : 'CONTINUE'))
                               .toUpperCase(),
                       style: TextStyle(
                         fontSize: 11.5,

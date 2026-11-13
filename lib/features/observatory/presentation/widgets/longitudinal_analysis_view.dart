@@ -46,7 +46,11 @@ class _LongitudinalAnalysisViewState
       ),
       error: (e, st) => Center(
         child: Text(
-          isAr ? 'تعذر تحميل بيانات التحليل' : 'Unable to load analysis telemetry',
+          isAr
+              ? 'تعذر تحميل بيانات التحليل'
+              : (strings.isFrench
+                  ? 'Impossible de charger les données d’analyse'
+                  : 'Unable to load analysis telemetry'),
           style: TextStyle(color: textSecondary),
         ),
       ),
@@ -76,7 +80,11 @@ class _LongitudinalAnalysisViewState
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    isAr ? 'التحليل الطولي للأعراض' : 'LONGITUDINAL SYMPTOM ANALYSIS',
+                    isAr
+                        ? 'التحليل الطولي للأعراض'
+                        : (strings.isFrench
+                            ? 'ANALYSE LONGITUDINALE'
+                            : 'LONGITUDINAL SYMPTOM ANALYSIS'),
                     style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
@@ -137,7 +145,11 @@ class _LongitudinalAnalysisViewState
                         Icon(Icons.tune_outlined, size: 16, color: LabColors.sageGreen),
                         const SizedBox(width: 8),
                         Text(
-                          isAr ? 'المرجع الشخصي الأساسي' : 'PERSONAL BASELINE TELEMETRY',
+                          isAr
+                              ? 'المرجع الشخصي الأساسي'
+                              : (strings.isFrench
+                                  ? 'RÉFÉRENCE PERSONNELLE'
+                                  : 'PERSONAL BASELINE TELEMETRY'),
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w800,
@@ -167,13 +179,17 @@ class _LongitudinalAnalysisViewState
                     Row(
                       children: [
                         _buildMetricCol(
-                          label: isAr ? 'أيام الرصد' : 'Days Observed',
+                          label: isAr
+                              ? 'أيام الرصد'
+                              : (strings.isFrench ? 'Jours observés' : 'Days Observed'),
                           value: '${baseline.totalRecordedDays}d',
                           textPrimary: textPrimary,
                           textSecondary: textSecondary,
                         ),
                         _buildMetricCol(
-                          label: isAr ? 'المزاج المرجعي' : 'Baseline Mood',
+                          label: isAr
+                              ? 'المزاج المرجعي'
+                              : (strings.isFrench ? 'Humeur de base' : 'Baseline Mood'),
                           value: baseline.averageMoodIntensity != null
                               ? '${baseline.averageMoodIntensity!.toStringAsFixed(1)}/10'
                               : '—',
@@ -181,7 +197,9 @@ class _LongitudinalAnalysisViewState
                           textSecondary: textSecondary,
                         ),
                         _buildMetricCol(
-                          label: isAr ? 'متوسط النوم' : 'Avg Sleep',
+                          label: isAr
+                              ? 'متوسط النوم'
+                              : (strings.isFrench ? 'Sommeil moyen' : 'Avg Sleep'),
                           value: baseline.averageSleepHours != null
                               ? '${baseline.averageSleepHours!.toStringAsFixed(1)}h'
                               : '—',
@@ -239,7 +257,11 @@ class _LongitudinalAnalysisViewState
 
               // 3. Frequency Distribution
               Text(
-                isAr ? 'الأعراض الأكثر تكراراً في النافذة المحددة:' : 'Most frequent experiences in window:',
+                isAr
+                    ? 'الأعراض الأكثر تكراراً في النافذة المحددة:'
+                    : (strings.isFrench
+                        ? 'Ressentis les plus fréquents sur la période :'
+                        : 'Most frequent experiences in window:'),
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textSecondary),
               ),
               const SizedBox(height: 10),
@@ -256,7 +278,9 @@ class _LongitudinalAnalysisViewState
                     child: Text(
                       isAr
                           ? 'لا توجد تقارير أعراض مسجلة في نافذة $_selectedWindowDays يوماً الماضية.'
-                          : 'No symptom reports logged in the past ${_selectedWindowDays}d window.',
+                          : (strings.isFrench
+                              ? 'Aucun rapport enregistré sur les $_selectedWindowDays derniers jours.'
+                              : 'No symptom reports logged in the past ${_selectedWindowDays}d window.'),
                       style: TextStyle(fontSize: 12, color: textSecondary),
                     ),
                   ),
@@ -303,7 +327,9 @@ class _LongitudinalAnalysisViewState
                                 ),
                               ),
                               Text(
-                                isAr ? '$count مرات' : '$count times',
+                                isAr
+                                    ? '$count مرات'
+                                    : (strings.isFrench ? '$count fois' : '$count times'),
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
@@ -331,13 +357,21 @@ class _LongitudinalAnalysisViewState
 
               // 4. Chronological Reports History
               Text(
-                isAr ? 'سجل تقارير الأعراض:' : 'Symptom Assessment History:',
+                isAr
+                    ? 'سجل تقارير الأعراض:'
+                    : (strings.isFrench
+                        ? 'Historique des bilans :'
+                        : 'Symptom Assessment History:'),
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: textSecondary),
               ),
               const SizedBox(height: 10),
               if (reports.isEmpty)
                 Text(
-                  isAr ? 'لم تسجل أي تقارير بعد.' : 'No symptom reports logged yet.',
+                  isAr
+                      ? 'لم تسجل أي تقارير بعد.'
+                      : (strings.isFrench
+                          ? 'Aucun bilan enregistré pour le moment.'
+                          : 'No symptom reports logged yet.'),
                   style: TextStyle(fontSize: 12, color: textSecondary),
                 )
               else

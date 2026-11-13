@@ -145,7 +145,9 @@ class _ContextualSupportSheetState
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              isAr ? 'الخيارات' : 'Choices',
+                              isAr
+                                  ? 'الخيارات'
+                                  : (strings.isFrench ? 'Choix' : 'Choices'),
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,

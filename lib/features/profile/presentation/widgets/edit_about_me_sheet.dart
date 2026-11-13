@@ -138,7 +138,10 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
 
                 // Preferred Name
                 Text(
-                  (strings.isArabic ? 'الاسم أو اللقب المفضل' : 'PREFERRED NAME').toUpperCase(),
+                  (strings.isArabic
+                          ? 'الاسم أو اللقب المفضل'
+                          : (strings.isFrench ? 'PRÉNOM OU SURNOM' : 'PREFERRED NAME'))
+                      .toUpperCase(),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -151,7 +154,11 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
                   controller: _nameController,
                   style: TextStyle(fontSize: 12.5, color: textPrimary),
                   decoration: InputDecoration(
-                    hintText: strings.isArabic ? 'كيف تحب أن نناديك؟' : 'How should we address you?',
+                    hintText: strings.isArabic
+                        ? 'كيف تحب أن نناديك؟'
+                        : (strings.isFrench
+                            ? 'Comment souhaitez-vous être appelé(e) ?'
+                            : 'How should we address you?'),
                     hintStyle: TextStyle(fontSize: 11.5, color: textSecondary.withValues(alpha: 0.6)),
                     filled: true,
                     fillColor: context.tokens.surfaceSecondary,
@@ -166,7 +173,12 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
 
                 // Age Range
                 Text(
-                  (strings.isArabic ? 'الفئة العمرية (اختياري)' : 'AGE RANGE (OPTIONAL)').toUpperCase(),
+                  (strings.isArabic
+                          ? 'الفئة العمرية (اختياري)'
+                          : (strings.isFrench
+                              ? 'TRANCHE D’ÂGE (OPTIONNEL)'
+                              : 'AGE RANGE (OPTIONAL)'))
+                      .toUpperCase(),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -217,7 +229,12 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
 
                 // Personal Introduction
                 Text(
-                  (strings.isArabic ? 'مقدمة شخصية قصيرة' : 'PERSONAL INTRODUCTION').toUpperCase(),
+                  (strings.isArabic
+                          ? 'مقدمة شخصية قصيرة'
+                          : (strings.isFrench
+                              ? 'PRÉSENTATION PERSONNELLE'
+                              : 'PERSONAL INTRODUCTION'))
+                      .toUpperCase(),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -233,7 +250,9 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
                   decoration: InputDecoration(
                     hintText: strings.isArabic
                         ? 'مقدمة حرة ومريحة عن نفسك وتجربتك...'
-                        : 'Brief introductory thoughts you feel comfortable sharing...',
+                        : (strings.isFrench
+                            ? 'Quelques mots simples que vous souhaitez partager...'
+                            : 'Brief introductory thoughts you feel comfortable sharing...'),
                     hintStyle: TextStyle(fontSize: 11.5, color: textSecondary.withValues(alpha: 0.6)),
                     filled: true,
                     fillColor: context.tokens.surfaceSecondary,
@@ -258,7 +277,10 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      (strings.isArabic ? 'حفظ المعلومات' : 'SAVE CHANGES').toUpperCase(),
+                      (strings.isArabic
+                              ? 'حفظ المعلومات'
+                              : (strings.isFrench ? 'ENREGISTRER' : 'SAVE CHANGES'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,

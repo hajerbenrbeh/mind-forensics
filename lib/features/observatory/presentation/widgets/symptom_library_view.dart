@@ -44,7 +44,9 @@ class SymptomLibraryView extends ConsumerWidget {
                   decoration: InputDecoration(
                     hintText: isAr
                         ? 'ابحث في كافة الأعراض والتجارب...'
-                        : 'Search across all symptoms...',
+                        : (strings.isFrench
+                            ? 'Rechercher parmi tous les ressentis...'
+                            : 'Search across all symptoms...'),
                     hintStyle: TextStyle(
                       color: textSecondary.withValues(alpha: 0.6),
                       fontSize: 12,
@@ -70,7 +72,11 @@ class SymptomLibraryView extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               IconButton.outlined(
-                tooltip: isAr ? 'إضافة تجربة خاصة' : 'Add custom symptom',
+                tooltip: isAr
+                    ? 'إضافة تجربة خاصة'
+                    : (strings.isFrench
+                        ? 'Ajouter un ressenti personnalisé'
+                        : 'Add custom symptom'),
                 icon: const Icon(Icons.add_rounded, size: 20),
                 style: IconButton.styleFrom(
                   foregroundColor: textPrimary,
@@ -90,7 +96,7 @@ class SymptomLibraryView extends ConsumerWidget {
           child: Row(
             children: [
               ChoiceChip(
-                label: Text(isAr ? 'الكل' : 'All'),
+                label: Text(isAr ? 'الكل' : (strings.isFrench ? 'Tout' : 'All')),
                 selected: activeDomain == null,
                 onSelected: (_) =>
                     ref.read(selectedDomainFilterProvider.notifier).select(null),
@@ -149,7 +155,11 @@ class SymptomLibraryView extends ConsumerWidget {
           child: filteredSymptoms.isEmpty
               ? Center(
                   child: Text(
-                    isAr ? 'لم يتم العثور على أعراض مطابقة' : 'No matching symptoms found',
+                    isAr
+                        ? 'لم يتم العثور على أعراض مطابقة'
+                        : (strings.isFrench
+                            ? 'Aucun ressenti correspondant trouvé'
+                            : 'No matching symptoms found'),
                     style: TextStyle(color: textSecondary, fontSize: 12.5),
                   ),
                 )
@@ -220,7 +230,11 @@ class SymptomLibraryView extends ConsumerWidget {
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(
-                                            isAr ? 'خاص' : 'CUSTOM',
+                                            isAr
+                                                ? 'خاص'
+                                                : (strings.isFrench
+                                                    ? 'PERSO'
+                                                    : 'CUSTOM'),
                                             style: TextStyle(
                                               fontSize: 9,
                                               fontWeight: FontWeight.w800,
@@ -238,7 +252,11 @@ class SymptomLibraryView extends ConsumerWidget {
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(
-                                            isAr ? 'من ملفك' : 'INTAKE',
+                                            isAr
+                                                ? 'من ملفك'
+                                                : (strings.isFrench
+                                                    ? 'PROFIL'
+                                                    : 'INTAKE'),
                                             style: const TextStyle(
                                               fontSize: 8.5,
                                               fontWeight: FontWeight.w800,
@@ -308,7 +326,11 @@ class SymptomLibraryView extends ConsumerWidget {
                           onTap: () =>
                               ref.read(selectedSymptomIdsProvider.notifier).clear(),
                           child: Text(
-                            isAr ? 'إلغاء التحديد' : 'Clear selection',
+                            isAr
+                                ? 'إلغاء التحديد'
+                                : (strings.isFrench
+                                    ? 'Tout désélectionner'
+                                    : 'Clear selection'),
                             style: TextStyle(fontSize: 11, color: textSecondary),
                           ),
                         ),
@@ -329,7 +351,11 @@ class SymptomLibraryView extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                     ),
                     child: Text(
-                      isAr ? 'تقييم الأعراض الآن' : 'Assess Symptoms',
+                      isAr
+                          ? 'تقييم الأعراض الآن'
+                          : (strings.isFrench
+                              ? 'Évaluer ces ressentis'
+                              : 'Assess Symptoms'),
                       style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
                     ),
                   ),

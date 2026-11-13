@@ -117,7 +117,9 @@ class ThoughtTraceDetailSheet extends ConsumerWidget {
                       if (onEdit != null)
                         IconButton(
                           icon: const Icon(Icons.edit_note_rounded, size: 20),
-                          tooltip: strings.isArabic ? 'تعديل' : 'Edit',
+                          tooltip: strings.isArabic
+                              ? 'تعديل'
+                              : (strings.isFrench ? 'Modifier' : 'Edit'),
                           color: tokens.accent,
                           visualDensity: VisualDensity.compact,
                           onPressed: () {
@@ -127,7 +129,9 @@ class ThoughtTraceDetailSheet extends ConsumerWidget {
                         ),
                       IconButton(
                         icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                        tooltip: strings.isArabic ? 'حذف' : 'Delete',
+                        tooltip: strings.isArabic
+                            ? 'حذف'
+                            : (strings.isFrench ? 'Supprimer' : 'Delete'),
                         color: textSecondary,
                         visualDensity: VisualDensity.compact,
                         onPressed: () async {
@@ -334,7 +338,11 @@ class ThoughtTraceDetailSheet extends ConsumerWidget {
                 const SizedBox(height: 8),
                 if (trace.situation != null && trace.situation!.trim().isNotEmpty)
                   _buildContextBlock(
-                    label: strings.isArabic ? 'الموقف / المحفز' : 'SITUATION / TRIGGER',
+                    label: strings.isArabic
+                        ? 'الموقف / المحفز'
+                        : (strings.isFrench
+                            ? 'SITUATION / DÉCLENCHEUR'
+                            : 'SITUATION / TRIGGER'),
                     content: trace.situation!.trim(),
                     surfaceSecondary: tokens.surfaceSecondary,
                     radius: tokens.buttonRadius,
@@ -345,7 +353,11 @@ class ThoughtTraceDetailSheet extends ConsumerWidget {
                 if (trace.behavioralResponse != null && trace.behavioralResponse!.trim().isNotEmpty) ...[
                   const SizedBox(height: 8),
                   _buildContextBlock(
-                    label: strings.isArabic ? 'السلوك / الاستجابة' : 'BEHAVIORAL RESPONSE',
+                    label: strings.isArabic
+                        ? 'السلوك / الاستجابة'
+                        : (strings.isFrench
+                            ? 'RÉPONSE COMPORTEMENTALE'
+                            : 'BEHAVIORAL RESPONSE'),
                     content: trace.behavioralResponse!.trim(),
                     surfaceSecondary: tokens.surfaceSecondary,
                     radius: tokens.buttonRadius,

@@ -78,7 +78,11 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
             const FingerprintThreadSignature(size: 18, animated: false),
             const SizedBox(width: 8),
             Text(
-              strings.isArabic ? 'أثر اليوم (MIND TRACE)' : 'DAILY MIND TRACE',
+              strings.isArabic
+                  ? 'أثر اليوم (MIND TRACE)'
+                  : (strings.isFrench
+                      ? 'EMPREINTE DU JOUR'
+                      : 'DAILY MIND TRACE'),
               style: LabTheme.serifStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w700,
@@ -359,7 +363,11 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      (strings.isArabic ? 'الحالة والمشاعر' : 'RECORDED STATE')
+                      (strings.isArabic
+                              ? 'الحالة والمشاعر'
+                              : (strings.isFrench
+                                  ? 'ÉTAT ENREGISTRÉ'
+                                  : 'RECORDED STATE'))
                           .toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
@@ -459,7 +467,9 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
                 const Icon(Icons.visibility_outlined, size: 16),
                 const SizedBox(width: 8),
                 Text(
-                  (strings.isArabic ? 'مراجعة تفاصيل الأثر' : 'REVIEW ENTRY')
+                  (strings.isArabic
+                          ? 'مراجعة تفاصيل الأثر'
+                          : (strings.isFrench ? 'REVOIR L’ENTRÉE' : 'REVIEW ENTRY'))
                       .toUpperCase(),
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5),
                 ),
@@ -489,7 +499,11 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
                 const Icon(Icons.edit_note_rounded, size: 16),
                 const SizedBox(width: 8),
                 Text(
-                  (strings.isArabic ? 'تعديل تقييم اليوم' : 'EDIT TODAY\'S CHECK-IN')
+                  (strings.isArabic
+                          ? 'تعديل تقييم اليوم'
+                          : (strings.isFrench
+                              ? 'MODIFIER LE BILAN DU JOUR'
+                              : 'EDIT TODAY\'S CHECK-IN'))
                       .toUpperCase(),
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.4),
                 ),

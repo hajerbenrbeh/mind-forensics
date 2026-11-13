@@ -88,7 +88,7 @@ class EditExperiencesSheet extends ConsumerWidget {
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: Text(
-                    strings.isArabic ? 'تم' : 'Done',
+                    strings.isArabic ? 'تم' : (strings.isFrench ? 'Terminé' : 'Done'),
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),

@@ -302,7 +302,11 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    strings.isArabic ? 'منحنى المزاج قيد المعايرة' : 'Mood curve calibrating',
+                    strings.isArabic
+                        ? 'منحنى المزاج قيد المعايرة'
+                        : (strings.isFrench
+                            ? 'Courbe d’humeur en calibration'
+                            : 'Mood curve calibrating'),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -313,7 +317,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                   Text(
                     strings.isArabic
                         ? 'سجل يومين على الأقل من الملاحظات لرسم منحنى المزاج الخاص بك.'
-                        : 'At least 2 days of observations needed to render your personal mood curve.',
+                        : (strings.isFrench
+                            ? 'Au moins 2 jours d’observations sont requis pour tracer votre courbe personnelle.'
+                            : 'At least 2 days of observations needed to render your personal mood curve.'),
                     style: TextStyle(fontSize: 11.5, color: tokens.textSecondary),
                   ),
                 ],

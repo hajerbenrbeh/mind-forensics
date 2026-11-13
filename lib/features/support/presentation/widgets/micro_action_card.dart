@@ -174,7 +174,9 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  isAr ? '2 دقائق فقط' : '2 MINUTES ONLY',
+                  isAr
+                      ? '2 دقائق فقط'
+                      : (isFr ? '2 MINUTES SEULEMENT' : '2 MINUTES ONLY'),
                   style: const TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
@@ -188,7 +190,9 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
           Text(
             isAr
                 ? 'اختر خطوة ميكرو-بسيطة تدوم دقيقتين لكسر الجمود:'
-                : 'Select one gentle micro-step to break initial inertia:',
+                : (isFr
+                    ? 'Choisissez un petit geste doux de deux minutes pour relancer l’élan :'
+                    : 'Select one gentle micro-step to break initial inertia:'),
             style: TextStyle(
               fontSize: 12,
               color: textSecondary,
@@ -298,8 +302,14 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
                     ),
                     child: Text(
                       _isTimerRunning
-                          ? (isAr ? 'إيقاف مؤقت' : 'Pause Timer')
-                          : (isAr ? 'بدء الدقيقتين' : 'Start 2 Minutes'),
+                          ? (isAr
+                              ? 'إيقاف مؤقت'
+                              : (isFr ? 'Mettre en pause' : 'Pause Timer'))
+                          : (isAr
+                              ? 'بدء الدقيقتين'
+                              : (isFr
+                                  ? 'Démarrer 2 minutes'
+                                  : 'Start 2 Minutes')),
                       style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                     ),
                   ),
@@ -318,7 +328,7 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
                     ),
                   ),
                   child: Text(
-                    isAr ? 'أكملت الخطوة' : 'Done',
+                    isAr ? 'أكملت الخطوة' : (isFr ? 'Terminé' : 'Done'),
                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
                   ),
                 ),
@@ -334,7 +344,9 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
                   child: Text(
                     isAr
                         ? 'أحسنت. خطوة صغيرة واحدة تكسر الجمود بدون أي ضغط.'
-                        : 'Well done. One tiny step breaks inertia with zero pressure.',
+                        : (isFr
+                            ? 'Bravo. Un petit pas suffit à relancer l’élan sans pression.'
+                            : 'Well done. One tiny step breaks inertia with zero pressure.'),
                     style: const TextStyle(
                       fontSize: 11.5,
                       color: LabColors.sageGreen,
@@ -353,7 +365,11 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            isAr ? 'تم حفظ التجربة في اكتشافاتك' : 'Strategy saved to Discoveries',
+                            isAr
+                                ? 'تم حفظ التجربة في اكتشافاتك'
+                                : (isFr
+                                    ? 'Stratégie enregistrée dans vos découvertes'
+                                    : 'Strategy saved to Discoveries'),
                             style: const TextStyle(fontSize: 12),
                           ),
                           duration: const Duration(seconds: 2),
@@ -363,7 +379,9 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
                   },
                   icon: const Icon(Icons.bookmark_add_outlined, size: 14),
                   label: Text(
-                    isAr ? 'حفظ كاكتشاف' : 'Save to Discoveries',
+                    isAr
+                        ? 'حفظ كاكتشاف'
+                        : (isFr ? 'Enregistrer' : 'Save to Discoveries'),
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
                   ),
                   style: TextButton.styleFrom(

@@ -530,7 +530,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ? preferred
                           : (authState.user?.codename.isNotEmpty == true
                               ? authState.user!.codename
-                              : (strings.isArabic ? 'مستكشف' : 'Observer'));
+                              : (strings.isArabic
+                                  ? 'مستكشف'
+                                  : (strings.isFrench
+                                      ? 'Observateur'
+                                      : 'Observer')));
                       return Column(
                         children: [
                           Text(
@@ -682,7 +686,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               builder: (context, ref, _) {
                 final authState = ref.watch(authControllerProvider);
                 final user = authState.user;
-                final codename = user?.codename ?? (strings.isArabic ? 'مستكشف' : 'Observer');
+                final codename = user?.codename ??
+                    (strings.isArabic
+                        ? 'مستكشف'
+                        : (strings.isFrench ? 'Observateur' : 'Observer'));
                 final isAnon = user?.isAnonymous ?? true;
                 final email = user?.email;
 
@@ -972,7 +979,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             // Section 3: Gentle Reflection Notifications
             _sectionLabel(
-              strings.isArabic ? 'إشعارات التأمل الهادئة' : 'GENTLE REFLECTION NOTIFICATIONS',
+              strings.isArabic
+                  ? 'إشعارات التأمل الهادئة'
+                  : (strings.isFrench
+                      ? 'NOTIFICATIONS DE RÉFLEXION DOUCES'
+                      : 'GENTLE REFLECTION NOTIFICATIONS'),
               textSecondary,
             ),
             Container(
@@ -993,14 +1004,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              strings.isArabic ? 'إشعارات هادئة وغير ملزمة' : 'Gentle Invitations',
+                              strings.isArabic
+                                  ? 'إشعارات هادئة وغير ملزمة'
+                                  : (strings.isFrench
+                                      ? 'Invitations douces'
+                                      : 'Gentle Invitations'),
                               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: textPrimary),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               strings.isArabic
                                   ? 'تذكيرات لطيفة للتأمل دون ضغط أو عدادات أيام متتالية.'
-                                  : 'Thoughtful reminders to pause and observe. No streak pressure or guilt.',
+                                  : (strings.isFrench
+                                      ? 'Rappels bienveillants pour faire une pause et observer, sans pression ni séries.'
+                                      : 'Thoughtful reminders to pause and observe. No streak pressure or guilt.'),
                               style: TextStyle(fontSize: 12, color: textSecondary, height: 1.3),
                             ),
                           ],
@@ -1022,7 +1039,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Divider(color: borderColor, height: 1),
                     const SizedBox(height: 12),
                     Text(
-                      strings.isArabic ? 'وتيرة الإشعارات' : 'NOTIFICATION FREQUENCY',
+                      strings.isArabic
+                          ? 'وتيرة الإشعارات'
+                          : (strings.isFrench
+                              ? 'FRÉQUENCE DES INVITATIONS'
+                              : 'NOTIFICATION FREQUENCY'),
                       style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,
@@ -1033,11 +1054,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        _notifFreqChip('daily', strings.isArabic ? 'يومياً' : 'Daily', isDark, borderColor),
+                        _notifFreqChip(
+                            'daily',
+                            strings.isArabic
+                                ? 'يومياً'
+                                : (strings.isFrench ? 'Quotidien' : 'Daily'),
+                            isDark,
+                            borderColor),
                         const SizedBox(width: 8),
-                        _notifFreqChip('alternate', strings.isArabic ? 'يوم بيوم' : 'Alternate Days', isDark, borderColor),
+                        _notifFreqChip(
+                            'alternate',
+                            strings.isArabic
+                                ? 'يوم بيوم'
+                                : (strings.isFrench
+                                    ? 'Un jour sur deux'
+                                    : 'Alternate Days'),
+                            isDark,
+                            borderColor),
                         const SizedBox(width: 8),
-                        _notifFreqChip('weekly', strings.isArabic ? 'أسبوعياً' : 'Weekly', isDark, borderColor),
+                        _notifFreqChip(
+                            'weekly',
+                            strings.isArabic
+                                ? 'أسبوعياً'
+                                : (strings.isFrench ? 'Hebdomadaire' : 'Weekly'),
+                            isDark,
+                            borderColor),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -1176,7 +1217,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: 24),
 
             // Section 6: Data Backup & Cloud Synchronization
-            _sectionLabel(strings.isArabic ? 'النسخ الاحتياطي والمزامنة السحابية' : 'DATA BACKUP & CLOUD RESTORATION', textSecondary),
+            _sectionLabel(
+              strings.isArabic
+                  ? 'النسخ الاحتياطي والمزامنة السحابية'
+                  : (strings.isFrench
+                      ? 'SAUVEGARDE ET RESTAURATION CLOUD'
+                      : 'DATA BACKUP & CLOUD RESTORATION'),
+              textSecondary,
+            ),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -1260,14 +1308,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             Icon(Icons.shield_outlined, size: 14, color: isDark ? LabColors.sageGreenGlow : LabColors.forestGreen),
                             const SizedBox(width: 6),
                             Text(
-                              'LOCAL SOVEREIGN STORAGE: ACTIVE',
+                              strings.isArabic
+                                  ? 'التخزين المحلي السيادي: نشط'
+                                  : (strings.isFrench
+                                      ? 'STOCKAGE LOCAL SOUVERAIN : ACTIF'
+                                      : 'LOCAL SOVEREIGN STORAGE: ACTIVE'),
                               style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.4, color: isDark ? LabColors.sageGreenGlow : LabColors.forestGreen),
                             ),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'All mood logs, reflection sessions, and clinical profiles are securely stored on this device. Cloud sync activates automatically when Firebase credentials (google-services.json) are provided.',
+                          strings.isArabic
+                              ? 'كل السجلات اليومية وجلسات الاستبصار والملف النفسي محفوظة بأمان على جهازك. يتم تفعيل المزامنة السحابية تلقائياً عند توفر بيانات Firebase.'
+                              : (strings.isFrench
+                                  ? 'Tous vos journaux d’humeur, sessions de réflexion et profils cliniques sont conservés en sécurité sur cet appareil.'
+                                  : 'All mood logs, reflection sessions, and clinical profiles are securely stored on this device. Cloud sync activates automatically when Firebase credentials (google-services.json) are provided.'),
                           style: TextStyle(fontSize: 11, color: textSecondary, height: 1.35),
                         ),
                       ],
@@ -1287,9 +1343,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 10),
                           ),
                           icon: const Icon(Icons.backup_outlined, size: 15),
-                          label: const Text(
-                            'BACKUP NOW',
-                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.4),
+                          label: Text(
+                            strings.isArabic
+                                ? 'نسخ احتياطي الآن'
+                                : (strings.isFrench
+                                    ? 'SAUVEGARDER'
+                                    : 'BACKUP NOW'),
+                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.4),
                           ),
                           onPressed: () async {
                             HapticFeedback.mediumImpact();
@@ -1297,7 +1357,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Backup complete: ${result.tracesCount} traces, ${result.sessionsCount} sessions, ${result.memoriesCount} memories preserved.'),
+                                  content: Text(
+                                    strings.isArabic
+                                        ? 'اكتمل النسخ الاحتياطي: ${result.tracesCount} أثر، ${result.sessionsCount} جلسات، ${result.memoriesCount} خلاصات محفوظة.'
+                                        : (strings.isFrench
+                                            ? 'Sauvegarde terminée : ${result.tracesCount} empreintes, ${result.sessionsCount} sessions, ${result.memoriesCount} souvenirs préservés.'
+                                            : 'Backup complete: ${result.tracesCount} traces, ${result.sessionsCount} sessions, ${result.memoriesCount} memories preserved.'),
+                                  ),
                                   behavior: SnackBarBehavior.floating,
                                 ),
                               );

@@ -107,7 +107,11 @@ class _CustomSymptomSheetState extends ConsumerState<CustomSymptomSheet> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    isAr ? 'إضافة تجربة أو عرض خاص' : 'Add Custom Symptom / Experience',
+                    isAr
+                        ? 'إضافة تجربة أو عرض خاص'
+                        : (strings.isFrench
+                            ? 'Ajouter un ressenti personnalisé'
+                            : 'Add Custom Symptom / Experience'),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
@@ -125,7 +129,9 @@ class _CustomSymptomSheetState extends ConsumerState<CustomSymptomSheet> {
 
               // Domain selection pills
               Text(
-                isAr ? 'المجال:' : 'Category Domain:',
+                isAr
+                    ? 'المجال:'
+                    : (strings.isFrench ? 'Domaine :' : 'Category Domain:'),
                 style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: textSecondary),
               ),
               const SizedBox(height: 6),
@@ -160,7 +166,11 @@ class _CustomSymptomSheetState extends ConsumerState<CustomSymptomSheet> {
 
               // Title input
               Text(
-                isAr ? 'تسمية العرض أو الصعوبة:' : 'Symptom / Experience Name:',
+                isAr
+                    ? 'تسمية العرض أو الصعوبة:'
+                    : (strings.isFrench
+                        ? 'Nom du ressenti / symptôme :'
+                        : 'Symptom / Experience Name:'),
                 style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: textSecondary),
               ),
               const SizedBox(height: 6),
@@ -168,7 +178,11 @@ class _CustomSymptomSheetState extends ConsumerState<CustomSymptomSheet> {
                 controller: _titleController,
                 style: TextStyle(color: textPrimary, fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: isAr ? 'مثلاً: ثقل غير معتاد في الرأس بعد الغداء' : 'e.g., Afternoon mental fog',
+                  hintText: isAr
+                      ? 'مثلاً: ثقل غير معتاد في الرأس بعد الغداء'
+                      : (strings.isFrench
+                          ? 'ex. Brouillard mental l’après-midi'
+                          : 'e.g., Afternoon mental fog'),
                   hintStyle: TextStyle(color: textSecondary.withValues(alpha: 0.6), fontSize: 12),
                   filled: true,
                   fillColor: isDark ? LabColors.nightBackground : LabColors.daylightBackground,
@@ -191,7 +205,11 @@ class _CustomSymptomSheetState extends ConsumerState<CustomSymptomSheet> {
 
               // Description input (Optional)
               Text(
-                isAr ? 'ملاحظة توضيحية (اختياري):' : 'Optional Context / Cue:',
+                isAr
+                    ? 'ملاحظة توضيحية (اختياري):'
+                    : (strings.isFrench
+                        ? 'Contexte ou nuance (optionnel) :'
+                        : 'Optional Context / Cue:'),
                 style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: textSecondary),
               ),
               const SizedBox(height: 6),
@@ -200,7 +218,11 @@ class _CustomSymptomSheetState extends ConsumerState<CustomSymptomSheet> {
                 maxLines: 2,
                 style: TextStyle(color: textPrimary, fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: isAr ? 'كيف تحس بالتجربة وما الذي يلازمها؟' : 'How does it usually manifest?',
+                  hintText: isAr
+                      ? 'كيف تحس بالتجربة وما الذي يلازمها؟'
+                      : (strings.isFrench
+                          ? 'Comment se manifeste ce ressenti ?'
+                          : 'How does it usually manifest?'),
                   hintStyle: TextStyle(color: textSecondary.withValues(alpha: 0.6), fontSize: 12),
                   filled: true,
                   fillColor: isDark ? LabColors.nightBackground : LabColors.daylightBackground,
@@ -233,7 +255,11 @@ class _CustomSymptomSheetState extends ConsumerState<CustomSymptomSheet> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                   child: Text(
-                    isAr ? 'حفظ العرض في المرصد' : 'Save to Observatory',
+                    isAr
+                        ? 'حفظ العرض في المرصد'
+                        : (strings.isFrench
+                            ? 'Enregistrer dans l’Observatoire'
+                            : 'Save to Observatory'),
                     style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                   ),
                 ),

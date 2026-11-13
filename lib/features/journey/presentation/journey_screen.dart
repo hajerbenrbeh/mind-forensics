@@ -203,25 +203,39 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
   }
 
   Widget _buildPhone6Timeline(bool isDark, Color textPrimary, Color textSecondary) {
+    final strings = ref.watch(appStringsProvider);
+    final isAr = strings.isArabic;
+    final isFr = strings.isFrench;
+
     final timelinePhases = [
       (
-        title: 'Balanced',
-        desc: 'Calm, focused, and in control',
+        title: isAr ? 'متوازن' : (isFr ? 'Équilibré' : 'Balanced'),
+        desc: isAr
+            ? 'هادئ، مركّز، ومسيطر على إيقاعك'
+            : (isFr ? 'Calme, concentré et posé' : 'Calm, focused, and in control'),
         isActive: true,
       ),
       (
-        title: 'Elevated',
-        desc: 'More energy and optimism',
+        title: isAr ? 'مرتفع' : (isFr ? 'Élevé' : 'Elevated'),
+        desc: isAr
+            ? 'طاقة وتفاؤل أكثر من المعتاد'
+            : (isFr ? 'Plus d’énergie et d’optimisme' : 'More energy and optimism'),
         isActive: false,
       ),
       (
-        title: 'Low',
-        desc: 'Feeling down, withdrawn',
+        title: isAr ? 'منخفض' : (isFr ? 'Bas' : 'Low'),
+        desc: isAr
+            ? 'حزن أو رغبة في الانسحاب'
+            : (isFr ? 'Baisse de moral, retrait' : 'Feeling down, withdrawn'),
         isActive: false,
       ),
       (
-        title: 'Manic',
-        desc: 'High energy, less need for sleep',
+        title: isAr ? 'اندفاع عالٍ' : (isFr ? 'Maniaque' : 'Manic'),
+        desc: isAr
+            ? 'طاقة عالية وحاجة أقل للنوم'
+            : (isFr
+                ? 'Haute énergie, moins besoin de sommeil'
+                : 'High energy, less need for sleep'),
         isActive: false,
       ),
     ];
@@ -234,7 +248,7 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your Journey',
+            isAr ? 'مسارك' : (isFr ? 'Votre Parcours' : 'Your Journey'),
             style: TextStyle(
               fontFamily: 'serif',
               fontSize: 22,
@@ -245,7 +259,11 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
           ),
           const SizedBox(height: 2),
           Text(
-            'Explore the different phases of your mental journey.',
+            isAr
+                ? 'استكشف مختلف مراحل مسارك النفسي.'
+                : (isFr
+                    ? 'Explorez les différentes phases de votre parcours mental.'
+                    : 'Explore the different phases of your mental journey.'),
             style: TextStyle(
               fontSize: 12.5,
               color: textSecondary,
@@ -475,7 +493,7 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
                     ),
                   ),
                   Text(
-                    '$completedCount/${activePhaseActivities.length} ${strings.isArabic ? 'مكتمل' : 'completed'}',
+                    '$completedCount/${activePhaseActivities.length} ${strings.isArabic ? 'مكتمل' : (strings.isFrench ? 'complétés' : 'completed')}',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -741,7 +759,9 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
               child: _buildMetricTile(
                 title: strings.totalCompletedActivities,
                 value: '${completed.length}',
-                subtitle: strings.isArabic ? 'نشاط مستكشف' : 'activities',
+                subtitle: strings.isArabic
+                    ? 'نشاط مستكشف'
+                    : (strings.isFrench ? 'activités' : 'activities'),
                 isDark: isDark,
                 surfaceColor: surfaceColor,
                 borderColor: borderColor,
@@ -754,7 +774,9 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
               child: _buildMetricTile(
                 title: strings.totalReflectionsLogged,
                 value: '$reflectionsCount',
-                subtitle: strings.isArabic ? 'تأمل مسجل' : 'reflections',
+                subtitle: strings.isArabic
+                    ? 'تأمل مسجل'
+                    : (strings.isFrench ? 'réflexions' : 'reflections'),
                 isDark: isDark,
                 surfaceColor: surfaceColor,
                 borderColor: borderColor,

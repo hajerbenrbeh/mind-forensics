@@ -201,7 +201,9 @@ class _ThoughtTraceTimelineViewState
       child: Row(
         children: [
           _buildFilterChip(
-            label: strings.isArabic ? 'الكل' : 'All',
+            label: strings.isArabic
+                ? 'الكل'
+                : (strings.isFrench ? 'Tout' : 'All'),
             isSelected: _selectedFilter == 'all' && _selectedEmotionFilter == null,
             onTap: () {
               setState(() {
@@ -212,7 +214,9 @@ class _ThoughtTraceTimelineViewState
           ),
           const SizedBox(width: 6),
           _buildFilterChip(
-            label: strings.isArabic ? 'تم فحصها' : 'Investigated',
+            label: strings.isArabic
+                ? 'تم فحصها'
+                : (strings.isFrench ? 'Explorées' : 'Investigated'),
             isSelected: _selectedFilter == 'investigated',
             onTap: () {
               setState(() {
@@ -223,7 +227,9 @@ class _ThoughtTraceTimelineViewState
           ),
           const SizedBox(width: 6),
           _buildFilterChip(
-            label: strings.isArabic ? 'آخر 7 أيام' : 'Past 7 Days',
+            label: strings.isArabic
+                ? 'آخر 7 أيام'
+                : (strings.isFrench ? '7 derniers jours' : 'Past 7 Days'),
             isSelected: _selectedFilter == 'week',
             onTap: () {
               setState(() {
@@ -234,7 +240,9 @@ class _ThoughtTraceTimelineViewState
           ),
           const SizedBox(width: 6),
           _buildFilterChip(
-            label: strings.isArabic ? 'هذا الشهر' : 'Past 30 Days',
+            label: strings.isArabic
+                ? 'هذا الشهر'
+                : (strings.isFrench ? '30 derniers jours' : 'Past 30 Days'),
             isSelected: _selectedFilter == 'month',
             onTap: () {
               setState(() {
@@ -580,7 +588,11 @@ class _ThoughtTraceTimelineViewState
                         Row(
                           children: [
                             Text(
-                              strings.isArabic ? 'الموقف: ' : 'CONTEXT: ',
+                              strings.isArabic
+                                  ? 'الموقف: '
+                                  : (strings.isFrench
+                                      ? 'CONTEXTE : '
+                                      : 'CONTEXT: '),
                               style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.bold,

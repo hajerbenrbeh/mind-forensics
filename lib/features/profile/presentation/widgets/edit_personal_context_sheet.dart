@@ -150,7 +150,12 @@ class _EditPersonalContextSheetState
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      (strings.isArabic ? 'حفظ السياق الشخصي' : 'SAVE PERSONAL CONTEXT').toUpperCase(),
+                      (strings.isArabic
+                              ? 'حفظ السياق الشخصي'
+                              : (strings.isFrench
+                                  ? 'ENREGISTRER LE CONTEXTE'
+                                  : 'SAVE PERSONAL CONTEXT'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,

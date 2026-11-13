@@ -447,7 +447,11 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
                   size: 14, color: context.tokens.accent),
               const SizedBox(width: 6),
               Text(
-                strings.isArabic ? 'أنماط السياق والاستجابة' : 'RECURRING CONTEXT & COPING THEMES',
+                strings.isArabic
+                    ? 'أنماط السياق والاستجابة'
+                    : (strings.isFrench
+                        ? 'THÈMES DE CONTEXTE & D’ADAPTATION'
+                        : 'RECURRING CONTEXT & COPING THEMES'),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
@@ -461,7 +465,9 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
           Text(
             strings.isArabic
                 ? 'استكشاف تجريبي للمواقف المسجلة واستجاباتك السلوكية ($totalInvestigated فكرة تم فحصها).'
-                : 'Empirical review of your recorded situations and coping actions ($totalInvestigated deconstructed thoughts).',
+                : (strings.isFrench
+                    ? 'Revue empirique de vos situations et actions enregistrées ($totalInvestigated pensées explorées).'
+                    : 'Empirical review of your recorded situations and coping actions ($totalInvestigated deconstructed thoughts).'),
             style: TextStyle(fontSize: 11.5, color: textSecondary, height: 1.35),
           ),
           const SizedBox(height: 12),
@@ -470,13 +476,19 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
             Text(
               strings.isArabic
                   ? 'لم يتم تسجيل مواقف أو استجابات سلوكية كافية في هذا الإطار الزمني.'
-                  : 'Add contextual triggers or deconstruct thoughts to uncover recurring behavioral patterns.',
+                  : (strings.isFrench
+                      ? 'Ajoutez des contextes ou explorez une pensée pour révéler vos schémas récurrents.'
+                      : 'Add contextual triggers or deconstruct thoughts to uncover recurring behavioral patterns.'),
               style: TextStyle(fontSize: 11, color: textSecondary.withValues(alpha: 0.8)),
             )
           else ...[
             if (reportedSituations.isNotEmpty) ...[
               Text(
-                strings.isArabic ? 'عوامل السياق المسجلة' : 'USER-REPORTED CONTEXT / TRIGGERS',
+                strings.isArabic
+                    ? 'عوامل السياق المسجلة'
+                    : (strings.isFrench
+                        ? 'CONTEXTES & DÉCLENCHEURS RAPPORTÉS'
+                        : 'USER-REPORTED CONTEXT / TRIGGERS'),
                 style: TextStyle(
                   fontSize: 9.5,
                   fontWeight: FontWeight.w700,
@@ -508,7 +520,11 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
 
             if (reportedCoping.isNotEmpty) ...[
               Text(
-                strings.isArabic ? 'الاستجابات السلوكية المسجلة' : 'REPORTED COPING & BEHAVIORAL RESPONSES',
+                strings.isArabic
+                    ? 'الاستجابات السلوكية المسجلة'
+                    : (strings.isFrench
+                        ? 'RÉPONSES COMPORTEMENTALES RAPPORTÉES'
+                        : 'REPORTED COPING & BEHAVIORAL RESPONSES'),
                 style: TextStyle(
                   fontSize: 9.5,
                   fontWeight: FontWeight.w700,

@@ -244,7 +244,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final profile = ref.watch(profileControllerProvider).value;
     final userName = profile?.preferredName.isNotEmpty == true
         ? profile!.preferredName
-        : (strings.isArabic ? 'صديقي' : 'Friend');
+        : (strings.isArabic ? 'صديقي' : (strings.isFrench ? 'Ami' : 'Friend'));
 
     final activeCase = ref.watch(activeCaseControllerProvider).value;
     final traces = ref.watch(mindTraceControllerProvider).value ?? [];
@@ -431,7 +431,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         Icon(Icons.shield_outlined, size: 13, color: tokens.accent),
                         const SizedBox(width: 6),
                         Text(
-                          strings.isArabic ? 'مساحة استبصار آمنة • خطوط الطوارئ متاحة' : 'Safe reflection space • Helplines available',
+                          strings.isArabic
+                              ? 'مساحة استبصار آمنة • خطوط الطوارئ متاحة'
+                              : (strings.isFrench
+                                  ? 'Espace de réflexion sûr • Lignes d’aide disponibles'
+                                  : 'Safe reflection space • Helplines available'),
                           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: tokens.accent),
                         ),
                       ],
@@ -1229,14 +1233,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Text(
                 strings.isArabic
                     ? 'خط الأساس الشخصي نشط • ${baseline.totalRecordedDays} أيام مسجلة'
-                    : 'Personal Baseline active • ${baseline.totalRecordedDays} observation days calibrated',
+                    : (strings.isFrench
+                        ? 'Référence personnelle active • ${baseline.totalRecordedDays} jours enregistrés'
+                        : 'Personal Baseline active • ${baseline.totalRecordedDays} observation days calibrated'),
                 style: TextStyle(fontSize: 12, color: tokens.textSecondary),
               ),
             ),
             InkWell(
               onTap: () => context.push('/insights'),
               child: Text(
-                (strings.isArabic ? 'عرض' : 'VIEW').toUpperCase(),
+                (strings.isArabic
+                        ? 'عرض'
+                        : (strings.isFrench ? 'VOIR' : 'VIEW'))
+                    .toUpperCase(),
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tokens.textPrimary),
               ),
             ),
