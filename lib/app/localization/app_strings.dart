@@ -463,10 +463,101 @@ class AppStrings {
   String get returnToCaseBtn => isArabic ? 'الرجوع للجلسة' : (isFrench ? 'Revenir à la session' : 'Return to Session');
   String get viewSupportResourcesBtn => isArabic ? 'أرقام النجدة والمساعدة' : (isFrench ? 'Voir les ressources d’urgence' : 'View Crisis Resources');
 
-  // Onboarding
-  String get onboardingSkip => isArabic ? 'تخطي' : (isFrench ? 'PASSER' : 'SKIP');
-  String get onboardingEnterLab => isArabic ? 'دخول مخبر التنظيم المعرفي' : (isFrench ? 'ENTRER AU LAB' : 'ENTER NEURO LAB');
-  String get onboardingNext => isArabic ? 'الموالي' : (isFrench ? 'SUIVANT' : 'NEXT');
+  // Onboarding (4-Step Fast Flow)
+  String get onboardingSkip => isArabic ? 'تخطي' : (isFrench ? 'Passer' : 'Skip');
+  String get onboardingEnterLab => isArabic ? 'دخول المساحة' : (isFrench ? 'Entrer dans l’espace' : 'Enter Space');
+  String get onboardingNext => isArabic ? 'الموالي' : (isFrench ? 'Suivant' : 'Continue');
+  String get onboardingGetStarted => isArabic ? 'ابدأ الآن' : (isFrench ? 'Commencer' : 'Get Started');
+  String get onboardingContinue => isArabic ? 'متابعة' : (isFrench ? 'Continuer' : 'Continue');
+  String onboardingStepOf(int step, int total) => isArabic
+      ? 'الخطوة $step من $total'
+      : (isFrench ? 'Étape $step sur $total' : 'Step $step of $total');
+
+  // Step 1: Welcome & Privacy
+  String get onboardingWelcomeHeadline => isArabic
+      ? 'كل فكرة تترك أثراً.'
+      : (isFrench ? 'Chaque pensée laisse une trace.' : 'Every thought leaves a trace.');
+  String get onboardingWelcomeBody => isArabic
+      ? 'مساحة شخصية هادئة لملاحظة أفكارك ومشاعرك اليومية وفهم أنماطك بهدوء وبدون أحكام.'
+      : (isFrench
+          ? 'Un espace personnel et apaisé pour observer vos pensées, émotions et rythmes quotidiens sans jugement.'
+          : 'A quiet, personal space to notice your thoughts, emotions, and daily patterns at your own pace without judgment.');
+  String get onboardingPrivacyPromise => isArabic
+      ? 'تُحفظ بياناتك بخصوصية تامة على جهازك افتراضياً. مستوحى من الوعي المعرفي — وليس علاجاً طبياً أو بديلاً عن المختص.'
+      : (isFrench
+          ? 'Stocké en privé sur votre appareil par défaut. Inspiré de la conscience cognitive — ceci n’est ni une thérapie ni un traitement médical.'
+          : 'Stored privately on your device by default. Inspired by cognitive reflection — not medical treatment or therapy.');
+
+  // Step 2: Focus (1–3 Options)
+  String get onboardingFocusTitle => isArabic
+      ? 'شنوّة أكثر حاجة تحب تركّز عليها؟'
+      : (isFrench ? 'Sur quoi souhaitez-vous porter votre attention ?' : 'What would help most right now?');
+  String get onboardingFocusSubtitle => isArabic
+      ? 'اختار من خيار لـ 3 (اختياري). باش نرتبولك المساحة حسب حاجتك.'
+      : (isFrench
+          ? 'Choisissez 1 à 3 axes (facultatif) pour adapter vos repères dès l’accueil.'
+          : 'Pick 1 to 3 focus areas (optional) so your home space starts tailored to you.');
+  String get focusGoalStress => isArabic
+      ? 'تهدئة التوتر والقلق'
+      : (isFrench ? 'Apaiser le stress et l’anxiété' : 'Ease stress & anxiety');
+  String get focusGoalMood => isArabic
+      ? 'فهم تقلبات المزاج'
+      : (isFrench ? 'Comprendre les variations d’humeur' : 'Understand mood patterns');
+  String get focusGoalOverthinking => isArabic
+      ? 'فك تشابك كثرة التفكير'
+      : (isFrench ? 'Démêler la rumination mentale' : 'Untangle overthinking');
+  String get focusGoalSleepEnergy => isArabic
+      ? 'توازن النوم والطاقة'
+      : (isFrench ? 'Équilibrer sommeil et énergie' : 'Sleep & energy rhythm');
+  String get focusGoalSpecialist => isArabic
+      ? 'تنظيم الملاحظات مع مختص'
+      : (isFrench ? 'Préparer le suivi avec un spécialiste' : 'Reflect alongside a specialist');
+  String get addCustomGoalToggle => isArabic
+      ? 'أو أضف هدفاً خاصاً (اختياري)'
+      : (isFrench ? 'Ou ajouter un objectif personnel (facultatif)' : 'Or add your own focus (optional)');
+  String get customGoalHint => isArabic
+      ? 'مثال: لاحظت إني نتقلق الصباح...'
+      : (isFrench ? 'Ex : mieux repérer mes déclencheurs...' : 'e.g. notice morning tension...');
+
+  // Step 3: Comfort & Safety Check
+  String get onboardingComfortTitle => isArabic
+      ? 'إطار الراحة والأمان'
+      : (isFrench ? 'Confort & repères de sécurité' : 'Comfort & safety check');
+  String get onboardingComfortSubtitle => isArabic
+      ? 'اختياري بالكامل — يساعدنا على ضبط الإيقاع وتوفير خطوط الدعم بوضوح.'
+      : (isFrench
+          ? 'Entièrement facultatif — aide à ajuster le rythme et garder l’aide à portée.'
+          : 'Completely optional — helps calibrate pacing and keep support resources clear.');
+  String get supportOptionSpecialist => isArabic
+      ? 'نتابع مع مختص حالياً'
+      : (isFrench ? 'Suivi par un spécialiste' : 'Seeing a specialist');
+  String get supportOptionSelfGuided => isArabic
+      ? 'نستكشف وحدي'
+      : (isFrench ? 'Exploration autonome' : 'Exploring on my own');
+  String get supportOptionPreferNotToSay => isArabic
+      ? 'أفضل عدم التحديد'
+      : (isFrench ? 'Préfère ne pas préciser' : 'Prefer not to say');
+  String get onboardingCrisisSafetyNote => isArabic
+      ? 'للحالات الطارئة: خطوط المساعدة التونسية (الرقم الأخضر 80 10 50 50، 190، 198) متوفرة دائماً بلمسة واحدة.'
+      : (isFrench
+          ? 'Ressources d’urgence : les lignes d’écoute (80 10 50 50 / 190 / 198) restent accessibles à tout moment en haut de l’écran.'
+          : 'Immediate support: Tunisian crisis & emergency lines (80 10 50 50 / 190 / 198) stay 1 tap away in the top bar.');
+  String get openCrisisResourcesLabel => isArabic
+      ? 'عرض أرقام الطوارئ'
+      : (isFrench ? 'Voir les numéros d’aide' : 'View emergency numbers');
+
+  // Step 4: First Check-In & Zero-Blank-Screen Handoff
+  String get onboardingFirstCheckInSubtitle => isArabic
+      ? 'سجّل أول شعور ليك في لمستين باش تكون صفحتك الرئيسية حاضرة.'
+      : (isFrench
+          ? 'Enregistrez votre premier ressenti en deux gestes pour démarrer avec un accueil vivant.'
+          : 'Log your first trace in two taps so your Home space greets you with today’s baseline.');
+  String get saveAndEnterAppBtn => isArabic
+      ? 'حفظ والدخول للتطبيق'
+      : (isFrench ? 'Enregistrer & entrer' : 'Save & Enter App');
+  String get skipAndEnterAppBtn => isArabic
+      ? 'تخطي التسجيل والدخول'
+      : (isFrench ? 'Passer et entrer' : 'Skip & Enter App');
 
   // Clinical Session Brief & Privacy Shield (Section 12 - Step 12)
   String get casePrivateBadge => isArabic ? 'سري: خاص — غير قابل للمشاركة' : (isFrench ? 'CONFIDENTIEL : PRIVÉ — NON PARTAGEABLE' : 'CONFIDENTIAL: PRIVATE — NEVER SHAREABLE');
