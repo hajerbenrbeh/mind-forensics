@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../controllers/investigation_providers.dart';
 import '../../data/direct_gemini_investigator_service.dart';
+import '../../data/direct_groq_investigator_service.dart';
 
 /// Modal bottom sheet allowing users and developers to inspect AI status,
 /// test Google Gemini connectivity, switch between Live and Test Mode,
@@ -32,12 +33,30 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
   String? _testResult;
   bool? _testSuccess;
 
+  late AiEngineProvider _selectedProvider;
+
   @override
   void initState() {
     super.initState();
     final config = ref.read(aiConfigProvider);
-    final keyToDisplay = config.isMockKey ? '' : config.apiKey;
+    _selectedProvider = config.provider;
+    final keyToDisplay = config.isMockKey ? '' : config.activeApiKey;
     _keyController = TextEditingController(text: keyToDisplay);
+  }
+
+  void _switchProvider(AiEngineProvider provider) {
+    HapticFeedback.selectionClick();
+    final config = ref.read(aiConfigProvider);
+    ref.read(aiConfigProvider.notifier).setProvider(provider);
+    final nextKey = provider == AiEngineProvider.groq
+        ? config.groqApiKey
+        : (config.apiKey == kDevMockGeminiKey ? '' : config.apiKey);
+    setState(() {
+      _selectedProvider = provider;
+      _keyController.text = nextKey;
+      _testResult = null;
+      _testSuccess = null;
+    });
   }
 
   @override
@@ -48,7 +67,8 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
 
   Future<void> _testConnection() async {
     final key = _keyController.text.trim();
-    if (key.isEmpty) {
+    final config = ref.read(aiConfigProvider);
+    if (key.isEmpty && !(_selectedProvider == AiEngineProvider.groq && config.hasProxy)) {
       setState(() {
         _testResult = 'Please enter an API key to test connection.';
         _testSuccess = false;
@@ -63,8 +83,17 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
     HapticFeedback.lightImpact();
 
     try {
-      final service = DirectGeminiInvestigatorService(apiKey: key);
-      final result = await service.testConnection();
+      final ({bool success, String message}) result;
+      if (_selectedProvider == AiEngineProvider.groq) {
+        final service = DirectGroqInvestigatorService(
+          apiKey: key,
+          proxyUrl: config.proxyUrl,
+        );
+        result = await service.testConnection();
+      } else {
+        final service = DirectGeminiInvestigatorService(apiKey: key);
+        result = await service.testConnection();
+      }
       if (mounted) {
         setState(() {
           _isTesting = false;
@@ -86,13 +115,18 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
   Future<void> _saveKey() async {
     final key = _keyController.text.trim();
     HapticFeedback.mediumImpact();
-    await ref.read(aiConfigProvider.notifier).setApiKey(key);
+    await ref.read(aiConfigProvider.notifier).setApiKey(
+          key,
+          provider: _selectedProvider,
+        );
+    final providerLabel =
+        _selectedProvider == AiEngineProvider.groq ? 'Groq' : 'Gemini';
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(key.isNotEmpty
-              ? 'Gemini API key saved and activated.'
+              ? '$providerLabel API key saved and activated.'
               : 'Switched to offline clinical simulator.'),
           behavior: SnackBarBehavior.floating,
         ),
@@ -102,7 +136,9 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
 
   Future<void> _clearKey() async {
     HapticFeedback.lightImpact();
-    await ref.read(aiConfigProvider.notifier).clearApiKey();
+    await ref
+        .read(aiConfigProvider.notifier)
+        .clearApiKey(provider: _selectedProvider);
     if (mounted) {
       _keyController.clear();
       setState(() {
@@ -182,7 +218,11 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    aiConfig.isLiveActive ? 'LIVE GEMINI' : 'TEST MODE (\$0.00)',
+                    aiConfig.isLiveActive
+                        ? (aiConfig.provider == AiEngineProvider.groq
+                            ? 'LIVE GROQ'
+                            : 'LIVE GEMINI')
+                        : 'TEST MODE (\$0.00)',
                     style: TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w800,
@@ -195,10 +235,42 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Mind Forensics connects directly to Google AI Studio for live multi-turn reasoning, or runs in offline clinical test mode with zero data transmission.',
+              'Mind Forensics supports Groq (Llama 3.3 free tier) or Google Gemini for live specialist dialogue, or offline mock mode with zero transmission.',
               style: TextStyle(fontSize: 12, color: textSecondary, height: 1.4),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
+
+            // Provider Selector (Groq vs Gemini)
+            Row(
+              children: [
+                Expanded(
+                  child: ChoiceChip(
+                    selected: _selectedProvider == AiEngineProvider.groq,
+                    label: const Center(
+                      child: Text(
+                        'Groq (Free Llama)',
+                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    onSelected: (_) => _switchProvider(AiEngineProvider.groq),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ChoiceChip(
+                    selected: _selectedProvider == AiEngineProvider.gemini,
+                    label: const Center(
+                      child: Text(
+                        'Google Gemini',
+                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    onSelected: (_) => _switchProvider(AiEngineProvider.gemini),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
 
             // Mode Selector: Test Mode toggle
             Container(
@@ -245,7 +317,9 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
             const SizedBox(height: 16),
 
             Text(
-              'GOOGLE GEMINI API KEY',
+              _selectedProvider == AiEngineProvider.groq
+                  ? 'GROQ API KEY (CONSOLE.GROQ.COM)'
+                  : 'GOOGLE GEMINI API KEY',
               style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w800,
@@ -259,7 +333,9 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
               obscureText: _obscureKey,
               style: TextStyle(fontSize: 13, color: textPrimary),
               decoration: InputDecoration(
-                hintText: 'Paste key from aistudio.google.com...',
+                hintText: _selectedProvider == AiEngineProvider.groq
+                    ? 'Paste gsk_... key (or use --dart-define=AI_PROXY_URL)'
+                    : 'Paste key from aistudio.google.com...',
                 hintStyle: TextStyle(fontSize: 12, color: textSecondary.withValues(alpha: 0.6)),
                 filled: true,
                 fillColor: isDark ? LabColors.nightSurfaceElevated : LabColors.daylightSurfaceSubtle,

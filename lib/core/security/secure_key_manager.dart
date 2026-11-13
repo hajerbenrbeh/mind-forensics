@@ -28,6 +28,7 @@ class SecureKeyManager {
 
   static const String keyMasterStorage = 'mf_master_storage_key_v1';
   static const String keySecureGeminiApi = 'mf_secure_gemini_api_key';
+  static const String keySecureGroqApi = 'mf_secure_groq_api_key';
   static const String legacyPrefGeminiKey = 'mf_gemini_api_key';
 
   static final Map<String, String> _memoryFallbackStore = {};
@@ -169,6 +170,32 @@ class SecureKeyManager {
     await _deleteSecure(keySecureGeminiApi);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(legacyPrefGeminiKey);
+  }
+
+  /// Reads the Groq / OpenAI-compatible API Key from platform secure storage.
+  Future<String> getGroqApiKey() async {
+    try {
+      final secureKey = await _readSecure(keySecureGroqApi);
+      if (secureKey != null && secureKey.trim().isNotEmpty) {
+        return secureKey.trim();
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  /// Securely saves the Groq API Key to platform secure storage.
+  Future<void> saveGroqApiKey(String apiKey) async {
+    final clean = apiKey.trim();
+    if (clean.isNotEmpty && clean != 'DEV_MOCK_GEMINI_KEY') {
+      await _writeSecure(keySecureGroqApi, clean);
+    } else {
+      await _deleteSecure(keySecureGroqApi);
+    }
+  }
+
+  /// Clears the Groq API Key from secure storage.
+  Future<void> clearGroqApiKey() async {
+    await _deleteSecure(keySecureGroqApi);
   }
 
   /// Purges all master keys and secrets from secure storage (e.g. factory reset).
