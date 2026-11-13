@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_strings.dart';
-import '../../../app/theme/lab_colors.dart';
+import '../../../app/router/app_router.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/mind_pressable.dart';
 import '../../../core/widgets/neural_brain_wireframe.dart';
@@ -14,7 +16,6 @@ import '../../support/presentation/widgets/micro_action_card.dart';
 import '../../support/presentation/widgets/perspective_exploration_card.dart';
 import '../../support/presentation/widgets/routine_anchor_card.dart';
 import 'widgets/add_discovery_sheet.dart';
-import 'widgets/longitudinal_analysis_view.dart';
 import 'widgets/symptom_library_view.dart';
 
 /// Inner Observatory: Primary environment for deeper psychological exploration.
@@ -41,24 +42,23 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final tokens = context.tokens;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final strings = ref.watch(appStringsProvider);
     final isAr = strings.isArabic;
 
-    final bg = isDark ? LabColors.nightBackground : LabColors.daylightBackground;
-    final surfaceColor =
-        isDark ? LabColors.nightSurface : LabColors.daylightSurface;
-    final borderColor =
-        isDark ? LabColors.nightBorder : LabColors.daylightBorder;
-    final textPrimary =
-        isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary;
-    final textSecondary =
-        isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
+    final bg = tokens.background;
+    final surfaceColor = tokens.surface;
+    final borderColor = tokens.border;
+    final textPrimary = tokens.textPrimary;
+    final textSecondary = tokens.textSecondary;
 
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
+        backgroundColor: bg,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Text(
           strings.observatoryTitle.toUpperCase(),
           style: TextStyle(
@@ -69,13 +69,12 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
           ),
         ),
         actions: [
-          // Contextual Support Quick Action
           IconButton(
             tooltip: strings.contextualSupportTitle,
             icon: Icon(
               Icons.healing_outlined,
               size: 20,
-              color: LabColors.sageGreen,
+              color: tokens.accent,
             ),
             onPressed: () => ContextualSupportSheet.show(context),
           ),
@@ -86,15 +85,15 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
       body: SafeArea(
         child: NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            // Top Phone 5 Hero Banner (3D Neural Brain & Exploration Cards)
+            // Top Soft Observatory Hero Banner (MindTokens styled, non-redundant actions)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: _buildPhone5Hero(isDark, textPrimary, textSecondary),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                child: _buildPhone5Hero(isDark, tokens, strings),
               ),
             ),
 
-            // Section Switcher Tabs
+            // Section Switcher Tabs (4 focused sections)
             SliverToBoxAdapter(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -110,50 +109,28 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
                         index: 0,
                         label: strings.sectionPerspectiveExploration,
                         icon: Icons.psychology_outlined,
-                        isDark: isDark,
-                        textPrimary: textPrimary,
-                        textSecondary: textSecondary,
-                        borderColor: borderColor,
+                        tokens: tokens,
                       ),
                       const SizedBox(width: 8),
                       _buildSectionTab(
                         index: 1,
                         label: strings.sectionExperimentsStrategies,
                         icon: Icons.lightbulb_outline_rounded,
-                        isDark: isDark,
-                        textPrimary: textPrimary,
-                        textSecondary: textSecondary,
-                        borderColor: borderColor,
+                        tokens: tokens,
                       ),
                       const SizedBox(width: 8),
                       _buildSectionTab(
                         index: 2,
                         label: strings.sectionPersonalDiscoveries,
                         icon: Icons.auto_awesome_outlined,
-                        isDark: isDark,
-                        textPrimary: textPrimary,
-                        textSecondary: textSecondary,
-                        borderColor: borderColor,
+                        tokens: tokens,
                       ),
                       const SizedBox(width: 8),
                       _buildSectionTab(
                         index: 3,
                         label: strings.sectionSymptomExploration,
                         icon: Icons.radar_outlined,
-                        isDark: isDark,
-                        textPrimary: textPrimary,
-                        textSecondary: textSecondary,
-                        borderColor: borderColor,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildSectionTab(
-                        index: 4,
-                        label: isAr ? 'التحليل الطولي والأنماط' : 'Longitudinal & Patterns',
-                        icon: Icons.insights_outlined,
-                        isDark: isDark,
-                        textPrimary: textPrimary,
-                        textSecondary: textSecondary,
-                        borderColor: borderColor,
+                        tokens: tokens,
                       ),
                     ],
                   ),
@@ -177,143 +154,117 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
     );
   }
 
-  Widget _buildPhone5Hero(bool isDark, Color textPrimary, Color textSecondary) {
+  Widget _buildPhone5Hero(bool isDark, MindTokens tokens, AppStrings strings) {
+    final heroBg = isDark ? tokens.surface : tokens.accent;
+    final heroFg = isDark ? tokens.textPrimary : Colors.white;
+    final heroSubFg = heroFg.withValues(alpha: 0.78);
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: LabColors.forestGreen,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: LabColors.forestGreen.withValues(alpha: 0.35),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: heroBg,
+        borderRadius: BorderRadius.circular(tokens.cardRadius),
+        border: isDark ? Border.all(color: tokens.border, width: 1.0) : null,
       ),
       child: Column(
         children: [
-          const Text(
-            'Inner Observatory',
+          Text(
+            strings.observatoryTitle,
             style: TextStyle(
               fontFamily: 'serif',
-              fontSize: 19,
+              fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: LabColors.warmIvory,
+              color: heroFg,
               letterSpacing: -0.2,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 3),
           Text(
-            'A deeper look into your mind',
+            strings.observatoryHeroSubtitle,
+            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11.5,
+              fontSize: 12,
               fontWeight: FontWeight.w400,
-              color: LabColors.warmIvory.withValues(alpha: 0.75),
+              color: heroSubFg,
             ),
           ),
           const SizedBox(height: 12),
           const SizedBox(
-            height: 110,
-            child: NeuralBrainWireframe(size: 110),
+            height: 96,
+            child: NeuralBrainWireframe(size: 96),
           ),
           const SizedBox(height: 12),
-          // 3 Phone 5 Exploration Cards
-          _buildHeroExplorationCard(
-            title: 'Thought Patterns',
-            subtitle: 'Explore recurring thoughts',
-            icon: Icons.lightbulb_outline,
-            isSelected: _selectedSection == 0,
-            onTap: () => setState(() => _selectedSection = 0),
-          ),
-          const SizedBox(height: 6),
-          _buildHeroExplorationCard(
-            title: 'Emotional Landscape',
-            subtitle: 'Understand your emotions',
-            icon: Icons.favorite_border_rounded,
-            isSelected: _selectedSection == 3,
-            onTap: () => setState(() => _selectedSection = 3),
-          ),
-          const SizedBox(height: 6),
-          _buildHeroExplorationCard(
-            title: 'Behavior Insights',
-            subtitle: 'See what drives your actions',
-            icon: Icons.trending_up_rounded,
-            isSelected: _selectedSection == 1,
-            onTap: () => setState(() => _selectedSection = 1),
+          Row(
+            children: [
+              Expanded(
+                child: _buildHeroActionPill(
+                  title: strings.mindAssistantTitle,
+                  icon: Icons.auto_awesome,
+                  isDark: isDark,
+                  heroFg: heroFg,
+                  tokens: tokens,
+                  onTap: () => context.push(AppRouter.companion),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildHeroActionPill(
+                  title: strings.quickGroundingTitle,
+                  icon: Icons.spa_outlined,
+                  isDark: isDark,
+                  heroFg: heroFg,
+                  tokens: tokens,
+                  onTap: () => ContextualSupportSheet.show(context),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildHeroExplorationCard({
+  Widget _buildHeroActionPill({
     required String title,
-    required String subtitle,
     required IconData icon,
-    required bool isSelected,
+    required bool isDark,
+    required Color heroFg,
+    required MindTokens tokens,
     required VoidCallback onTap,
   }) {
     return MindPressable(
       onPressed: () {
-        HapticFeedback.selectionClick();
+        HapticFeedback.lightImpact();
         onTap();
       },
       borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.white.withValues(alpha: 0.18)
-              : Colors.white.withValues(alpha: 0.08),
+          color: isDark ? tokens.surfaceSecondary : Colors.white.withValues(alpha: 0.14),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected
-                ? LabColors.warmIvory
-                : Colors.white.withValues(alpha: 0.15),
+            color: isDark ? tokens.border : Colors.white.withValues(alpha: 0.22),
             width: 1.0,
           ),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.12),
+            Icon(icon, size: 15, color: isDark ? tokens.accent : Colors.white),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: heroFg,
+                ),
               ),
-              child: Icon(icon, size: 15, color: LabColors.warmIvory),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: LabColors.warmIvory,
-                    ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: LabColors.warmIvory.withValues(alpha: 0.70),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              size: 16,
-              color: LabColors.warmIvory,
             ),
           ],
         ),
@@ -325,10 +276,7 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
     required int index,
     required String label,
     required IconData icon,
-    required bool isDark,
-    required Color textPrimary,
-    required Color textSecondary,
-    required Color borderColor,
+    required MindTokens tokens,
   }) {
     final isSelected = _selectedSection == index;
     return Material(
@@ -338,16 +286,16 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
           HapticFeedback.selectionClick();
           setState(() => _selectedSection = index);
         },
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected
-                ? (isDark ? const Color(0xFF222222) : const Color(0xFFE5E7EB))
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
+            color: isSelected ? tokens.accentSoft : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isSelected ? borderColor : Colors.transparent,
+              color: isSelected ? tokens.accent.withValues(alpha: 0.35) : Colors.transparent,
             ),
           ),
           child: Row(
@@ -356,15 +304,15 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
               Icon(
                 icon,
                 size: 15,
-                color: isSelected ? textPrimary : textSecondary,
+                color: isSelected ? tokens.accent : tokens.textSecondary,
               ),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
                   fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                  color: isSelected ? textPrimary : textSecondary,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? tokens.accent : tokens.textSecondary,
                 ),
               ),
             ],
@@ -391,10 +339,8 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
       case 2:
         return _buildPersonalDiscoveriesView(strings, isDark, textPrimary, textSecondary, surfaceColor, borderColor);
       case 3:
-        return _buildSymptomExplorationView(strings, isDark, textPrimary, textSecondary, surfaceColor, borderColor);
-      case 4:
       default:
-        return const LongitudinalAnalysisView();
+        return _buildSymptomExplorationView(strings, isDark, textPrimary, textSecondary, surfaceColor, borderColor);
     }
   }
 
@@ -514,7 +460,7 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
                       style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
                     ),
                     style: TextButton.styleFrom(
-                      foregroundColor: LabColors.sageGreen,
+                      foregroundColor: context.tokens.accent,
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
@@ -534,7 +480,7 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: surfaceColor,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(context.tokens.cardRadius),
                     border: Border.all(color: borderColor),
                   ),
                   child: Column(
@@ -609,9 +555,9 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
               Container(
                 width: 6,
                 height: 6,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: LabColors.sageGreen,
+                  color: context.tokens.accent,
                 ),
               ),
               const SizedBox(width: 8),
@@ -671,8 +617,8 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF141414) : const Color(0xFFF9FAFB),
-                borderRadius: BorderRadius.circular(6),
+                color: context.tokens.surfaceSecondary,
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: borderColor),
               ),
               child: Text(
@@ -704,15 +650,15 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: surfaceColor,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor),
             ),
             child: Row(
               children: [
-                Icon(Icons.radar_outlined, size: 16, color: LabColors.sageGreen),
+                Icon(Icons.radar_outlined, size: 16, color: context.tokens.accent),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -737,7 +683,7 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
                   onPressed: () => ContextualSupportSheet.show(context),
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
-                    foregroundColor: LabColors.sageGreen,
+                    foregroundColor: context.tokens.accent,
                   ),
                   child: Text(
                     strings.contextualSupportTitle,

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../app/localization/app_strings.dart';
 import '../../../app/localization/locale_controller.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../app/theme/theme_controller.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/security/app_lock_provider.dart';
@@ -14,6 +15,7 @@ import '../../../core/widgets/mind_button.dart';
 import '../../../core/widgets/mind_card.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../backup/data/unified_backup_service.dart';
+import '../../case_file/presentation/clinical_export_preview_sheet.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/data/cloud_sync_service.dart';
 import '../../investigation/presentation/widgets/ai_engine_config_sheet.dart';
@@ -265,6 +267,204 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  Future<void> _openSharePacketBuilder(BuildContext context, AppStrings strings) async {
+    final allCases = await ref.read(savedCasesProvider.future);
+    if (!context.mounted) return;
+    final tokens = context.tokens;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final shareableCases = allCases.where((c) => !c.isPrivate).toList();
+    final privateCount = allCases.length - shareableCases.length;
+    final selectedIds = <String>{};
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          final selectedCases = shareableCases.where((c) => selectedIds.contains(c.id)).toList();
+          return Container(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(ctx).size.height * 0.82),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            decoration: BoxDecoration(
+              color: tokens.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(tokens.cardRadius)),
+              border: Border(top: BorderSide(color: tokens.border)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: tokens.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    strings.sharePacketTitle,
+                    style: TextStyle(
+                      fontFamily: 'serif',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    strings.sharePacketSub,
+                    style: TextStyle(fontSize: 12.5, color: tokens.textSecondary),
+                  ),
+                  if (privateCount > 0) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: tokens.surfaceSecondary,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: tokens.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.lock_outline_rounded, size: 15, color: tokens.accent),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              strings.isArabic
+                                  ? 'تم استبعاد $privateCount جلسات خاصة تلقائياً.'
+                                  : (strings.isFrench
+                                      ? '$privateCount sessions privées exclues automatiquement.'
+                                      : '$privateCount private sessions automatically excluded.'),
+                              style: TextStyle(fontSize: 11.5, color: tokens.textSecondary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                  if (shareableCases.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Text(
+                        strings.isArabic
+                            ? 'لا توجد جلسات غير خاصة جاهزة للمشاركة بعد.'
+                            : (strings.isFrench
+                                ? 'Aucune session partageable disponible pour le moment.'
+                                : 'No non-private reflections available to include yet.'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 13, color: tokens.textSecondary),
+                      ),
+                    )
+                  else
+                    Flexible(
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: shareableCases.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (_, idx) {
+                          final item = shareableCases[idx];
+                          final checked = selectedIds.contains(item.id);
+                          final label = item.title.trim().isNotEmpty
+                              ? item.title.trim()
+                              : (item.incidentDescription.trim().isNotEmpty
+                                  ? item.incidentDescription.trim()
+                                  : item.caseNumber);
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () => setSheetState(() {
+                              if (checked) {
+                                selectedIds.remove(item.id);
+                              } else {
+                                selectedIds.add(item.id);
+                              }
+                            }),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: checked ? tokens.accentSoft : tokens.surfaceSecondary,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: checked ? tokens.accent : tokens.border),
+                              ),
+                              child: Row(
+                                children: [
+                                  Checkbox(
+                                    value: checked,
+                                    activeColor: tokens.accent,
+                                    onChanged: (_) => setSheetState(() {
+                                      if (checked) {
+                                        selectedIds.remove(item.id);
+                                      } else {
+                                        selectedIds.add(item.id);
+                                      }
+                                    }),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      label,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: checked ? FontWeight.w600 : FontWeight.w500,
+                                        color: tokens.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  if (shareableCases.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 46,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: tokens.accent,
+                          foregroundColor: isDark ? tokens.background : Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(tokens.buttonRadius),
+                          ),
+                        ),
+                        onPressed: selectedCases.isEmpty
+                            ? null
+                            : () {
+                                Navigator.of(ctx).pop();
+                                ClinicalExportPreviewSheet.show(context, selectedCases);
+                              },
+                        icon: const Icon(Icons.visibility_outlined, size: 18),
+                        label: Text(
+                          strings.isArabic
+                              ? 'معاينة الحزمة (${selectedCases.length})'
+                              : (strings.isFrench
+                                  ? 'Aperçu du dossier (${selectedCases.length})'
+                                  : 'Preview Share Packet (${selectedCases.length})'),
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -311,9 +511,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     height: 76,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isDark ? const Color(0xFF1E281C) : const Color(0xFFD6E2D0),
+                      color: context.tokens.accentSoft,
                       border: Border.all(
-                        color: isDark ? const Color(0xFF3D5036) : const Color(0xFFA8BFA0),
+                        color: context.tokens.accent.withValues(alpha: 0.35),
                         width: 1.5,
                       ),
                     ),
@@ -344,7 +544,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Mind Forensics Member',
+                            strings.memberRoleLabel,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -376,14 +576,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF22301F) : const Color(0xFFDCE9D6),
-                      borderRadius: BorderRadius.circular(10),
+                      color: context.tokens.accentSoft,
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     alignment: Alignment.center,
                     child: Icon(
                       Icons.eco_outlined,
                       size: 20,
-                      color: isDark ? const Color(0xFF7EAF72) : const Color(0xFF355E2B),
+                      color: context.tokens.accent,
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -392,7 +592,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'My Account',
+                          strings.myAccountTitle,
                           style: TextStyle(
                             fontFamily: 'serif',
                             fontSize: 15,
@@ -402,7 +602,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Manage clinical profile and preferences',
+                          strings.myAccountSub,
                           style: TextStyle(
                             fontSize: 11.5,
                             color: textSecondary,
@@ -432,14 +632,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF2B281B) : const Color(0xFFF7F2E7),
-                      borderRadius: BorderRadius.circular(10),
+                      color: context.tokens.accentSoft,
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     alignment: Alignment.center,
                     child: Icon(
                       Icons.auto_awesome,
                       size: 20,
-                      color: isDark ? LabColors.champagneGold : const Color(0xFF8A6A23),
+                      color: context.tokens.accent,
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -448,7 +648,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Mind Assistant Engine',
+                          strings.mindAssistantEngineTitle,
                           style: TextStyle(
                             fontFamily: 'serif',
                             fontSize: 15,
@@ -458,7 +658,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Gemini live AI & test mode diagnostics',
+                          strings.mindAssistantEngineSub,
                           style: TextStyle(
                             fontSize: 11.5,
                             color: textSecondary,
@@ -809,10 +1009,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const SizedBox(width: 12),
                       Switch(
                         value: _gentleNotifications,
-                        activeTrackColor: isDark ? LabColors.nightAccent : LabColors.daylightAccent,
-                        activeThumbColor: isDark ? LabColors.nightBackground : LabColors.daylightBackground,
-                        inactiveThumbColor: isDark ? const Color(0xFF555555) : const Color(0xFFA1A1AA),
-                        inactiveTrackColor: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE4E4E7),
+                        activeTrackColor: context.tokens.accent,
+                        activeThumbColor: context.tokens.background,
+                        inactiveThumbColor: context.tokens.textTertiary,
+                        inactiveTrackColor: context.tokens.surfaceSecondary,
                         onChanged: _setGentleNotifications,
                       ),
                     ],
@@ -905,10 +1105,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(width: 12),
                   Switch(
                     value: _aiHistoryAccess,
-                    activeTrackColor: isDark ? LabColors.nightAccent : LabColors.daylightAccent,
-                    activeThumbColor: isDark ? LabColors.nightBackground : LabColors.daylightBackground,
-                    inactiveThumbColor: isDark ? const Color(0xFF555555) : const Color(0xFFA1A1AA),
-                    inactiveTrackColor: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE4E4E7),
+                    activeTrackColor: context.tokens.accent,
+                    activeThumbColor: context.tokens.background,
+                    inactiveThumbColor: context.tokens.textTertiary,
+                    inactiveTrackColor: context.tokens.surfaceSecondary,
                     onChanged: _setAiHistory,
                   ),
                 ],
@@ -951,10 +1151,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       final appLockState = ref.watch(appLockProvider);
                       return Switch(
                         value: appLockState.isEnabled,
-                        activeTrackColor: isDark ? LabColors.nightAccent : LabColors.daylightAccent,
-                        activeThumbColor: isDark ? LabColors.nightBackground : LabColors.daylightBackground,
-                        inactiveThumbColor: isDark ? const Color(0xFF555555) : const Color(0xFFA1A1AA),
-                        inactiveTrackColor: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE4E4E7),
+                        activeTrackColor: context.tokens.accent,
+                        activeThumbColor: context.tokens.background,
+                        inactiveThumbColor: context.tokens.textTertiary,
+                        inactiveTrackColor: context.tokens.surfaceSecondary,
                         onChanged: (val) async {
                           final success = await ref.read(appLockProvider.notifier).toggleBiometrics(val);
                           if (!success && val && context.mounted) {
@@ -1031,10 +1231,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const SizedBox(width: 12),
                       Switch(
                         value: _cloudSyncEnabled,
-                        activeTrackColor: isDark ? LabColors.nightAccent : LabColors.daylightAccent,
-                        activeThumbColor: isDark ? LabColors.nightBackground : LabColors.daylightBackground,
-                        inactiveThumbColor: isDark ? const Color(0xFF555555) : const Color(0xFFA1A1AA),
-                        inactiveTrackColor: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE4E4E7),
+                        activeTrackColor: context.tokens.accent,
+                        activeThumbColor: context.tokens.background,
+                        inactiveThumbColor: context.tokens.textTertiary,
+                        inactiveTrackColor: context.tokens.surfaceSecondary,
                         onChanged: (val) async {
                           HapticFeedback.lightImpact();
                           setState(() => _cloudSyncEnabled = val);
@@ -1183,6 +1383,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.tokens.accent,
+                        foregroundColor: isDark ? context.tokens.background : Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                      ),
+                      icon: const Icon(Icons.inventory_2_outlined, size: 16),
+                      label: Text(
+                        strings.sharePacketTitle,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.3),
+                      ),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        _openSharePacketBuilder(context, strings);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         foregroundColor: textPrimary,
@@ -1224,7 +1446,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.psychology_outlined, size: 22, color: LabColors.champagneGold),
+                    Icon(Icons.psychology_outlined, size: 22, color: context.tokens.accent),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -1281,7 +1503,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             // Phone 8: Sign Out Action
             MindButton(
-              text: 'Log Out',
+              text: strings.signOutBtn,
               variant: MindButtonVariant.secondary,
               isFullWidth: true,
               onPressed: () async {
@@ -1340,8 +1562,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             color: isSelected
-                ? (isDark ? LabColors.nightAccent : LabColors.daylightAccent)
-                : (isDark ? Colors.white70 : Colors.black54),
+                ? context.tokens.accent
+                : context.tokens.textSecondary,
           ),
         ),
       ),

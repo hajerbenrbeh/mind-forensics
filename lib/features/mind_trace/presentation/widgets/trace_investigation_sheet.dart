@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/localization/app_strings.dart';
-import '../../../../app/theme/lab_colors.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../controllers/mind_trace_controller.dart';
 import '../../domain/mind_trace_model.dart';
 import '../../domain/thought_trace_investigation.dart';
@@ -86,11 +86,11 @@ class _TraceInvestigationSheetState
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: LabColors.surfaceElevated,
+          SnackBar(
+            backgroundColor: context.tokens.surfaceSecondary,
             content: Text(
               'Thought reflection saved to your record.',
-              style: TextStyle(color: LabColors.textPrimary, fontSize: 13),
+              style: TextStyle(color: context.tokens.textPrimary, fontSize: 13),
             ),
           ),
         );
@@ -106,16 +106,18 @@ class _TraceInvestigationSheetState
   Widget build(BuildContext context) {
     final strings = ref.watch(appStringsProvider);
     final media = MediaQuery.of(context);
+    final tokens = context.tokens;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       height: media.size.height * 0.90,
-      decoration: const BoxDecoration(
-        color: LabColors.surface0,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(tokens.cardRadius)),
         border: Border(
-          top: BorderSide(color: LabColors.borderSubtle, width: 1),
-          left: BorderSide(color: LabColors.borderSubtle, width: 1),
-          right: BorderSide(color: LabColors.borderSubtle, width: 1),
+          top: BorderSide(color: tokens.border, width: 1),
+          left: BorderSide(color: tokens.border, width: 1),
+          right: BorderSide(color: tokens.border, width: 1),
         ),
       ),
       child: Column(
@@ -126,7 +128,7 @@ class _TraceInvestigationSheetState
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: LabColors.textSecondary.withValues(alpha: 0.3),
+              color: tokens.textSecondary.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -146,11 +148,11 @@ class _TraceInvestigationSheetState
                             : (strings.isFrench
                                 ? 'EXPLORATION DE LA PENSÉE'
                                 : 'EXPLORE THIS THOUGHT'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.4,
-                          color: LabColors.burgundyRose,
+                          color: tokens.accent,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -160,9 +162,9 @@ class _TraceInvestigationSheetState
                             : (strings.isFrench
                                 ? 'Explorez ce moment avec curiosité. Toutes les questions sont facultatives.'
                                 : 'Explore this moment with curiosity and compassion. Every question is optional.'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: LabColors.textSecondary,
+                          color: tokens.textSecondary,
                           height: 1.35,
                         ),
                       ),
@@ -170,14 +172,14 @@ class _TraceInvestigationSheetState
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: LabColors.textSecondary),
+                  icon: Icon(Icons.close, color: tokens.textSecondary),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
           ),
 
-          const Divider(color: LabColors.borderSubtle, height: 1),
+          Divider(color: tokens.border, height: 1),
 
           // Scrollable inquiry questions
           Expanded(
@@ -188,10 +190,10 @@ class _TraceInvestigationSheetState
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: LabColors.surfaceElevated,
-                    borderRadius: BorderRadius.circular(8),
+                    color: tokens.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(tokens.cardRadius),
                     border: Border.all(
-                      color: LabColors.burgundyMaroon.withValues(alpha: 0.4),
+                      color: tokens.accent.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -203,9 +205,9 @@ class _TraceInvestigationSheetState
                           Container(
                             width: 6,
                             height: 6,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: LabColors.burgundyRose,
+                              color: tokens.accent,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -215,11 +217,11 @@ class _TraceInvestigationSheetState
                                 : (strings.isFrench
                                     ? 'EMPREINTE EN COURS D’EXAMEN'
                                     : 'ANCHOR THOUGHT UNDER INQUIRY'),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.2,
-                              color: LabColors.textSecondary,
+                              color: tokens.textSecondary,
                             ),
                           ),
                         ],
@@ -227,11 +229,11 @@ class _TraceInvestigationSheetState
                       const SizedBox(height: 8),
                       Text(
                         '“${widget.trace.thoughtPreview}”',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'serif',
                           fontSize: 14,
                           fontStyle: FontStyle.italic,
-                          color: LabColors.textPrimary,
+                          color: tokens.textPrimary,
                           height: 1.45,
                         ),
                       ),
@@ -263,33 +265,33 @@ class _TraceInvestigationSheetState
               20,
               12 + media.padding.bottom,
             ),
-            decoration: const BoxDecoration(
-              color: LabColors.surface0,
+            decoration: BoxDecoration(
+              color: tokens.surface,
               border: Border(
-                top: BorderSide(color: LabColors.borderSubtle, width: 1),
+                top: BorderSide(color: tokens.border, width: 1),
               ),
             ),
             child: SizedBox(
               width: double.infinity,
-              height: 48,
+              height: 50,
               child: ElevatedButton(
                 onPressed: _isSaving ? null : _handleSave,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: LabColors.textPrimary,
-                  foregroundColor: LabColors.surface0,
+                  backgroundColor: tokens.accent,
+                  foregroundColor: isDark ? tokens.background : Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(tokens.buttonRadius),
                   ),
                 ),
                 child: _isSaving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            LabColors.surface0,
+                            isDark ? tokens.background : Colors.white,
                           ),
                         ),
                       )
@@ -319,12 +321,13 @@ class _TraceInvestigationSheetState
   }) {
     final controller = _controllers[q.id];
 
+    final tokens = context.tokens;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: LabColors.surface1,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: LabColors.borderSubtle, width: 1),
+        color: tokens.surfaceSecondary,
+        borderRadius: BorderRadius.circular(tokens.cardRadius),
+        border: Border.all(color: tokens.border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,18 +335,18 @@ class _TraceInvestigationSheetState
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: LabColors.surfaceElevated,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: LabColors.borderSubtle),
+                  color: tokens.accentSoft,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: tokens.accent.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   '0$index',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: LabColors.burgundyRose,
+                    color: tokens.accent,
                   ),
                 ),
               ),
@@ -351,11 +354,11 @@ class _TraceInvestigationSheetState
               Expanded(
                 child: Text(
                   q.category.toUpperCase(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.1,
-                    color: LabColors.textSecondary,
+                    color: tokens.textSecondary,
                   ),
                 ),
               ),
@@ -364,10 +367,10 @@ class _TraceInvestigationSheetState
           const SizedBox(height: 8),
           Text(
             q.question,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: LabColors.textPrimary,
+              color: tokens.textPrimary,
               height: 1.3,
             ),
           ),
@@ -377,7 +380,7 @@ class _TraceInvestigationSheetState
             style: TextStyle(
               fontSize: 11,
               fontStyle: FontStyle.italic,
-              color: LabColors.textSecondary.withValues(alpha: 0.8),
+              color: tokens.textSecondary.withValues(alpha: 0.85),
               height: 1.3,
             ),
           ),
@@ -386,32 +389,32 @@ class _TraceInvestigationSheetState
             controller: controller,
             maxLines: 3,
             minLines: 2,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: LabColors.textPrimary,
+              color: tokens.textPrimary,
               height: 1.4,
             ),
             decoration: InputDecoration(
               isDense: true,
               hintText: 'Record your observation (optional)...',
-              hintStyle: const TextStyle(
+              hintStyle: TextStyle(
                 fontSize: 12,
-                color: LabColors.textTertiary,
+                color: tokens.textTertiary,
               ),
               filled: true,
-              fillColor: LabColors.surface0,
+              fillColor: tokens.surface,
               contentPadding: const EdgeInsets.all(12),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: const BorderSide(color: LabColors.borderSubtle),
+                borderRadius: BorderRadius.circular(tokens.buttonRadius),
+                borderSide: BorderSide(color: tokens.border),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: const BorderSide(color: LabColors.borderSubtle),
+                borderRadius: BorderRadius.circular(tokens.buttonRadius),
+                borderSide: BorderSide(color: tokens.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6),
-                borderSide: const BorderSide(color: LabColors.burgundyRose),
+                borderRadius: BorderRadius.circular(tokens.buttonRadius),
+                borderSide: BorderSide(color: tokens.accent, width: 1.2),
               ),
             ),
           ),

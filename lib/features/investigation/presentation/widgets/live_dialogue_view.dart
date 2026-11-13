@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/localization/locale_controller.dart';
 import '../../../../app/theme/lab_colors.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../../core/safety/crisis_keywords.dart';
 import '../../../../core/safety/safety_interceptor.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
@@ -236,14 +237,11 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
 
   void _showCognitiveDistortionsSheet(Statement statement) {
     HapticFeedback.lightImpact();
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final strings = ref.read(appStringsProvider);
 
-    final bg = isDark ? LabColors.nightSurface : LabColors.daylightSurface;
-    final border = isDark ? LabColors.nightBorder : LabColors.daylightBorder;
-    final textPrimary = isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary;
-    final textSecondary = isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
+    final border = context.tokens.border;
+    final textPrimary = context.tokens.textPrimary;
+    final textSecondary = context.tokens.textSecondary;
 
     final distortions = [
       (
@@ -280,12 +278,13 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: bg,
+      backgroundColor: context.tokens.surface,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(context.tokens.cardRadius)),
       ),
       builder: (ctx) {
+        final sheetTokens = ctx.tokens;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -319,7 +318,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                     if (statement.distortionTag != null)
                       TextButton(
                         style: TextButton.styleFrom(
-                          foregroundColor: LabColors.cherryRedGlow,
+                          foregroundColor: sheetTokens.safetyWarmth,
                           visualDensity: VisualDensity.compact,
                         ),
                         onPressed: () {
@@ -347,7 +346,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: distortions.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 6),
+                    separatorBuilder: (context, index) => const SizedBox(height: 8),
                     itemBuilder: (context, idx) {
                       final item = distortions[idx];
                       final isSelected = statement.distortionTag == item.name;
@@ -357,19 +356,19 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                           _updateStatementDistortion(statement, item.name);
                           Navigator.pop(ctx);
                         },
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(sheetTokens.buttonRadius),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? (isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE4E4E7))
-                                : (isDark ? const Color(0xFF0F0F0F) : const Color(0xFFFAFAFA)),
-                            borderRadius: BorderRadius.circular(8),
+                                ? sheetTokens.accentSoft
+                                : sheetTokens.surfaceSecondary,
+                            borderRadius: BorderRadius.circular(sheetTokens.buttonRadius),
                             border: Border.all(
                               color: isSelected
-                                  ? (isDark ? Colors.white : Colors.black)
+                                  ? sheetTokens.accent
                                   : border,
-                              width: 1,
+                              width: isSelected ? 1.2 : 1,
                             ),
                           ),
                           child: Column(
@@ -381,18 +380,18 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                                   Text(
                                     item.name,
                                     style: TextStyle(
-                                      fontSize: 11.5,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w700,
                                       color: isSelected
-                                          ? (isDark ? Colors.white : Colors.black)
+                                          ? sheetTokens.accent
                                           : textPrimary,
                                     ),
                                   ),
                                   if (isSelected)
                                     Icon(
                                       Icons.check_circle_outline,
-                                      size: 14,
-                                      color: isDark ? Colors.white : Colors.black,
+                                      size: 16,
+                                      color: sheetTokens.accent,
                                     ),
                                 ],
                               ),
@@ -601,21 +600,21 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                           final hasCustom = profile?.customAiDirectives.trim().isNotEmpty == true;
                           return TextButton.icon(
                             style: TextButton.styleFrom(
-                              foregroundColor: hasCustom ? LabColors.champagneGold : textSecondary,
+                              foregroundColor: hasCustom ? context.tokens.accent : textSecondary,
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               visualDensity: VisualDensity.compact,
                             ),
                             icon: Icon(
                               Icons.tune_rounded,
                               size: 14,
-                              color: hasCustom ? LabColors.champagneGold : textSecondary,
+                              color: hasCustom ? context.tokens.accent : textSecondary,
                             ),
                             label: Text(
                               strings.isArabic ? 'تعليمات' : 'Instructions',
                               style: TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: hasCustom ? FontWeight.w800 : FontWeight.w600,
-                                color: hasCustom ? LabColors.champagneGold : textSecondary,
+                                color: hasCustom ? context.tokens.accent : textSecondary,
                               ),
                             ),
                             onPressed: () => CustomAiInstructionsSheet.show(context),
@@ -700,20 +699,19 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
               height: 84,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDark ? const Color(0xFF263321) : const Color(0xFFEAE0D1),
+                color: context.tokens.accentSoft,
                 boxShadow: [
                   BoxShadow(
-                    color: (isDark ? LabColors.forestGreen : const Color(0xFF687157))
-                        .withValues(alpha: 0.25),
-                    blurRadius: 28,
-                    spreadRadius: 4,
+                    color: context.tokens.accent.withValues(alpha: 0.16),
+                    blurRadius: 24,
+                    spreadRadius: 2,
                   ),
                 ],
               ),
               child: Icon(
                 Icons.auto_awesome,
                 size: 38,
-                color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+                color: context.tokens.accent,
               ),
             ),
             const SizedBox(height: 20),
@@ -758,10 +756,10 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                       decoration: BoxDecoration(
-                        color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+                        color: context.tokens.surface,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+                          color: context.tokens.border,
                           width: 1.0,
                         ),
                       ),
@@ -796,17 +794,18 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     required bool isLive,
   }) {
     final isUser = statement.speaker == StatementSpeaker.user;
+    final tokens = context.tokens;
 
     final bubbleBg = isUser
-        ? (isDark ? const Color(0xFF181818) : const Color(0xFFE4E4E7))
-        : (isDark ? const Color(0xFF0C0C0C) : const Color(0xFFFAFAFA));
+        ? tokens.surfaceSecondary
+        : tokens.surface;
 
     final bubbleBorder = isUser
-        ? (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFD4D4D8))
-        : (isDark ? (isLive ? LabColors.sageBorder(isDark: true) : borderColor) : borderColor);
+        ? tokens.border
+        : (isLive ? tokens.accent.withValues(alpha: 0.35) : tokens.border);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
@@ -820,7 +819,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                   height: 5,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isLive ? LabColors.sageGreenGlow : LabColors.warmBeige,
+                    color: isLive ? tokens.accent : tokens.textSecondary,
                   ),
                 ),
                 const SizedBox(width: 5),
@@ -830,7 +829,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.6,
-                    color: isLive ? LabColors.sageGreenGlow : textSecondary,
+                    color: isLive ? tokens.accent : textSecondary,
                   ),
                 ),
               ] else ...[
@@ -849,10 +848,10 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
           const SizedBox(height: 5),
           Container(
             constraints: const BoxConstraints(maxWidth: 320),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: bubbleBg,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(color: bubbleBorder, width: 1),
             ),
             child: Column(
@@ -861,8 +860,8 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                 Text(
                   statement.text,
                   style: TextStyle(
-                    fontSize: 13,
-                    height: 1.4,
+                    fontSize: 13.5,
+                    height: 1.45,
                     color: textPrimary,
                     fontWeight: isUser ? FontWeight.w500 : FontWeight.w400,
                   ),
@@ -875,14 +874,14 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                     children: [
                       InkWell(
                         onTap: () => _cycleStatementLabel(statement),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: statement.label != null
                                 ? LabColors.labelBackground(statement.label!, isDark: isDark)
-                                : (isDark ? const Color(0xFF222222) : const Color(0xFFE4E4E7)),
-                            borderRadius: BorderRadius.circular(4),
+                                : tokens.surface,
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: statement.label != null
                                   ? LabColors.forLabel(statement.label!)
@@ -895,7 +894,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                                 ? '[${statement.label!.letter}] ${statement.label!.displayName}'
                                 : '+ Tag [F/A/I]',
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w800,
                               color: statement.label != null
                                   ? LabColors.forLabel(statement.label!)
@@ -906,17 +905,17 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                       ),
                       InkWell(
                         onTap: () => _showCognitiveDistortionsSheet(statement),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(8),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: statement.distortionTag != null
-                                ? LabColors.beigeBackground(isDark: isDark)
-                                : (isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE4E4E7)),
-                            borderRadius: BorderRadius.circular(4),
+                                ? tokens.accentSoft
+                                : tokens.surface,
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: statement.distortionTag != null
-                                  ? LabColors.warmBeige
+                                  ? tokens.accent
                                   : borderColor,
                               width: 0.8,
                             ),
@@ -926,16 +925,62 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                                 ? '[${statement.distortionTag}]'
                                 : strings.tagDistortionBtn,
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w800,
                               color: statement.distortionTag != null
-                                  ? LabColors.warmBeige
+                                  ? tokens.accent
                                   : textSecondary,
                             ),
                           ),
                         ),
                       ),
                     ],
+                  ),
+                ] else ...[
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: () async {
+                      HapticFeedback.lightImpact();
+                      final notifier = ref.read(activeCaseControllerProvider.notifier);
+                      await notifier.saveConclusion(statement.text);
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            strings.isArabic
+                                ? 'تم حفظ الفكرة في ملفك'
+                                : (strings.isFrench
+                                    ? 'Idée sauvegardée dans votre profil'
+                                    : 'Takeaway saved to your profile'),
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: tokens.surfaceSecondary,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: tokens.border),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.bookmark_add_outlined, size: 12, color: tokens.accent),
+                          const SizedBox(width: 4),
+                          Text(
+                            strings.saveTakeawayAction,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.accent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ],
@@ -958,10 +1003,10 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
             decoration: BoxDecoration(
               color: surfaceColor,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor, width: 1),
             ),
             child: Row(
@@ -1000,6 +1045,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     Color textSecondary,
     int statementCount,
   ) {
+    final tokens = context.tokens;
     final pills = statementCount <= 2
         ? [
             strings.quickPillWhatFacts,
@@ -1014,20 +1060,20 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
           ];
 
     return Container(
-      height: 38,
+      height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
           ActionChip(
-            backgroundColor: surfaceColor,
-            side: BorderSide(color: LabColors.sageGreen.withValues(alpha: 0.5), width: 1),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            backgroundColor: tokens.accentSoft,
+            side: BorderSide(color: tokens.accent.withValues(alpha: 0.35), width: 1),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
-            avatar: const Icon(Icons.spa_outlined, size: 13, color: LabColors.sageGreen),
+            avatar: Icon(Icons.spa_outlined, size: 13, color: tokens.accent),
             label: Text(
               strings.needPracticalSupportNow,
-              style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: LabColors.sageGreen),
+              style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: tokens.accent),
             ),
             onPressed: () => ContextualSupportSheet.show(context),
           ),
@@ -1037,8 +1083,8 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
             child: ActionChip(
               backgroundColor: surfaceColor,
               side: BorderSide(color: borderColor, width: 1),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
               label: Text(
                 pill,
                 style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: textSecondary),
@@ -1061,9 +1107,10 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
   ) {
     final activeCase = ref.watch(activeCaseControllerProvider).value ?? widget.caseModel;
     final isPaused = activeCase.isPausedForSafety;
+    final tokens = context.tokens;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 8, 14, 12),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
       decoration: BoxDecoration(
         color: surfaceColor,
         border: Border(top: BorderSide(color: borderColor, width: 1)),
@@ -1078,7 +1125,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
               maxLines: 4,
               textInputAction: TextInputAction.send,
               onSubmitted: (_) => isPaused ? null : _sendMessage(),
-              style: TextStyle(fontSize: 13, color: textPrimary),
+              style: TextStyle(fontSize: 13.5, color: textPrimary),
               decoration: InputDecoration(
                 hintText: isPaused
                     ? 'Session paused for safety'
@@ -1086,22 +1133,22 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                 hintStyle: TextStyle(
                     fontSize: 12,
                     color: isPaused
-                        ? LabColors.safetyWarmth
-                        : textSecondary.withValues(alpha: 0.6)),
+                        ? tokens.safetyWarmth
+                        : textSecondary.withValues(alpha: 0.65)),
                 filled: true,
-                fillColor: isDark ? const Color(0xFF121212) : const Color(0xFFF4F4F5),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                fillColor: tokens.surfaceSecondary,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(tokens.buttonRadius),
                   borderSide: BorderSide(color: borderColor, width: 1),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(tokens.buttonRadius),
                   borderSide: BorderSide(color: borderColor, width: 1),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: textPrimary, width: 1),
+                  borderRadius: BorderRadius.circular(tokens.buttonRadius),
+                  borderSide: BorderSide(color: tokens.accent, width: 1.2),
                 ),
               ),
             ),
@@ -1110,20 +1157,20 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
           BouncingWidget(
             onTap: isPaused || _isInvestigatorTyping ? null : () => _sendMessage(),
             child: Container(
-              width: 38,
-              height: 38,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 color: isPaused
-                    ? (isDark ? const Color(0xFF222222) : const Color(0xFFE5E5E5))
-                    : (isDark ? Colors.white : Colors.black),
-                borderRadius: BorderRadius.circular(8),
+                    ? tokens.border
+                    : tokens.accent,
+                borderRadius: BorderRadius.circular(tokens.buttonRadius),
               ),
               child: Icon(
                 isPaused ? Icons.lock_outline_rounded : Icons.arrow_upward_rounded,
                 size: 20,
                 color: isPaused
                     ? textSecondary
-                    : (isDark ? Colors.black : Colors.white),
+                    : (isDark ? tokens.background : Colors.white),
               ),
             ),
           ),
@@ -1140,11 +1187,12 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     Color textSecondary,
     AppStrings strings,
   ) {
+    final tokens = context.tokens;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F080A) : const Color(0xFFFBF8F6),
+        color: tokens.background,
         border: Border(bottom: BorderSide(color: borderColor, width: 1)),
       ),
       child: SingleChildScrollView(
@@ -1167,16 +1215,16 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 160),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5.5),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? (isDark ? LabColors.darkWine : LabColors.warmIvory)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(6),
+                        ? tokens.accentSoft
+                        : tokens.surface,
+                    borderRadius: BorderRadius.circular(tokens.chipRadius),
                     border: Border.all(
                       color: isSelected
-                          ? LabColors.champagneGold
-                          : (isDark ? const Color(0xFF262626) : const Color(0xFFE4E4E7)),
+                          ? tokens.accent
+                          : tokens.border,
                       width: isSelected ? 1.2 : 1.0,
                     ),
                   ),
@@ -1185,11 +1233,11 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                     children: [
                       if (isSelected) ...[
                         Container(
-                          width: 5,
-                          height: 5,
-                          decoration: const BoxDecoration(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: LabColors.champagneGold,
+                            color: tokens.accent,
                           ),
                         ),
                         const SizedBox(width: 5),
@@ -1197,9 +1245,9 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                       Text(
                         label,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 11.5,
                           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected ? LabColors.champagneGold : textSecondary,
+                          color: isSelected ? tokens.accent : textSecondary,
                           letterSpacing: 0.1,
                         ),
                       ),

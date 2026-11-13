@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../../../app/theme/lab_theme.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
 import '../../controllers/profile_controller.dart';
 import '../../domain/psychological_profile_model.dart';
@@ -153,11 +154,11 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
                     hintText: strings.isArabic ? 'كيف تحب أن نناديك؟' : 'How should we address you?',
                     hintStyle: TextStyle(fontSize: 11.5, color: textSecondary.withValues(alpha: 0.6)),
                     filled: true,
-                    fillColor: isDark ? const Color(0xFF101010) : const Color(0xFFF4F4F5),
+                    fillColor: context.tokens.surfaceSecondary,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: border)),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: border)),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: LabColors.champagneGold)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: border)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: border)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: context.tokens.accent)),
                   ),
                 ),
 
@@ -184,16 +185,16 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
                         HapticFeedback.selectionClick();
                         setState(() => _selectedAgeRange = range);
                       },
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
-                              : (isDark ? const Color(0xFF121212) : const Color(0xFFFAFAFA)),
-                          borderRadius: BorderRadius.circular(6),
+                              ? context.tokens.accentSoft
+                              : context.tokens.surfaceSecondary,
+                          borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                           border: Border.all(
-                            color: isSelected ? LabColors.champagneGold : border,
+                            color: isSelected ? context.tokens.accent : border,
                             width: isSelected ? 1 : 0.8,
                           ),
                         ),
@@ -203,7 +204,7 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
                             fontSize: 11,
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                             color: isSelected
-                                ? (isDark ? LabColors.warmIvory : LabColors.deepBurgundy)
+                                ? context.tokens.accent
                                 : textSecondary,
                           ),
                         ),
@@ -235,11 +236,11 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
                         : 'Brief introductory thoughts you feel comfortable sharing...',
                     hintStyle: TextStyle(fontSize: 11.5, color: textSecondary.withValues(alpha: 0.6)),
                     filled: true,
-                    fillColor: isDark ? const Color(0xFF101010) : const Color(0xFFF4F4F5),
+                    fillColor: context.tokens.surfaceSecondary,
                     contentPadding: const EdgeInsets.all(12),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: border)),
-                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: border)),
-                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: LabColors.champagneGold)),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: border)),
+                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: border)),
+                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: context.tokens.accent)),
                   ),
                 ),
 
@@ -252,8 +253,8 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
                     width: double.infinity,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white : Colors.black,
-                      borderRadius: BorderRadius.circular(8),
+                      color: context.tokens.accent,
+                      borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -262,7 +263,7 @@ class _EditAboutMeSheetState extends ConsumerState<EditAboutMeSheet> {
                         fontSize: 11.5,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.6,
-                        color: isDark ? Colors.black : Colors.white,
+                        color: isDark ? context.tokens.background : Colors.white,
                       ),
                     ),
                   ),

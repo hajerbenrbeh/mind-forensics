@@ -43,14 +43,14 @@ class MindTokens extends ThemeExtension<MindTokens> {
     border: LabColors.daylightBorder,
     textPrimary: LabColors.daylightTextPrimary,
     textSecondary: LabColors.daylightTextSecondary,
-    textTertiary: Color(0xFF7A8D81),
+    textTertiary: Color(0xFF8A948D),
     accent: LabColors.daylightAccent,
     accentSoft: LabColors.daylightAccentSoft,
     safetyWarmth: LabColors.safetyWarmth,
     safetyWarmthSoft: LabColors.safetySoftBgLight,
     cardRadius: 20.0,
-    buttonRadius: 20.0,
-    chipRadius: 24.0,
+    buttonRadius: 18.0,
+    chipRadius: 20.0,
   );
 
   static const MindTokens dark = MindTokens(
@@ -66,8 +66,8 @@ class MindTokens extends ThemeExtension<MindTokens> {
     safetyWarmth: LabColors.safetyWarmthDark,
     safetyWarmthSoft: LabColors.safetySoftBgDark,
     cardRadius: 20.0,
-    buttonRadius: 20.0,
-    chipRadius: 24.0,
+    buttonRadius: 18.0,
+    chipRadius: 20.0,
   );
 
   @override

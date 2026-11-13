@@ -86,7 +86,7 @@ class LabTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: LabColors.daylightSurface,
+        fillColor: LabColors.daylightSurfaceSubtle,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         hintStyle: const TextStyle(color: LabColors.daylightTextSecondary, fontSize: 13),
         border: OutlineInputBorder(
@@ -101,6 +101,26 @@ class LabTheme {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: LabColors.daylightAccent, width: 1.5),
         ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: LabColors.daylightSurface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: LabColors.daylightSurface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: LabColors.daylightBorder, width: 1),
+        ),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: LabColors.daylightBorder,
+        thickness: 1,
+        space: 1,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -188,7 +208,7 @@ class LabTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: LabColors.nightSurface,
+        fillColor: LabColors.nightSurfaceSubtle,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         hintStyle: const TextStyle(color: LabColors.nightTextSecondary, fontSize: 13),
         border: OutlineInputBorder(
@@ -204,10 +224,30 @@ class LabTheme {
           borderSide: const BorderSide(color: LabColors.nightAccent, width: 1.5),
         ),
       ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: LabColors.nightSurface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: LabColors.nightSurface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: LabColors.nightBorder, width: 1),
+        ),
+      ),
+      dividerTheme: const DividerThemeData(
+        color: LabColors.nightBorder,
+        thickness: 1,
+        space: 1,
+      ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: LabColors.nightAccent,
-          foregroundColor: const Color(0xFF151B19),
+          foregroundColor: LabColors.nightBackground,
           minimumSize: const Size(48, 48), // Accessible touch target
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),

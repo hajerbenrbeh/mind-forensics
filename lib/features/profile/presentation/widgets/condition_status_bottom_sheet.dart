@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
 import '../../controllers/profile_controller.dart';
 import '../../domain/condition_type.dart';
@@ -187,16 +188,12 @@ class _ConditionStatusBottomSheetState
                             horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
                           color: isCurrent
-                              ? (isDark
-                                  ? const Color(0xFF1C1C1C)
-                                  : const Color(0xFFF0F0F2))
-                              : (isDark
-                                  ? const Color(0xFF0F0F0F)
-                                  : const Color(0xFFFAFAFA)),
-                          borderRadius: BorderRadius.circular(8),
+                              ? context.tokens.accentSoft
+                              : context.tokens.surfaceSecondary,
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isCurrent
-                                ? (isDark ? Colors.white : Colors.black)
+                                ? context.tokens.accent
                                 : border,
                             width: 1,
                           ),
@@ -220,7 +217,7 @@ class _ConditionStatusBottomSheetState
                               Icon(
                                 Icons.check_circle_rounded,
                                 size: 16,
-                                color: isDark ? Colors.white : Colors.black,
+                                color: context.tokens.accent,
                               ),
                           ],
                         ),
@@ -258,13 +255,11 @@ class _ConditionStatusBottomSheetState
                     color: textSecondary.withValues(alpha: 0.6),
                   ),
                   filled: true,
-                  fillColor: isDark
-                      ? const Color(0xFF121212)
-                      : const Color(0xFFF4F4F5),
+                  fillColor: context.tokens.surfaceSecondary,
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide(color: border, width: 1),
                   ),
                   enabledBorder: OutlineInputBorder(
@@ -308,10 +303,10 @@ class _ConditionStatusBottomSheetState
                 },
                 child: Container(
                   width: double.infinity,
-                  height: 44,
+                  height: 46,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white : Colors.black,
-                    borderRadius: BorderRadius.circular(8),
+                    color: context.tokens.accent,
+                    borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                   ),
                   alignment: Alignment.center,
                   child: Text(
@@ -322,7 +317,7 @@ class _ConditionStatusBottomSheetState
                       fontSize: 12.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.4,
-                      color: isDark ? Colors.black : Colors.white,
+                      color: isDark ? context.tokens.background : Colors.white,
                     ),
                   ),
                 ),

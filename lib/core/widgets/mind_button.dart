@@ -45,24 +45,24 @@ class MindButton extends StatelessWidget {
 
     switch (variant) {
       case MindButtonVariant.primary:
-        bg = isDark ? tokens.accent : LabColors.forestGreen;
-        fg = isDark ? LabColors.darkForestBackground : Colors.white;
+        bg = tokens.accent;
+        fg = isDark ? tokens.background : Colors.white;
         border = Colors.transparent;
         break;
       case MindButtonVariant.secondary:
-        bg = Colors.transparent;
+        bg = tokens.surface;
         fg = tokens.textPrimary;
         border = tokens.border;
         break;
       case MindButtonVariant.soft:
         bg = tokens.accentSoft;
-        fg = isDark ? tokens.accent : tokens.textPrimary;
+        fg = isDark ? tokens.accent : tokens.accent;
         border = tokens.border;
         break;
       case MindButtonVariant.danger:
-        bg = isDark ? LabColors.cherryBgDark : LabColors.cherryBgLight;
-        fg = LabColors.cherryRed;
-        border = isDark ? LabColors.cherryBorderDark : LabColors.cherryBorderLight;
+        bg = tokens.safetyWarmthSoft;
+        fg = tokens.safetyWarmth;
+        border = isDark ? LabColors.safetyBorderDark : LabColors.safetyBorderLight;
         break;
     }
 

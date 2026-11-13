@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/localization/app_strings.dart';
-import '../../../../app/theme/lab_colors.dart';
 import '../../../../app/theme/lab_theme.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
 import '../../../profile/controllers/profile_controller.dart';
 import '../../../profile/domain/psychological_profile_model.dart';
@@ -98,19 +98,15 @@ class _CustomAiInstructionsSheetState
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tokens = context.tokens;
     final strings = ref.watch(appStringsProvider);
 
-    final bg = isDark ? const Color(0xFF0F0F0F) : Colors.white;
-    final surfaceColor =
-        isDark ? const Color(0xFF18181B) : const Color(0xFFF4F4F5);
-    final borderColor =
-        isDark ? LabColors.nightBorder : LabColors.daylightBorder;
-    final textPrimary =
-        isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary;
-    final textSecondary =
-        isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
+    final bg = tokens.surface;
+    final surfaceColor = tokens.surfaceSecondary;
+    final borderColor = tokens.border;
+    final textPrimary = tokens.textPrimary;
+    final textSecondary = tokens.textSecondary;
 
     return Container(
       padding: EdgeInsets.only(
@@ -121,11 +117,13 @@ class _CustomAiInstructionsSheetState
       ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(tokens.cardRadius),
+        ),
         border: Border(
           top: BorderSide(
-            color: isDark ? LabColors.wineBorder : LabColors.champagneGold,
-            width: 1.5,
+            color: tokens.border,
+            width: 1,
           ),
         ),
       ),
@@ -136,15 +134,15 @@ class _CustomAiInstructionsSheetState
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: isDark ? LabColors.darkWine : LabColors.warmIvory,
-                  borderRadius: BorderRadius.circular(6),
+                  color: tokens.accentSoft,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.tune_rounded,
                   size: 16,
-                  color: LabColors.champagneGold,
+                  color: tokens.accent,
                 ),
               ),
               const SizedBox(width: 10),
@@ -153,9 +151,13 @@ class _CustomAiInstructionsSheetState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      strings.isArabic ? 'تعليمات المساعد المخصصة' : 'Custom AI Instructions',
+                      strings.isArabic
+                          ? 'تعليمات المساعد المخصصة'
+                          : (strings.isFrench
+                              ? 'Instructions personnalisées'
+                              : 'Custom AI Instructions'),
                       style: LabTheme.serifStyle(
-                        fontSize: 15,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: textPrimary,
                       ),
@@ -164,14 +166,16 @@ class _CustomAiInstructionsSheetState
                     Text(
                       strings.isArabic
                           ? 'حدد كيف ترغب أن يتحاور معك رفيقك النفسي الذكي'
-                          : 'Define how your AI companion should communicate with you',
-                      style: TextStyle(fontSize: 11, color: textSecondary),
+                          : (strings.isFrench
+                              ? 'Définissez comment votre compagnon échange avec vous'
+                              : 'Define how your AI companion should communicate with you'),
+                      style: TextStyle(fontSize: 11.5, color: textSecondary),
                     ),
                   ],
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.close_rounded, size: 18),
+                icon: Icon(Icons.close_rounded, size: 18, color: textSecondary),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
@@ -180,12 +184,16 @@ class _CustomAiInstructionsSheetState
 
           // Preset Chips
           Text(
-            strings.isArabic ? 'نماذج جاهزة سريعة' : 'QUICK DIRECTIVE PRESETS',
-            style: const TextStyle(
-              fontSize: 9.5,
+            strings.isArabic
+                ? 'نماذج جاهزة سريعة'
+                : (strings.isFrench
+                    ? 'MODÈLES RAPIDES'
+                    : 'QUICK DIRECTIVE PRESETS'),
+            style: TextStyle(
+              fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.6,
-              color: LabColors.champagneGold,
+              color: tokens.accent,
             ),
           ),
           const SizedBox(height: 8),
@@ -200,16 +208,16 @@ class _CustomAiInstructionsSheetState
                 },
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
                     color: surfaceColor,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(tokens.chipRadius),
                     border: Border.all(color: borderColor, width: 1),
                   ),
                   child: Text(
                     preset.label,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w600,
                       color: textPrimary,
                     ),
@@ -223,12 +231,16 @@ class _CustomAiInstructionsSheetState
 
           // Custom Input Box
           Text(
-            strings.isArabic ? 'تعليماتك الخاصة' : 'YOUR CUSTOM INSTRUCTIONS',
-            style: const TextStyle(
-              fontSize: 9.5,
+            strings.isArabic
+                ? 'تعليماتك الخاصة'
+                : (strings.isFrench
+                    ? 'VOS INSTRUCTIONS PERSONNELLES'
+                    : 'YOUR CUSTOM INSTRUCTIONS'),
+            style: TextStyle(
+              fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.6,
-              color: LabColors.champagneGold,
+              color: tokens.accent,
             ),
           ),
           const SizedBox(height: 6),
@@ -242,22 +254,22 @@ class _CustomAiInstructionsSheetState
                   : 'e.g. Keep responses concise, never give unsolicited lectures, and ask only one question at a time. Emphasize somatic grounding...',
               hintStyle: TextStyle(
                 fontSize: 11.5,
-                color: textSecondary.withValues(alpha: 0.6),
+                color: textSecondary.withValues(alpha: 0.65),
               ),
               filled: true,
               fillColor: surfaceColor,
-              contentPadding: const EdgeInsets.all(12),
+              contentPadding: const EdgeInsets.all(14),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(tokens.buttonRadius),
                 borderSide: BorderSide(color: borderColor),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(tokens.buttonRadius),
                 borderSide: BorderSide(color: borderColor),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: LabColors.champagneGold),
+                borderRadius: BorderRadius.circular(tokens.buttonRadius),
+                borderSide: BorderSide(color: tokens.accent, width: 1.4),
               ),
             ),
           ),
@@ -269,12 +281,12 @@ class _CustomAiInstructionsSheetState
             width: double.infinity,
             child: FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: isDark ? Colors.white : Colors.black,
-                foregroundColor: isDark ? Colors.black : Colors.white,
+                backgroundColor: tokens.accent,
+                foregroundColor: isDark ? tokens.background : Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(tokens.buttonRadius),
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               onPressed: _isSaving ? null : _save,
               child: _isSaving

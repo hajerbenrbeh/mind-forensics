@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/localization/app_strings.dart';
-import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/crisis_keywords.dart';
 import '../../../core/safety/safety_interceptor.dart';
@@ -49,6 +48,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
   double _anxietyLevel = 3.0;
   double _sleepHours = 7.5;
   final Set<String> _selectedTriggers = {};
+  final Set<String> _selectedHelped = {};
   bool _isSaving = false;
   bool _initializedFromTrace = false;
 
@@ -61,14 +61,20 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
   ];
 
   final List<String> _triggerOptions = const [
-    'Sleep',
-    'Stress',
+    'Work / Demands',
+    'Sleep Disruption',
     'Studies',
     'Social',
     'Health',
-    'Work / Demands',
-    'Sleep Disruption',
-    'Other +',
+    'Overload',
+  ];
+
+  final List<String> _helpedOptions = const [
+    'Walk',
+    'Quiet time',
+    'Breathing',
+    'Talked',
+    'Rest',
   ];
 
   @override
@@ -80,6 +86,37 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
       vsync: this,
       initialIndex: widget.initialTab.clamp(0, 2),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _hydrateFromTrace(ref.read(todayTraceProvider));
+    });
+  }
+
+  void _hydrateFromTrace(MindTraceModel? trace) {
+    if (_initializedFromTrace || trace == null) return;
+    _initializedFromTrace = true;
+    setState(() {
+      _selectedMood = trace.overallMood;
+      _moodIntensity = trace.moodIntensity.toDouble();
+      _energyLevel = (trace.energyLevel ?? 5).toDouble();
+      _anxietyLevel = (trace.anxietyLevel ?? 3).toDouble();
+      _sleepHours = trace.sleepHours ?? 7.5;
+      if (trace.journalText != null && _noteController.text.isEmpty) {
+        _noteController.text = trace.journalText!;
+      }
+      if (trace.situation != null &&
+          trace.situation!.isNotEmpty &&
+          _selectedTriggers.isEmpty) {
+        final parts = trace.situation!.split(',').map((s) => s.trim());
+        _selectedTriggers.addAll(parts.where((p) => p.isNotEmpty));
+      }
+      if (trace.behavioralResponse != null &&
+          trace.behavioralResponse!.isNotEmpty &&
+          _selectedHelped.isEmpty) {
+        final parts = trace.behavioralResponse!.split(',').map((s) => s.trim());
+        _selectedHelped.addAll(parts.where((p) => p.isNotEmpty));
+      }
+    });
   }
 
   String _getMoodLabel(String key, AppStrings strings) {
@@ -134,6 +171,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
       final userId = authUser?.id ?? 'local_user';
 
       final situationStr = _selectedTriggers.isNotEmpty ? _selectedTriggers.join(', ') : null;
+      final helpedStr = _selectedHelped.isNotEmpty ? _selectedHelped.join(', ') : null;
       final noteText = _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null;
 
       // Layer 1 crisis pre-scan: Intercept Level 2 phrases immediately
@@ -154,6 +192,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
               anxietyLevel: _anxietyLevel.toInt(),
               sleepHours: _sleepHours,
               situation: situationStr,
+              behavioralResponse: helpedStr ?? today.behavioralResponse,
               journalText: noteText ?? today.journalText,
               updatedAt: now,
             )
@@ -168,6 +207,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
               anxietyLevel: _anxietyLevel.toInt(),
               sleepHours: _sleepHours,
               situation: situationStr,
+              behavioralResponse: helpedStr,
               journalText: noteText,
               createdAt: now,
               updatedAt: now,
@@ -196,28 +236,15 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final strings = ref.watch(appStringsProvider);
+    final traces = ref.watch(mindTraceControllerProvider).value ?? const [];
 
-    // Hydrate form state once when today's trace becomes available
-    final todayTrace = ref.watch(todayTraceProvider);
-    if (!_initializedFromTrace && todayTrace != null) {
-      _initializedFromTrace = true;
-      _selectedMood = todayTrace.overallMood;
-      _moodIntensity = todayTrace.moodIntensity.toDouble();
-      _energyLevel = (todayTrace.energyLevel ?? 5).toDouble();
-      _anxietyLevel = (todayTrace.anxietyLevel ?? 3).toDouble();
-      _sleepHours = todayTrace.sleepHours ?? 7.5;
-      if (todayTrace.journalText != null && _noteController.text.isEmpty) {
-        _noteController.text = todayTrace.journalText!;
+    ref.listen<MindTraceModel?>(todayTraceProvider, (_, next) {
+      if (!_initializedFromTrace && next != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _hydrateFromTrace(next);
+        });
       }
-      if (todayTrace.situation != null &&
-          todayTrace.situation!.isNotEmpty &&
-          _selectedTriggers.isEmpty) {
-        final parts = todayTrace.situation!.split(',').map((s) => s.trim());
-        _selectedTriggers.addAll(parts.where((p) => p.isNotEmpty));
-      }
-    }
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    });
 
     return Scaffold(
       backgroundColor: tokens.background,
@@ -232,7 +259,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
               )
             : null,
         title: Text(
-          'Track Your Mood',
+          strings.trackPageTitle,
           style: TextStyle(
             fontFamily: 'serif',
             color: tokens.textPrimary,
@@ -243,17 +270,20 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
         actions: [
           IconButton(
             icon: Icon(Icons.calendar_today_outlined, size: 20, color: tokens.textPrimary),
-            tooltip: 'Calendar',
-            onPressed: () {},
+            tooltip: strings.calendarTitle,
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _showObservationCalendarSheet(context, traces, tokens, strings);
+            },
           ),
           const SupportButton(),
           const SizedBox(width: 8),
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+          labelColor: tokens.accent,
           unselectedLabelColor: tokens.textSecondary,
-          indicatorColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+          indicatorColor: tokens.accent,
           indicatorSize: TabBarIndicatorSize.tab,
           dividerColor: tokens.border,
           tabs: [
@@ -296,21 +326,21 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Question Header matching Phone 3
+          // 1. Question Header
           Text(
-            'How are you feeling right now?',
+            strings.howFeelingRightNow,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'serif',
               fontSize: 21,
               fontWeight: FontWeight.w600,
-              color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+              color: tokens.textPrimary,
               letterSpacing: -0.2,
             ),
           ),
           const SizedBox(height: 10),
 
-          // 2. Radial Mood Dial with Concentric Ripples & Centered Face (Phone 3)
+          // 2. Radial Mood Dial with Concentric Ripples
           RadialMoodDial(
             moods: dialMoodItems,
             selectedIndex: selectedMoodIndex,
@@ -322,10 +352,10 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
           ),
           const SizedBox(height: 12),
 
-          // 3. Core State Selection (satisfies find.text("TODAY'S CORE STATE") & mood labels)
+          // 3. Core State Selection
           Center(
             child: Text(
-              "TODAY'S CORE STATE",
+              strings.todaysCoreState,
               style: TextStyle(
                 color: tokens.textSecondary,
                 fontSize: 11,
@@ -339,17 +369,14 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
             children: _moodOptions.map((opt) {
               final isSelected = _selectedMood == opt.key;
               final label = _getMoodLabel(opt.key, strings);
+              final activeFg = isDark ? tokens.background : Colors.white;
               return Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2.5),
                   child: MindCard(
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    backgroundColor: isSelected
-                        ? (isDark ? LabColors.forestGreen : const Color(0xFF4A583E))
-                        : (isDark ? LabColors.darkForestCard : LabColors.cardIvory),
-                    borderColor: isSelected
-                        ? (isDark ? LabColors.lightOlive : LabColors.forestGreen)
-                        : (isDark ? LabColors.darkForestBorder : LabColors.borderIvory),
+                    backgroundColor: isSelected ? tokens.accent : tokens.surface,
+                    borderColor: isSelected ? tokens.accent : tokens.border,
                     onTap: () {
                       HapticFeedback.selectionClick();
                       setState(() => _selectedMood = opt.key);
@@ -361,7 +388,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
                         Icon(
                           opt.icon,
                           size: 20,
-                          color: isSelected ? Colors.white : tokens.textSecondary,
+                          color: isSelected ? activeFg : tokens.textSecondary,
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -369,7 +396,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected ? Colors.white : tokens.textPrimary,
+                            color: isSelected ? activeFg : tokens.textPrimary,
                           ),
                         ),
                       ],
@@ -382,15 +409,13 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
 
           const SizedBox(height: 16),
 
-          // 4. Optional Note Field matching Phone 3 ("Add a note (optional)...")
+          // 4. Optional Note Field
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
-              ),
+              color: tokens.surface,
+              borderRadius: BorderRadius.circular(tokens.cardRadius),
+              border: Border.all(color: tokens.border),
             ),
             child: Row(
               children: [
@@ -401,17 +426,20 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
                     controller: _noteController,
                     style: TextStyle(
                       fontSize: 13.5,
-                      color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+                      color: tokens.textPrimary,
                     ),
                     decoration: InputDecoration(
                       isDense: true,
+                      filled: false,
                       contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                      hintText: 'Add a note (optional)...',
+                      hintText: strings.addNoteOptionalHint,
                       hintStyle: TextStyle(
                         fontSize: 13,
                         color: tokens.textSecondary.withValues(alpha: 0.8),
                       ),
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
                     ),
                   ),
                 ),
@@ -421,20 +449,22 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
 
           const SizedBox(height: 20),
 
-          // 5. Influencing Factors / Triggers Section (Phone 3)
+          // 5. Influencing Factors / Triggers Section
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "What's influencing your mood?",
-                style: TextStyle(
-                  color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  strings.whatsInfluencingMood,
+                  style: TextStyle(
+                    color: tokens.textPrimary,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               Text(
-                "TRIGGERS & CONTEXT",
+                strings.triggersContextHeader,
                 style: TextStyle(
                   color: tokens.textSecondary,
                   fontSize: 10,
@@ -467,13 +497,49 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
             }).toList(),
           ),
 
+          const SizedBox(height: 18),
+
+          // 5b. What Helped Today? (Optional positive/calming factor pill)
+          Text(
+            strings.isArabic
+                ? 'شنوّة اللي ساعدك اليوم؟ (اختياري)'
+                : (strings.isFrench
+                    ? 'Qu’est-ce qui vous a aidé ? (optionnel)'
+                    : 'What helped today? (optional)'),
+            style: TextStyle(
+              color: tokens.textPrimary,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _helpedOptions.map((item) {
+              final isSel = _selectedHelped.contains(item);
+              return MindPill(
+                label: item,
+                isSelected: isSel,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() {
+                    if (isSel) {
+                      _selectedHelped.remove(item);
+                    } else {
+                      _selectedHelped.add(item);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
+
           const SizedBox(height: 20),
 
           // 6. Intensity & Telemetry Sliders
           MindCard(
             padding: const EdgeInsets.all(16),
-            backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
-            borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -524,18 +590,35 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
 
-          // 7. Save Entry Button (Phone 3) with subtitle "Log Daily Check-in" for test compatibility
+          // 7. Save Entry Button (single crisp label, no redundant subText yapping)
           MindButton(
-            text: 'Save Entry',
-            subText: strings.saveCheckInButton,
+            text: strings.saveCheckInButton,
             isFullWidth: true,
             isLoading: _isSaving,
             leadingIcon: Icons.check_circle_outline,
             onPressed: _saveQuickCheckIn,
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 10),
+          Center(
+            child: TextButton.icon(
+              onPressed: () {
+                HapticFeedback.selectionClick();
+                _tabController.animateTo(1);
+              },
+              icon: Icon(Icons.layers_outlined, size: 15, color: tokens.accent),
+              label: Text(
+                strings.deepenReflectionCta,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: tokens.accent,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -778,6 +861,140 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
           ],
         ),
       ),
+    );
+  }
+
+  void _showObservationCalendarSheet(
+    BuildContext context,
+    List<MindTraceModel> traces,
+    MindTokens tokens,
+    AppStrings strings,
+  ) {
+    final now = DateTime.now();
+    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+    final firstWeekday = DateTime(now.year, now.month, 1).weekday; // Mon=1 .. Sun=7
+    final byDay = <int, MindTraceModel>{};
+    for (final t in traces) {
+      if (t.date.year == now.year && t.date.month == now.month) {
+        byDay[t.date.day] = t;
+      }
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: tokens.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: tokens.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      strings.calendarTitle,
+                      style: TextStyle(
+                        fontFamily: 'serif',
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: tokens.textPrimary,
+                      ),
+                    ),
+                    MindBadge(label: '${now.year}-${now.month.toString().padLeft(2, '0')}'),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  strings.calendarNoBreaksNote,
+                  style: TextStyle(fontSize: 11.5, color: tokens.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 7,
+                    mainAxisSpacing: 8,
+                    crossAxisSpacing: 8,
+                    childAspectRatio: 1.0,
+                  ),
+                  itemCount: (firstWeekday - 1) + daysInMonth,
+                  itemBuilder: (_, idx) {
+                    if (idx < firstWeekday - 1) return const SizedBox.shrink();
+                    final day = idx - (firstWeekday - 1) + 1;
+                    final trace = byDay[day];
+                    final isToday = day == now.day;
+
+                    return InkWell(
+                      onTap: trace == null
+                          ? null
+                          : () {
+                              Navigator.of(ctx).pop();
+                              _tabController.animateTo(2);
+                            },
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: trace != null
+                              ? tokens.accentSoft
+                              : tokens.surfaceSecondary.withValues(alpha: 0.45),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isToday
+                                ? tokens.accent
+                                : (trace != null ? tokens.accent.withValues(alpha: 0.4) : tokens.border),
+                            width: isToday ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '$day',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: isToday || trace != null ? FontWeight.w700 : FontWeight.w500,
+                                color: trace != null ? tokens.accent : tokens.textSecondary,
+                              ),
+                            ),
+                            if (trace != null)
+                              Container(
+                                margin: const EdgeInsets.only(top: 2),
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: tokens.accent,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

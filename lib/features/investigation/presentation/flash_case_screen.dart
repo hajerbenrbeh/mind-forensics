@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/localization/app_strings.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../controllers/investigation_providers.dart';
 import '../domain/case_model.dart';
@@ -108,11 +109,17 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: borderColor),
+                color: _showHubView
+                    ? context.tokens.accentSoft
+                    : context.tokens.surfaceSecondary,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: _showHubView
+                      ? context.tokens.accent.withValues(alpha: 0.35)
+                      : borderColor,
+                ),
               ),
               child: Text(
                 _showHubView
@@ -122,7 +129,7 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.4,
-                  color: _showHubView ? LabColors.champagneGold : textSecondary,
+                  color: _showHubView ? context.tokens.accent : textSecondary,
                 ),
               ),
             ),
@@ -165,7 +172,7 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isDark ? LabColors.champagneGold : LabColors.deepBurgundy,
+                          context.tokens.accent,
                         ),
                       ),
                     ),

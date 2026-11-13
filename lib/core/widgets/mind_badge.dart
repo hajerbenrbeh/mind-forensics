@@ -28,10 +28,10 @@ class MindBadge extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final defaultBg = isSelected
-        ? (isDark ? tokens.accent : tokens.textPrimary)
+        ? tokens.accent
         : (backgroundColor ?? tokens.surfaceSecondary);
     final defaultFg = isSelected
-        ? (isDark ? const Color(0xFF151B19) : Colors.white)
+        ? (isDark ? tokens.background : Colors.white)
         : (textColor ?? tokens.textPrimary);
     final defaultBorder = isSelected
         ? Colors.transparent

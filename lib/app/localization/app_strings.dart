@@ -1189,6 +1189,69 @@ class AppStrings {
   String get dismissInsight => isArabic ? 'تجاهل' : (isFrench ? 'Masquer' : 'Dismiss');
   String get reopenTraceAction => isArabic ? 'فتح الأثر' : (isFrench ? 'Ouvrir' : 'Open Entry');
 
+  // Unified Soft UI & Decluttered Navigation Strings (EN / FR / AR Tunisian)
+  String get mindAssistantTitle => isArabic ? 'المساعد الذهني' : (isFrench ? 'Assistant Mental' : 'Mind Assistant');
+  String get mindAssistantSub => isArabic
+      ? 'احكي على اللي في بالك أو اسأل بهدوء وبدون ضغط.'
+      : (isFrench
+          ? 'Parlez de ce que vous avez en tête ou explorez une question.'
+          : 'Talk through what is on your mind, or ask anything.');
+  String get quickGroundingTitle => isArabic ? 'استراحة تنفّس سريعة' : (isFrench ? 'Pause d’ancrage' : 'Quick Grounding');
+  String get nextStepSettlePrompt => isArabic ? 'تحبّ تاخذ 60 ثانية تنفّس باش تهدى شوية؟' : (isFrench ? 'Voulez-vous prendre 60 secondes pour vous apaiser ?' : 'Would 60 seconds of breathing help settle things?');
+  String get nextStepThoughtPrompt => isArabic ? 'تحبّ نفرقو بين الحقيقة والافتراض في اللي صار؟' : (isFrench ? 'Séparer les faits des hypothèses ?' : 'Separate facts from what your mind assumed?');
+  String get nextStepAnchorPrompt => isArabic ? 'لحظة هادئة — تحبّ تحفظ مرساة لليوم؟' : (isFrench ? 'Un moment calme — enregistrer un repère ?' : 'A calm moment — want to save one anchor for today?');
+
+  String get trackPageTitle => isArabic ? 'تتبّع وملاحظة' : (isFrench ? 'Suivi & Observation' : 'Track & Observe');
+  String get fullTraceTab => isArabic ? 'رصد معمّق' : (isFrench ? 'Trace complète' : 'Full Trace');
+  String get howFeelingRightNow => isArabic ? 'كيفاش حاسس روحك توّا؟' : (isFrench ? 'Comment vous sentez-vous en ce moment ?' : 'How are you feeling right now?');
+  String get todaysCoreState => isArabic ? 'الحالة الأساسية لليوم' : (isFrench ? 'ÉTAT PRINCIPAL DU JOUR' : "TODAY'S CORE STATE");
+  String get addNoteOptionalHint => isArabic ? 'زيد ملاحظة صغيرة (اختياري)...' : (isFrench ? 'Ajouter une note (optionnel)...' : 'Add a note (optional)...');
+  String get whatsInfluencingMood => isArabic ? 'شنوّة اللي مأثّر على مزاجك؟' : (isFrench ? 'Qu’est-ce qui influence votre humeur ?' : "What's influencing your mood?");
+  String get triggersContextHeader => isArabic ? 'المحفّزات والسياق' : (isFrench ? 'DÉCLENCHEURS & CONTEXTE' : 'TRIGGERS & CONTEXT');
+  String get saveEntryBtn => isArabic ? 'حفظ التسجيل' : (isFrench ? 'Enregistrer' : 'Save Entry');
+  String get deepenReflectionCta => isArabic ? 'تعميق الملاحظة (5 خطوات)' : (isFrench ? 'Approfondir (5 étapes)' : 'Deepen Observation (5 steps)');
+  String get calendarTitle => isArabic ? 'تقويم الملاحظات' : (isFrench ? 'Calendrier d’observation' : 'Observation Calendar');
+
+  String get observatoryHeroSubtitle => isArabic ? 'نظرة هادئة وأعمق على أفكارك' : (isFrench ? 'Un regard calme et lucide sur votre esprit' : 'A deeper, calmer look into your mind');
+  String get thoughtPatternsLabel => isArabic ? 'أنماط الأفكار' : (isFrench ? 'Schémas de pensée' : 'Thought Patterns');
+  String get thoughtPatternsSub => isArabic ? 'فهم الأفكار المتكررة' : (isFrench ? 'Explorer les pensées récurrentes' : 'Explore recurring thoughts');
+  String get emotionalLandscapeLabel => isArabic ? 'الخريطة الشعورية' : (isFrench ? 'Paysage émotionnel' : 'Emotional Landscape');
+  String get emotionalLandscapeSub => isArabic ? 'تسمية وفهم المشاعر' : (isFrench ? 'Comprendre vos émotions' : 'Understand your emotions');
+  String get behaviorInsightsLabel => isArabic ? 'محفّزات السلوك' : (isFrench ? 'Élan comportemental' : 'Behavioral Steps');
+  String get behaviorInsightsSub => isArabic ? 'خطوات صغيرة بلا ضغط' : (isFrench ? 'Petits pas sans pression' : 'Low-pressure next actions');
+  String get savedReframesTitle => isArabic ? 'زوايا نظر محفوظة' : (isFrench ? 'Repères conservés' : 'Saved Reframes');
+  String get savedReframesEmpty => isArabic
+      ? 'احفظ أي إعادة صياغة مريحة أثناء الحوار باش ترجعلها وقت الحاجة.'
+      : (isFrench
+          ? 'Enregistrez une reformulation utile pendant un échange pour la retrouver ici.'
+          : 'Save a grounded takeaway from any dialogue to revisit during tough moments.');
+  String get saveTakeawayAction => isArabic ? 'حفظ الفكرة' : (isFrench ? 'Sauvegarder' : 'Save Takeaway');
+
+  String get moodTrendsHeader => isArabic ? 'توجّهات المزاج' : (isFrench ? 'Tendances de l’humeur' : 'Mood Trends');
+  String get yourPatternsHeader => isArabic ? 'أنماطك الملاحظة' : (isFrench ? 'Vos schémas' : 'Your Patterns');
+  String get viewAllArrowLabel => isArabic ? 'عرض الكل' : (isFrench ? 'Tout voir' : 'View all');
+  String get patternsAndTrendsTab => isArabic ? 'الأنماط والمنحنيات' : (isFrench ? 'Schémas & Tendances' : 'Patterns & Trends');
+  String get reflectionsAndMilestonesTab => isArabic ? 'التأملات والمحطات' : (isFrench ? 'Réflexions & Jalons' : 'Reflections & Milestones');
+  String get triggerMoodCorrelationsTitle => isArabic ? 'روابط السياق والمزاج' : (isFrench ? 'Liens contexte & humeur' : 'Context & Mood Links');
+  String get triggerMoodCorrelationsSub => isArabic
+      ? 'مقارنة محلية بسيطة بين العوامل اللي سجلتها ومتوسط راحتك بدون أحكام.'
+      : (isFrench
+          ? 'Observations locales basées uniquement sur vos étiquettes enregistrées.'
+          : 'Local comparisons from your own tagged logs, framed without judgment.');
+  String get typicalSleepLabel => isArabic ? 'متوسط النوم' : (isFrench ? 'SOMMEIL TYPIQUE' : 'TYPICAL SLEEP');
+  String get typicalEnergyLabel => isArabic ? 'متوسط الطاقة' : (isFrench ? 'ÉNERGIE TYPIQUE' : 'TYPICAL ENERGY');
+  String get moodIntensityShortLabel => isArabic ? 'شدة المزاج' : (isFrench ? 'INTENSITÉ' : 'INTENSITY');
+  String get frequentEmotionsLabel => isArabic ? 'المشاعر المتكررة' : (isFrench ? 'ÉMOTIONS FRÉQUENTES' : 'FREQUENT EMOTIONS');
+  String get suggestedTherapyLabel => isArabic ? 'مواضيع مقترحة للنقاش المهني' : (isFrench ? 'PISTES DE DISCUSSION THÉRAPEUTIQUE' : 'SUGGESTED FOR THERAPY DISCUSSION');
+
+  String get memberRoleLabel => isArabic ? 'عضو مسار الوعي الذاتي' : (isFrench ? 'Membre Mind Forensics' : 'Mind Forensics Member');
+  String get myAccountTitle => isArabic ? 'ملفي النفسي وحسابي' : (isFrench ? 'Mon Profil & Compte' : 'My Account & Context');
+  String get myAccountSub => isArabic ? 'السياق الشخصي وتفضيلات الحوار' : (isFrench ? 'Gérer le contexte personnel et les préférences' : 'Manage psychological context and preferences');
+  String get mindAssistantEngineTitle => isArabic ? 'محرّك المساعد الذهني' : (isFrench ? 'Moteur d’Assistant Mental' : 'Mind Assistant Engine');
+  String get mindAssistantEngineSub => isArabic ? 'وضع الاختبار المحلي أو الاتصال السحابي' : (isFrench ? 'Mode test local et diagnostics Gemini' : 'Gemini live AI & safe test mode status');
+  String get sharePacketTitle => isArabic ? 'تحضير ملخص للمشاركة (اختياري)' : (isFrench ? 'Préparer un dossier de partage' : 'Build Share Packet');
+  String get sharePacketSub => isArabic ? 'اختر البيانات التي تشاركها بإرادتك' : (isFrench ? 'Choisissez exactement quoi inclure' : 'Choose what to include before exporting');
+
   // Helper factory
   static AppStrings of(BuildContext context) {
     final locale = Localizations.localeOf(context);

@@ -18,9 +18,8 @@ import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/journey/presentation/journey_screen.dart';
 import 'scaffold_with_nav_bar.dart';
 
-/// App router configuration using GoRouter with 4 persistent bottom tabs:
-/// Home, Investigator, Toolkit, Profile.
-/// Insights lives inside Home until v2.
+/// App router configuration using GoRouter with 5 persistent bottom tabs:
+/// Home, Track, Inner Observatory (Explore & Investigator), Insights, Profile.
 class AppRouter {
   static const String onboarding = '/onboarding';
   static const String auth = '/auth';

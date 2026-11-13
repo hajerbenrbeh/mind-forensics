@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/crisis_keywords.dart';
 import '../../../core/safety/safety_interceptor.dart';
 import '../../../core/safety/support_button.dart';
@@ -53,16 +54,16 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF0F0F0F) : Colors.white,
+        backgroundColor: ctx.tokens.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: BorderSide(color: isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE4E4E7), width: 1),
+          borderRadius: BorderRadius.circular(ctx.tokens.cardRadius),
+          side: BorderSide(color: ctx.tokens.border, width: 1),
         ),
         title: Text(
           strings.editVerdictTitle,
           style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontSize: 13,
+            color: ctx.tokens.textPrimary,
+            fontSize: 14,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.8,
           ),
@@ -82,9 +83,11 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: isDark ? Colors.white : Colors.black,
-              foregroundColor: isDark ? Colors.black : Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: ctx.tokens.accent,
+              foregroundColor: isDark ? ctx.tokens.background : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(ctx.tokens.buttonRadius),
+              ),
             ),
             onPressed: () async {
               HapticFeedback.lightImpact();
@@ -126,21 +129,21 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
         builder: (ctx) {
           final isDark = Theme.of(ctx).brightness == Brightness.dark;
           return AlertDialog(
-            backgroundColor: isDark ? const Color(0xFF0F0F0F) : Colors.white,
+            backgroundColor: ctx.tokens.surface,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: BorderSide(color: isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE4E4E7), width: 1),
+              borderRadius: BorderRadius.circular(ctx.tokens.cardRadius),
+              side: BorderSide(color: ctx.tokens.border, width: 1),
             ),
             title: Row(
               children: [
-                Icon(Icons.lock_rounded, size: 18, color: LabColors.cherryRed),
+                Icon(Icons.lock_rounded, size: 18, color: ctx.tokens.safetyWarmth),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     strings.privacyShieldTitle,
                     style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black,
-                      fontSize: 13,
+                      color: ctx.tokens.textPrimary,
+                      fontSize: 14,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -149,14 +152,16 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
             ),
             content: Text(
               strings.caseIsPrivateCannotExport,
-              style: TextStyle(fontSize: 12.5, color: isDark ? const Color(0xFF888888) : const Color(0xFF71717A), height: 1.4),
+              style: TextStyle(fontSize: 12.5, color: ctx.tokens.textSecondary, height: 1.4),
             ),
             actions: [
               FilledButton(
                 style: FilledButton.styleFrom(
-                  backgroundColor: isDark ? Colors.white : Colors.black,
-                  foregroundColor: isDark ? Colors.black : Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  backgroundColor: ctx.tokens.accent,
+                  foregroundColor: isDark ? ctx.tokens.background : Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(ctx.tokens.buttonRadius),
+                  ),
                 ),
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: Text(strings.closeBtn, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11)),
@@ -175,33 +180,35 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF0F0F0F) : Colors.white,
+        backgroundColor: ctx.tokens.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-          side: BorderSide(color: isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE4E4E7), width: 1),
+          borderRadius: BorderRadius.circular(ctx.tokens.cardRadius),
+          side: BorderSide(color: ctx.tokens.border, width: 1),
         ),
         title: Text(
           strings.deleteCaseFileTitle,
           style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontSize: 13,
+            color: ctx.tokens.textPrimary,
+            fontSize: 14,
             fontWeight: FontWeight.w800,
             letterSpacing: 0.8,
           ),
         ),
         content: Text(
           strings.deleteCaseWarning,
-          style: TextStyle(fontSize: 12.5, color: isDark ? const Color(0xFF888888) : const Color(0xFF71717A), height: 1.4),
+          style: TextStyle(fontSize: 12.5, color: ctx.tokens.textSecondary, height: 1.4),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(strings.cancelBtn, style: TextStyle(color: isDark ? const Color(0xFF888888) : const Color(0xFF71717A))),
+            child: Text(strings.cancelBtn, style: TextStyle(color: ctx.tokens.textSecondary)),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: LabColors.safetyWarmth,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: ctx.tokens.safetyWarmth,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(ctx.tokens.buttonRadius),
+              ),
             ),
             onPressed: () async {
               HapticFeedback.heavyImpact();
@@ -289,10 +296,10 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
             children: [
               // Case Header Card
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   color: surfaceColor,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(context.tokens.cardRadius),
                   border: Border.all(color: borderColor, width: 1),
                 ),
                 child: Column(
@@ -304,10 +311,10 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1F1F1F) : const Color(0xFFE4E4E7),
-                                borderRadius: BorderRadius.circular(4),
+                                color: context.tokens.surfaceSecondary,
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 strings.formatSessionNumber(c.caseNumber),
@@ -322,18 +329,18 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
                             const SizedBox(width: 8),
                             InkWell(
                               onTap: () => _togglePrivacy(c),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(8),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: c.isPrivate
-                                      ? LabColors.cherryBackground(isDark: isDark)
-                                      : (isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5)),
-                                  borderRadius: BorderRadius.circular(4),
+                                      ? context.tokens.safetyWarmthSoft
+                                      : context.tokens.surfaceSecondary,
+                                  borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: c.isPrivate
-                                        ? LabColors.cherryBorder(isDark: isDark)
-                                        : (isDark ? const Color(0xFF262626) : const Color(0xFFE4E4E7)),
+                                        ? context.tokens.safetyWarmth.withValues(alpha: 0.35)
+                                        : borderColor,
                                   ),
                                 ),
                                 child: Row(
@@ -343,7 +350,7 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
                                       c.isPrivate ? Icons.lock_rounded : Icons.lock_open_outlined,
                                       size: 11,
                                       color: c.isPrivate
-                                          ? (isDark ? LabColors.cherryRedGlow : LabColors.cherryRedDeep)
+                                          ? context.tokens.safetyWarmth
                                           : textSecondary,
                                     ),
                                     const SizedBox(width: 4),
@@ -351,7 +358,7 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
                                       c.isPrivate ? strings.casePrivateBadge : strings.caseShareableBadge,
                                       style: TextStyle(
                                         color: c.isPrivate
-                                            ? (isDark ? LabColors.cherryRedGlow : LabColors.cherryRedDeep)
+                                            ? context.tokens.safetyWarmth
                                             : textSecondary,
                                         fontSize: 9.5,
                                         fontWeight: FontWeight.w700,
@@ -554,10 +561,12 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
                 width: double.infinity,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: isDark ? Colors.white : Colors.black,
-                    foregroundColor: isDark ? Colors.black : Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    backgroundColor: context.tokens.accent,
+                    foregroundColor: isDark ? context.tokens.background : Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   onPressed: () {
                     HapticFeedback.lightImpact();

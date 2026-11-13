@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/localization/app_strings.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../profile/controllers/profile_controller.dart';
 import 'widgets/breathing_exercise_card.dart';
@@ -281,7 +282,7 @@ class _ContextualSupportSheetState
           title: strings.needActionTitle,
           subtitle: strings.needActionDesc,
           icon: Icons.play_circle_outline_rounded,
-          accentColor: LabColors.champagneGold,
+          accentColor: context.tokens.accent,
           isSuggested: suggestAction,
           onTap: () => _selectChoice(SupportChoice.action),
           isDark: isDark,
@@ -297,7 +298,7 @@ class _ContextualSupportSheetState
           title: strings.needRoutineTitle,
           subtitle: strings.needRoutineDesc,
           icon: Icons.calendar_today_outlined,
-          accentColor: LabColors.sageGreen,
+          accentColor: context.tokens.accent,
           onTap: () => _selectChoice(SupportChoice.routine),
           isDark: isDark,
           textPrimary: textPrimary,
@@ -329,16 +330,16 @@ class _ContextualSupportSheetState
         Container(
           width: double.infinity,
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF190C10) : const Color(0xFFFFF1F2),
-            borderRadius: BorderRadius.circular(8),
+            color: context.tokens.safetyWarmthSoft,
+            borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
             border: Border.all(
-              color: isDark ? const Color(0xFF4C1D24) : const Color(0xFFFECDD3),
+              color: context.tokens.safetyWarmth.withValues(alpha: 0.45),
             ),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
               onTap: () {
                 Navigator.of(context).pop();
                 SupportModalSheet.show(context);
@@ -347,10 +348,10 @@ class _ContextualSupportSheetState
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.phone_in_talk_outlined,
                       size: 20,
-                      color: LabColors.cherryRed,
+                      color: context.tokens.safetyWarmth,
                     ),
                     const SizedBox(width: 12),
                     Expanded(

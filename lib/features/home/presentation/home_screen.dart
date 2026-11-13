@@ -18,11 +18,8 @@ import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/bouncing_widget.dart';
 import '../../../core/widgets/fingerprint_thread_signature.dart';
 import '../../../core/widgets/mind_badge.dart';
-import '../../../core/widgets/mind_card.dart';
 import '../../../core/widgets/mind_pressable.dart';
 import '../../../core/widgets/organic_wave_art.dart';
-import '../../../core/widgets/quick_action_card.dart';
-import '../../../core/widgets/smooth_spline_chart.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../insights/data/pattern_awareness_service.dart';
 import '../../insights/domain/personal_baseline_model.dart';
@@ -113,7 +110,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (mounted) {
       setState(() {
-        _recentCases = all.take(3).toList();
+        _recentCases = all.take(2).toList();
         _isLoading = false;
       });
     }
@@ -238,31 +235,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  Widget _buildLegendItem(String label, int pct, Color dotColor) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: dotColor,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          '$label $pct%',
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.2,
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
@@ -294,45 +266,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         t.dateKey: _getMoodColor(t.overallMood),
     };
 
-    // Calculate authentic spline trend from real user traces
-    final List<double> splineValues;
-    if (traces.length >= 2) {
-      splineValues = traces
-          .take(7)
-          .toList()
-          .reversed
-          .map((t) => (t.moodIntensity / 10.0).clamp(0.1, 0.9))
-          .toList();
-    } else if (todayTrace != null) {
-      splineValues = [0.4, 0.5, 0.45, 0.6, (todayTrace.moodIntensity / 10.0).clamp(0.2, 0.9)];
+    final String phaseTitle;
+    final String phaseSubtitle;
+    if (todayTrace != null) {
+      phaseTitle = _getMoodLabel(todayTrace.overallMood, strings);
+      phaseSubtitle = strings.isArabic
+          ? 'شدة ${todayTrace.moodIntensity}/10 • مسجّل اليوم'
+          : (strings.isFrench
+              ? 'Intensité ${todayTrace.moodIntensity}/10 • Enregistré aujourd’hui'
+              : 'Intensity ${todayTrace.moodIntensity}/10 • Logged today');
+    } else if (traces.isNotEmpty) {
+      phaseTitle = strings.isArabic ? 'مسار نشط' : (strings.isFrench ? 'Suivi actif' : 'Active Rhythm');
+      phaseSubtitle = strings.isArabic
+          ? '${traces.length} ملاحظات مسجّلة'
+          : (strings.isFrench ? '${traces.length} observations enregistrées' : '${traces.length} observations recorded');
     } else {
-      splineValues = const [0.35, 0.42, 0.38, 0.55, 0.62, 0.58, 0.65];
-    }
-
-    // Calculate authentic mood distribution from real observations
-    final int calmPct;
-    final int anxiousPct;
-    final int lowPct;
-    if (traces.isNotEmpty) {
-      int cCount = 0;
-      int aCount = 0;
-      int lCount = 0;
-      for (final t in traces) {
-        if (t.overallMood == 'calm') {
-          cCount++;
-        } else if (t.overallMood == 'anxious' || t.overallMood == 'restless') {
-          aCount++;
-        } else {
-          lCount++;
-        }
-      }
-      calmPct = ((cCount / traces.length) * 100).round();
-      anxiousPct = ((aCount / traces.length) * 100).round();
-      lowPct = ((lCount / traces.length) * 100).round();
-    } else {
-      calmPct = 0;
-      anxiousPct = 0;
-      lowPct = 0;
+      phaseTitle = strings.isArabic ? 'مستعد للرصد' : (strings.isFrench ? 'Prêt pour le bilan' : 'Ready to Check In');
+      phaseSubtitle = strings.isArabic
+          ? 'لحظة هادئة بلا أي ضغط'
+          : (strings.isFrench ? 'Un moment calme sans pression' : 'A calm moment with zero pressure');
     }
 
     return Scaffold(
@@ -377,7 +329,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. TOP HEADER ROW (Phone 2 master reference):
+                // 1. TOP HEADER ROW (Crisp single greeting + Mind Assistant & Avatar)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,28 +339,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Hello, $userName',
+                            strings.dearUserGreeting(userName),
                             style: TextStyle(
-                              fontSize: 22,
+                              fontFamily: 'serif',
+                              fontSize: 23,
                               fontWeight: FontWeight.w700,
                               color: tokens.textPrimary,
                               letterSpacing: -0.3,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           Text(
-                            strings.isArabic ? 'كيف تشعر اليوم؟' : 'How are you feeling today?',
+                            _getLocalizedGreeting(strings),
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 13.5,
                               fontWeight: FontWeight.w400,
                               color: tokens.textSecondary,
-                            ),
-                          ),
-                          Text(
-                            '${strings.dearUserGreeting(userName)} ${_getLocalizedGreeting(strings)}',
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              color: tokens.textSecondary.withValues(alpha: 0.60),
                             ),
                           ),
                         ],
@@ -422,44 +368,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             HapticFeedback.lightImpact();
                             context.push(AppRouter.companion);
                           },
-                          semanticLabel: 'Open Mind Assistant',
+                          semanticLabel: strings.mindAssistantTitle,
                           child: Container(
-                            width: 36,
-                            height: 36,
+                            width: 38,
+                            height: 38,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+                              color: tokens.surface,
                               border: Border.all(
-                                color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+                                color: tokens.border,
                                 width: 1.0,
                               ),
                             ),
                             child: Icon(
                               Icons.auto_awesome,
                               size: 18,
-                              color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+                              color: tokens.accent,
                             ),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Container(
-                          width: 36,
-                          height: 36,
-                          decoration: const BoxDecoration(
-                            color: LabColors.forestGreen,
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: tokens.accent,
                             shape: BoxShape.circle,
                           ),
                           alignment: Alignment.center,
-                          child: Text(
-                            (profile?.preferredName.isNotEmpty == true && profile!.preferredName != 'Friend')
-                                ? profile.preferredName[0].toUpperCase()
-                                : 'H',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: (profile?.preferredName.isNotEmpty == true && profile!.preferredName != 'Friend')
+                              ? Text(
+                                  profile.preferredName[0].toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark ? tokens.background : Colors.white,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.person_outline_rounded,
+                                  size: 19,
+                                  color: isDark ? tokens.background : Colors.white,
+                                ),
                         ),
                       ],
                     ),
@@ -467,54 +417,60 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
 
                 if (profile?.isMinor == true) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: LabColors.sageGreenGlow.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: LabColors.sageGreenGlow.withValues(alpha: 0.25)),
+                      color: tokens.accentSoft,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: tokens.accent.withValues(alpha: 0.25)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.shield_outlined, size: 13, color: LabColors.sageGreenGlow),
+                        Icon(Icons.shield_outlined, size: 13, color: tokens.accent),
                         const SizedBox(width: 6),
                         Text(
                           strings.isArabic ? 'مساحة استبصار آمنة • خطوط الطوارئ متاحة' : 'Safe reflection space • Helplines available',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: LabColors.sageGreenGlow),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: tokens.accent),
                         ),
                       ],
                     ),
                   ),
                 ],
                 if (profile != null && (profile.selectedGoals.isNotEmpty || profile.personalGoals.isNotEmpty)) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.flag_outlined, size: 13, color: LabColors.champagneGold),
-                            const SizedBox(width: 6),
-                            Text(
-                              profile.selectedGoals.isNotEmpty
-                                  ? profile.selectedGoals.first
-                                  : profile.personalGoals.split(', ').first,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                color: tokens.textSecondary,
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: tokens.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: tokens.border),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.flag_outlined, size: 13, color: tokens.accent),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  profile.selectedGoals.isNotEmpty
+                                      ? profile.selectedGoals.first
+                                      : profile.personalGoals.split(', ').first,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: tokens.textSecondary,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],
@@ -523,23 +479,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 const SizedBox(height: 18),
 
-                // 2. MASTER PHASE CARD (Phone 2 reference: "Your current phase: Balanced")
+                // 2. AUTHENTIC CURRENT STATE CARD + JOURNEY ENTRY
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
-                    borderRadius: BorderRadius.circular(20),
+                    color: tokens.surface,
+                    borderRadius: BorderRadius.circular(tokens.cardRadius),
                     border: Border.all(
-                      color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+                      color: tokens.border,
                       width: 1.0,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+                    boxShadow: isDark
+                        ? null
+                        : [
+                            BoxShadow(
+                              color: tokens.textPrimary.withValues(alpha: 0.035),
+                              blurRadius: 12,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                   ),
                   child: Stack(
                     children: [
@@ -552,7 +510,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  strings.isArabic ? 'مرحلتك الحالية' : 'Your current phase',
+                                  strings.isArabic ? 'حالتك الحالية' : (strings.isFrench ? 'Votre état actuel' : 'Your current focus'),
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
@@ -561,17 +519,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  strings.isArabic ? 'متوازن' : 'Balanced',
-                                  style: const TextStyle(
+                                  phaseTitle,
+                                  style: TextStyle(
                                     fontFamily: 'serif',
-                                    fontSize: 24,
+                                    fontSize: 23,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: -0.3,
+                                    color: tokens.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  strings.isArabic ? 'مرحلة هادئة ومستقرة' : 'A calm and stable phase',
+                                  phaseSubtitle,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: tokens.textSecondary,
@@ -580,7 +539,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ],
                             ),
                           ),
-                          const OrganicWaveArt(height: 95),
+                          const OrganicWaveArt(height: 82),
                         ],
                       ),
                       Positioned(
@@ -596,20 +555,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             width: 38,
                             height: 38,
                             decoration: BoxDecoration(
-                              color: LabColors.forestGreen,
+                              color: tokens.accent,
                               shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: LabColors.forestGreen.withValues(alpha: 0.35),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.arrow_forward_rounded,
                               size: 18,
-                              color: Colors.white,
+                              color: isDark ? tokens.background : Colors.white,
                             ),
                           ),
                         ),
@@ -620,205 +572,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 const SizedBox(height: 18),
 
-                // 3. MASTER "YOUR MIND AT A GLANCE" CARD (Phone 2 reference)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
-                      width: 1.0,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            strings.isArabic ? 'نظرة عامة على ذهنك' : 'Your Mind at a Glance',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: tokens.textPrimary,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              context.go(AppRouter.insights);
-                            },
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  strings.isArabic ? 'التفاصيل' : 'See details',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: isDark ? LabColors.lightOlive : LabColors.secondaryOlive,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 13,
-                                  color: isDark ? LabColors.lightOlive : LabColors.secondaryOlive,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      SmoothSplineChart(
-                        height: 75,
-                        values: splineValues,
-                        lineColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
-                      ),
-                      const SizedBox(height: 12),
-                      if (traces.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Center(
-                            child: Text(
-                              strings.isArabic
-                                  ? 'خط الاتجاه في وضع المعايرة (سجل أثرك للبدء)'
-                                  : 'Trend line calibrating (record a trace to begin)',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: tokens.textSecondary,
-                              ),
-                            ),
-                          ),
-                        )
-                      else
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildLegendItem('Calm', calmPct, LabColors.moodCalm),
-                            _buildLegendItem('Anxious', anxiousPct, LabColors.moodAnxious),
-                            _buildLegendItem('Low', lowPct, const Color(0xFFC04B22)),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                // 4. QUICK ACTIONS SECTION (Phone 2 reference)
-                Text(
-                  strings.isArabic ? 'إجراءات سريعة' : 'Quick Actions',
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: tokens.textPrimary,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    QuickActionCard(
-                      icon: Icons.wb_sunny_outlined,
-                      line1: 'Log',
-                      line2: 'Your Mood',
-                      onTap: () => context.go(AppRouter.track),
-                    ),
-                    const SizedBox(width: 10),
-                    QuickActionCard(
-                      icon: Icons.psychology_outlined,
-                      line1: 'Explore',
-                      line2: 'Your Mind',
-                      onTap: () => context.go(AppRouter.observatory),
-                    ),
-                    const SizedBox(width: 10),
-                    QuickActionCard(
-                      icon: Icons.spa_outlined,
-                      line1: 'Take a',
-                      line2: 'Breath',
-                      onTap: () => ContextualSupportSheet.show(context),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 14),
-
-                // Mind Assistant Card (Direct access to Phone 7)
-                MindCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
-                  borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    context.push(AppRouter.companion);
-                  },
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: isDark ? LabColors.forestGreen : const Color(0xFF4A583E),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.auto_awesome,
-                          size: 20,
-                          color: Color(0xFFF5EEE3),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Mind Assistant',
-                              style: TextStyle(
-                                fontFamily: 'serif',
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Talk about what’s on your mind, or ask anything you need.',
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                color: tokens.textSecondary,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 18,
-                        color: tokens.textSecondary,
-                      ),
-                    ],
-                  ),
-                ),
+                // 3. DAILY CHECK-IN HERO + MOOD-AWARE NEXT STEP
+                _buildDailyCheckInCard(tokens, strings, isDark, todayTrace, traces),
+                if (todayTrace != null) ...[
+                  const SizedBox(height: 12),
+                  _buildMoodAwareNextStepCard(todayTrace, tokens, strings, isDark),
+                ],
 
                 const SizedBox(height: 20),
 
-                // 2. SEGMENTED TIME SWITCHER: "Month | Week | Day" (30px radius)
+                // 4. SEGMENTED TIME SWITCHER & WEEKLY RHYTHM
                 HomeTimeSegmentedSwitcher(
                   selectedIndex: _selectedTimeIndex,
                   onChanged: (index) {
@@ -831,9 +594,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
 
-                // 3. HORIZONTAL 7-DAY MOOD TRACKER (Real recorded moods only)
                 HomeWeekMoodTracker(
                   selectedDay: _selectedDay,
                   recordedMoodDays: recordedMoodDays,
@@ -842,47 +604,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                 ),
 
-                const SizedBox(height: 22),
+                const SizedBox(height: 18),
 
-                // 4. TWO-COLUMN METRIC CARDS (20px radius, Real Data & Empty States)
+                // 5. TWO-COLUMN METRIC CARDS (Real Data & Calibrating States)
                 _buildTwoColumnMetricCards(tokens, strings, isDark, traces),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 22),
 
-                // 5. "EXERCISES FOR YOU" / "SUGGESTED FOR YOU" CARD (20px radius)
+                // 6. GROUNDING & EXERCISES CARD (Single Clean Breathing Entry)
                 _buildExercisesForYouCard(tokens, strings, isDark),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 22),
 
-                // 5b. CONTEXTUAL SUPPORT ENTRY POINT ("What would help right now?")
-                _buildContextualSupportCard(tokens, strings, isDark),
-
-                const SizedBox(height: 24),
-
-                // 6. STEP 6: DAILY CHECK-IN & NOTE (20px radius, Unified with Mind Trace)
-                _buildDailyCheckInCard(tokens, strings, isDark, todayTrace, traces),
-
-                const SizedBox(height: 24),
-
-                // 7. ACTIVE CASE OR START INVESTIGATION CARD (20px radius)
+                // 7. ACTIVE CASE OR START INVESTIGATION CARD
                 if (activeCase != null && !activeCase.isCompleted)
                   _buildActiveCaseCard(activeCase, tokens, strings, isDark)
                 else
                   _buildStartInvestigationCard(tokens, strings, isDark),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
-                // 8. PATTERN AWARENESS DIVERGENCE BANNER (20px radius)
+                // 8. PATTERN AWARENESS DIVERGENCE BANNER
                 _buildPatternAwarenessCard(tokens, strings, isDark, traces),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 22),
 
-                // 9. QUICK ACCESS ACTIONS (16px radius)
-                _buildQuickAccessGrid(tokens, strings, isDark),
-
-                const SizedBox(height: 24),
-
-                // 10. RECENT INVESTIGATIONS SECTION
+                // 9. RECENT INVESTIGATIONS SECTION (Up to 2 items)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -1215,167 +962,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildContextualSupportCard(
+  Widget _buildMoodAwareNextStepCard(
+    MindTraceModel todayTrace,
     MindTokens tokens,
     AppStrings strings,
     bool isDark,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: tokens.surface,
-        borderRadius: BorderRadius.circular(20.0),
-        border: Border.all(color: tokens.border, width: 1.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            onTap: () => ContextualSupportSheet.show(context),
-            borderRadius: BorderRadius.circular(12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: LabColors.sageGreen.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.spa_outlined,
-                    size: 18,
-                    color: LabColors.sageGreen,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        strings.homeSupportCardTitle,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: tokens.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        strings.homeSupportCardSub,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: tokens.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: tokens.textSecondary,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildSupportPill(
-                  label: strings.needSettleTitle,
-                  icon: Icons.air_rounded,
-                  tokens: tokens,
-                  onTap: () => ContextualSupportSheet.show(
-                    context,
-                    initialChoice: SupportChoice.settle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _buildSupportPill(
-                  label: strings.needThoughtsTitle,
-                  icon: Icons.psychology_outlined,
-                  tokens: tokens,
-                  onTap: () => ContextualSupportSheet.show(
-                    context,
-                    initialChoice: SupportChoice.thoughts,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _buildSupportPill(
-                  label: strings.needActionTitle,
-                  icon: Icons.timer_outlined,
-                  tokens: tokens,
-                  onTap: () => ContextualSupportSheet.show(
-                    context,
-                    initialChoice: SupportChoice.action,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _buildSupportPill(
-                  label: strings.needRoutineTitle,
-                  icon: Icons.anchor_rounded,
-                  tokens: tokens,
-                  onTap: () => ContextualSupportSheet.show(
-                    context,
-                    initialChoice: SupportChoice.routine,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                _buildSupportPill(
-                  label: strings.needExploreTitle,
-                  icon: Icons.explore_outlined,
-                  tokens: tokens,
-                  onTap: () => context.go('/observatory'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    final mood = todayTrace.overallMood;
+    final bool isAnxiousOrRestless = mood == 'anxious' || mood == 'restless';
+    final bool isHeavyOrFrustrated = mood == 'heavy' || mood == 'frustrated';
 
-  Widget _buildSupportPill({
-    required String label,
-    required IconData icon,
-    required MindTokens tokens,
-    required VoidCallback onTap,
-  }) {
+    final String prompt = isAnxiousOrRestless
+        ? strings.nextStepSettlePrompt
+        : (isHeavyOrFrustrated ? strings.nextStepThoughtPrompt : strings.nextStepAnchorPrompt);
+    final IconData icon = isAnxiousOrRestless
+        ? Icons.air_rounded
+        : (isHeavyOrFrustrated ? Icons.psychology_outlined : Icons.spa_outlined);
+
     return BouncingWidget(
       onTap: () {
         HapticFeedback.lightImpact();
-        onTap();
+        if (isAnxiousOrRestless) {
+          ContextualSupportSheet.show(context, initialChoice: SupportChoice.settle);
+        } else if (isHeavyOrFrustrated) {
+          context.push(AppRouter.companion);
+        } else {
+          context.go(AppRouter.track);
+        }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: tokens.surfaceSecondary,
+          color: tokens.accentSoft,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: tokens.border, width: 1),
+          border: Border.all(color: tokens.accent.withValues(alpha: 0.25)),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 13, color: tokens.textSecondary),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: tokens.textPrimary,
+            Icon(icon, size: 18, color: tokens.accent),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                prompt,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: tokens.textPrimary,
+                ),
               ),
             ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 13, color: tokens.accent),
           ],
         ),
       ),
@@ -1640,119 +1276,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Text(
               d.baselineComparison,
               style: TextStyle(fontSize: 12, color: tokens.textSecondary, height: 1.35),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickAccessGrid(
-    MindTokens tokens,
-    AppStrings strings,
-    bool isDark,
-  ) {
-    final actions = [
-      (
-        title: strings.isArabic ? 'كتابة فكرة' : 'Write a thought',
-        subtitle: strings.isArabic ? 'استكشاف فكري' : 'Explore a thought',
-        icon: Icons.edit_note_rounded,
-        onTap: () => context.push('/investigation'),
-      ),
-      (
-        title: strings.isArabic ? 'المرصد الداخلي' : 'Inner Observatory',
-        subtitle: strings.isArabic ? 'الأعراض والتجارب' : 'Symptom exploration',
-        icon: Icons.explore_outlined,
-        onTap: () => context.go('/observatory'),
-      ),
-      (
-        title: strings.isArabic ? 'تتبّع ورصد' : 'Track & Observe',
-        subtitle: strings.isArabic ? 'النوم، المزاج، المحفزات' : 'Sleep, mood, triggers',
-        icon: Icons.edit_calendar_outlined,
-        onTap: () => context.push('/track'),
-      ),
-      (
-        title: strings.isArabic ? 'التحليلات والأنماط' : 'Insights & Patterns',
-        subtitle: strings.isArabic ? 'خط الأساس والتغيرات' : 'Baseline & trends',
-        icon: Icons.insights_outlined,
-        onTap: () => context.push('/insights'),
-      ),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          (strings.isArabic ? 'وصول سريع' : 'QUICK ACCESS').toUpperCase(),
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.8,
-            color: tokens.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(child: _buildQuickActionCard(actions[0], tokens)),
-            const SizedBox(width: 10),
-            Expanded(child: _buildQuickActionCard(actions[1], tokens)),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(child: _buildQuickActionCard(actions[2], tokens)),
-            const SizedBox(width: 10),
-            Expanded(child: _buildQuickActionCard(actions[3], tokens)),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActionCard(
-    ({String title, String subtitle, IconData icon, VoidCallback onTap}) action,
-    MindTokens tokens,
-  ) {
-    return BouncingWidget(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        action.onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: tokens.surface,
-          borderRadius: BorderRadius.circular(16.0),
-          border: Border.all(color: tokens.border),
-        ),
-        child: Row(
-          children: [
-            Icon(action.icon, size: 18, color: tokens.accent),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    action.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    action.subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 10.5, color: tokens.textSecondary),
-                  ),
-                ],
-              ),
             ),
           ],
         ),

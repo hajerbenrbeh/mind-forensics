@@ -6,6 +6,7 @@ import '../../../../app/localization/app_strings.dart';
 import '../../../../app/localization/locale_controller.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../../../app/theme/lab_theme.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../../core/safety/crisis_keywords.dart';
 import '../../../../core/safety/safety_interceptor.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
@@ -261,18 +262,18 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                       fontSize: 12,
                     ),
                     filled: true,
-                    fillColor: isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5),
+                    fillColor: ctx.tokens.surfaceSecondary,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(ctx.tokens.buttonRadius),
                       borderSide: BorderSide(color: border),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(ctx.tokens.buttonRadius),
                       borderSide: BorderSide(color: border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: LabColors.champagneGold),
+                      borderRadius: BorderRadius.circular(ctx.tokens.buttonRadius),
+                      borderSide: BorderSide(color: ctx.tokens.accent, width: 1.3),
                     ),
                   ),
                 ),
@@ -284,16 +285,16 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                       onPressed: () => Navigator.pop(ctx),
                       child: Text(
                         strings.isArabic ? 'إلغاء' : 'Cancel',
-                        style: TextStyle(color: isDark ? Colors.grey : Colors.black54),
+                        style: TextStyle(color: ctx.tokens.textSecondary),
                       ),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isDark ? Colors.white : Colors.black,
-                        foregroundColor: isDark ? Colors.black : Colors.white,
+                        backgroundColor: ctx.tokens.accent,
+                        foregroundColor: isDark ? ctx.tokens.background : Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(ctx.tokens.buttonRadius),
                         ),
                       ),
                       onPressed: () {
@@ -359,11 +360,11 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
             children: [
               Text(
                 _getStepTitle(_currentStep, strings).toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.0,
-                  color: LabColors.champagneGold,
+                  color: context.tokens.accent,
                 ),
               ),
               Text(
@@ -408,9 +409,9 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
           borderRadius: BorderRadius.circular(2),
           child: LinearProgressIndicator(
             value: progress,
-            minHeight: 3,
-            backgroundColor: isDark ? const Color(0xFF1C1C1C) : const Color(0xFFE4E4E7),
-            valueColor: const AlwaysStoppedAnimation<Color>(LabColors.champagneGold),
+            minHeight: 4,
+            backgroundColor: context.tokens.surfaceSecondary,
+            valueColor: AlwaysStoppedAnimation<Color>(context.tokens.accent),
           ),
         ),
       ],
@@ -501,20 +502,20 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                   });
                 }
               },
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 140),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
+                      ? context.tokens.accentSoft
                       : surfaceColor,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isSelected
-                        ? LabColors.champagneGold
+                        ? context.tokens.accent
                         : borderColor,
-                    width: isSelected ? 1.2 : 0.8,
+                    width: isSelected ? 1.2 : 1.0,
                   ),
                 ),
                 child: Row(
@@ -523,8 +524,8 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                       desc.icon,
                       size: 16,
                       color: isSelected
-                          ? LabColors.champagneGold
-                          : (isDark ? Colors.grey : Colors.grey.shade700),
+                          ? context.tokens.accent
+                          : textSecondary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -537,16 +538,16 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                           fontWeight:
                               isSelected ? FontWeight.w700 : FontWeight.w500,
                           color: isSelected
-                              ? (isDark ? LabColors.warmIvory : LabColors.deepBurgundy)
+                              ? context.tokens.accent
                               : textPrimary,
                         ),
                       ),
                     ),
                     if (isSelected)
-                      const Icon(
+                      Icon(
                         Icons.check_rounded,
-                        size: 13,
-                        color: LabColors.champagneGold,
+                        size: 14,
+                        color: context.tokens.accent,
                       ),
                   ],
                 ),
@@ -572,14 +573,17 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 .map((custom) => Chip(
                       label: Text(
                         custom,
-                        style: const TextStyle(fontSize: 11, color: LabColors.warmIvory),
+                        style: TextStyle(fontSize: 11, color: context.tokens.accent),
                       ),
-                      backgroundColor: LabColors.darkWine,
-                      deleteIcon: const Icon(Icons.close, size: 12, color: Colors.white70),
+                      backgroundColor: context.tokens.accentSoft,
+                      deleteIcon: Icon(Icons.close, size: 12, color: context.tokens.accent),
                       onDeleted: () {
                         setState(() => _selectedEmotions.remove(custom));
                       },
-                      side: const BorderSide(color: LabColors.champagneGold, width: 0.8),
+                      side: BorderSide(
+                        color: context.tokens.accent.withValues(alpha: 0.4),
+                        width: 0.8,
+                      ),
                     ))
                 .toList(),
           ),
@@ -634,10 +638,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 24),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF12080A) : const Color(0xFFFAF5F2),
-              borderRadius: BorderRadius.circular(10),
+              color: context.tokens.surfaceSecondary,
+              borderRadius: BorderRadius.circular(context.tokens.cardRadius),
               border: Border.all(
-                color: LabColors.wineBorder,
+                color: borderColor,
                 width: 1,
               ),
             ),
@@ -650,10 +654,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                     fontWeight: FontWeight.w900,
                     letterSpacing: -1.0,
                     color: intensityVal >= 8
-                        ? LabColors.cherryRedGlow
+                        ? context.tokens.safetyWarmth
                         : (intensityVal <= 3
-                            ? LabColors.champagneGold
-                            : (isDark ? Colors.white : Colors.black)),
+                            ? context.tokens.accent
+                            : textPrimary),
                   ),
                 ),
                 Text(
@@ -666,19 +670,21 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight,
+                    color: context.tokens.accentSoft,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: LabColors.wineBorder),
+                    border: Border.all(
+                      color: context.tokens.accent.withValues(alpha: 0.35),
+                    ),
                   ),
                   child: Text(
                     intensityDesc.toUpperCase(),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.6,
-                      color: LabColors.champagneGold,
+                      color: context.tokens.accent,
                     ),
                   ),
                 ),
@@ -700,20 +706,20 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                 HapticFeedback.selectionClick();
                 setState(() => _moodIntensity = val.toDouble());
               },
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(10),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 140),
                 width: 28,
-                height: 32,
+                height: 34,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: isCurrent
-                      ? (isDark ? Colors.white : Colors.black)
+                      ? context.tokens.accent
                       : surfaceColor,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: isCurrent
-                        ? (isDark ? Colors.white : Colors.black)
+                        ? context.tokens.accent
                         : borderColor,
                   ),
                 ),
@@ -723,7 +729,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                     fontSize: 12,
                     fontWeight: isCurrent ? FontWeight.w800 : FontWeight.w600,
                     color: isCurrent
-                        ? (isDark ? Colors.black : Colors.white)
+                        ? (isDark ? context.tokens.background : Colors.white)
                         : textSecondary,
                   ),
                 ),
@@ -736,11 +742,11 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
 
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
-            activeTrackColor: LabColors.champagneGold,
-            inactiveTrackColor: isDark ? const Color(0xFF222222) : const Color(0xFFE4E4E7),
-            thumbColor: LabColors.warmIvory,
-            overlayColor: LabColors.champagneGold.withValues(alpha: 0.2),
-            trackHeight: 3,
+            activeTrackColor: context.tokens.accent,
+            inactiveTrackColor: context.tokens.surfaceSecondary,
+            thumbColor: context.tokens.accent,
+            overlayColor: context.tokens.accent.withValues(alpha: 0.16),
+            trackHeight: 4,
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
           ),
           child: Slider(
@@ -801,10 +807,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF181818) : const Color(0xFFF4F4F5),
-                borderRadius: BorderRadius.circular(4),
+                color: context.tokens.surfaceSecondary,
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: borderColor),
               ),
               child: Text(
@@ -897,11 +903,11 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
           const SizedBox(height: 20),
           Text(
             strings.isArabic ? 'أسئلة استبصار مخصصة' : 'TAILORED INQUIRIES',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.8,
-              color: LabColors.champagneGold,
+              color: context.tokens.accent,
             ),
           ),
           const SizedBox(height: 10),
@@ -910,10 +916,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: surfaceColor,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(context.tokens.cardRadius),
                   border: Border.all(color: borderColor),
                 ),
                 child: Column(
@@ -938,18 +944,16 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                             : 'Optional brief reflection...',
                         hintStyle: TextStyle(
                             fontSize: 11,
-                            color: textSecondary.withValues(alpha: 0.6)),
+                            color: textSecondary.withValues(alpha: 0.65)),
                         filled: true,
-                        fillColor: isDark
-                            ? const Color(0xFF101010)
-                            : const Color(0xFFF4F4F5),
+                        fillColor: context.tokens.surfaceSecondary,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
+                            horizontal: 12, vertical: 10),
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                             borderSide: BorderSide(color: borderColor)),
                         enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                             borderSide: BorderSide(color: borderColor)),
                       ),
                     ),
@@ -996,10 +1000,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF181818) : const Color(0xFFF4F4F5),
-                borderRadius: BorderRadius.circular(4),
+                color: context.tokens.surfaceSecondary,
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: borderColor),
               ),
               child: Text(
@@ -1038,10 +1042,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
 
         // 2. Sleep duration
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: surfaceColor,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(context.tokens.cardRadius),
             border: Border.all(color: borderColor),
           ),
           child: Column(
@@ -1060,10 +1064,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                   ),
                   Text(
                     '${_sleepHours.toStringAsFixed(1)} ${strings.isArabic ? 'ساعة' : 'hours'}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: LabColors.champagneGold,
+                      color: context.tokens.accent,
                     ),
                   ),
                 ],
@@ -1071,11 +1075,11 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
               const SizedBox(height: 6),
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: LabColors.champagneGold,
-                  inactiveTrackColor: isDark ? const Color(0xFF222222) : const Color(0xFFE4E4E7),
-                  thumbColor: textPrimary,
-                  trackHeight: 2,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  activeTrackColor: context.tokens.accent,
+                  inactiveTrackColor: context.tokens.surfaceSecondary,
+                  thumbColor: context.tokens.accent,
+                  trackHeight: 3,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
                 ),
                 child: Slider(
                   value: _sleepHours,
@@ -1117,10 +1121,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                   ),
                   Text(
                     qualityLabels[_sleepQuality - 1],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: LabColors.champagneGold,
+                      color: context.tokens.accent,
                     ),
                   ),
                 ],
@@ -1136,18 +1140,18 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                       HapticFeedback.selectionClick();
                       setState(() => _sleepQuality = score);
                     },
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
                       width: 52,
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
-                            : (isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5)),
-                        borderRadius: BorderRadius.circular(6),
+                            ? context.tokens.accentSoft
+                            : context.tokens.surfaceSecondary,
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: isSelected ? LabColors.champagneGold : borderColor,
+                          color: isSelected ? context.tokens.accent : borderColor,
                         ),
                       ),
                       child: Text(
@@ -1156,7 +1160,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                           fontSize: 12,
                           fontWeight:
                               isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected ? LabColors.champagneGold : textSecondary,
+                          color: isSelected ? context.tokens.accent : textSecondary,
                         ),
                       ),
                     ),
@@ -1213,11 +1217,11 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
             height: 72,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isDark ? const Color(0xFF1E0B10) : const Color(0xFFFBE8E9),
-              border: Border.all(color: LabColors.champagneGold, width: 1.5),
+              color: context.tokens.accentSoft,
+              border: Border.all(color: context.tokens.accent, width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: LabColors.champagneGold.withValues(alpha: 0.2),
+                  color: context.tokens.accent.withValues(alpha: 0.16),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -1260,10 +1264,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
           // Summary Card
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: surfaceColor,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(context.tokens.cardRadius),
               border: Border.all(color: borderColor),
             ),
             child: Column(
@@ -1275,18 +1279,18 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                   children: [
                     Text(
                       (strings.isArabic ? 'الحالة المعاشة' : 'LIVED STATE').toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.8,
-                        color: LabColors.champagneGold,
+                        color: context.tokens.accent,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5),
-                        borderRadius: BorderRadius.circular(6),
+                        color: context.tokens.surfaceSecondary,
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: borderColor),
                       ),
                       child: Text(
@@ -1310,16 +1314,16 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                     children: emotions.map((emotion) {
                       final icon = EmotionDescriptor.iconForLabel(emotion);
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF4F4F6),
-                          borderRadius: BorderRadius.circular(6),
+                          color: context.tokens.surfaceSecondary,
+                          borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: borderColor),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(icon, size: 12, color: LabColors.champagneGold),
+                            Icon(icon, size: 12, color: context.tokens.accent),
                             const SizedBox(width: 5),
                             Text(
                               emotion,
@@ -1374,10 +1378,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
             onTap: widget.onViewConstellation,
             child: Container(
               width: double.infinity,
-              height: 48,
+              height: 50,
               decoration: BoxDecoration(
-                color: isDark ? Colors.white : Colors.black,
-                borderRadius: BorderRadius.circular(8),
+                color: context.tokens.accent,
+                borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
               ),
               alignment: Alignment.center,
               child: Row(
@@ -1386,7 +1390,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                   Icon(
                     Icons.fingerprint_rounded,
                     size: 16,
-                    color: isDark ? Colors.black : Colors.white,
+                    color: isDark ? context.tokens.background : Colors.white,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -1398,7 +1402,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.5,
-                      color: isDark ? Colors.black : Colors.white,
+                      color: isDark ? context.tokens.background : Colors.white,
                     ),
                   ),
                 ],
@@ -1540,10 +1544,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                     }
                   },
             child: Container(
-              height: 46,
+              height: 48,
               decoration: BoxDecoration(
-                color: isDark ? Colors.white : Colors.black,
-                borderRadius: BorderRadius.circular(8),
+                color: context.tokens.accent,
+                borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
               ),
               alignment: Alignment.center,
               child: _isSaving
@@ -1552,7 +1556,7 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: isDark ? Colors.black : Colors.white,
+                        color: isDark ? context.tokens.background : Colors.white,
                       ),
                     )
                   : Text(
@@ -1561,10 +1565,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
                           : (strings.isArabic ? 'متابعة' : 'CONTINUE')
                               .toUpperCase(),
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.5,
-                        color: isDark ? Colors.black : Colors.white,
+                        color: isDark ? context.tokens.background : Colors.white,
                       ),
                     ),
             ),
@@ -1585,10 +1589,10 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
     required Color textSecondary,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? LabColors.nightSurface : LabColors.daylightSurface,
-        borderRadius: BorderRadius.circular(8),
+        color: context.tokens.surface,
+        borderRadius: BorderRadius.circular(context.tokens.cardRadius),
         border: Border.all(color: borderColor),
       ),
       child: Column(
@@ -1616,21 +1620,21 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
               ),
               Text(
                 '${value.toInt()}/10',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w800,
-                  color: LabColors.champagneGold,
+                  color: context.tokens.accent,
                 ),
               ),
             ],
           ),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: LabColors.champagneGold,
-              inactiveTrackColor: isDark ? const Color(0xFF222222) : const Color(0xFFE4E4E7),
-              thumbColor: textPrimary,
-              trackHeight: 2,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+              activeTrackColor: context.tokens.accent,
+              inactiveTrackColor: context.tokens.surfaceSecondary,
+              thumbColor: context.tokens.accent,
+              trackHeight: 3,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
             ),
             child: Slider(
               value: value,

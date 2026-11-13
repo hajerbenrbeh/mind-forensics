@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../../../app/theme/lab_theme.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
 import '../../controllers/profile_controller.dart';
 import '../../domain/psychological_profile_model.dart';
@@ -49,12 +50,12 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF141414) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        backgroundColor: context.tokens.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.tokens.cardRadius)),
         title: Text(
           strings.isArabic ? 'مسح الملاحظات الحرة؟' : 'Clear Free-Text Notes?',
           style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
+            color: context.tokens.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -63,7 +64,7 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
           strings.isArabic
               ? 'سيتم مسح النصوص والملاحظات الشخصية، مع الإبقاء على الحالات والأهداف وتفضيلات التواصل.'
               : 'This clears your free-text notes while preserving selected conditions, goals, and preferences.',
-          style: TextStyle(fontSize: 12, color: isDark ? Colors.grey : Colors.grey.shade700),
+          style: TextStyle(fontSize: 12, color: context.tokens.textSecondary),
         ),
         actions: [
           TextButton(
@@ -72,8 +73,8 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? Colors.white : Colors.black,
-              foregroundColor: isDark ? Colors.black : Colors.white,
+              backgroundColor: context.tokens.accent,
+              foregroundColor: isDark ? context.tokens.background : Colors.white,
             ),
             onPressed: () async {
               Navigator.pop(ctx);
@@ -193,11 +194,11 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: _allowAi
-                        ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
-                        : (isDark ? const Color(0xFF101010) : const Color(0xFFFAFAFA)),
-                    borderRadius: BorderRadius.circular(8),
+                        ? context.tokens.accentSoft
+                        : context.tokens.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: _allowAi ? LabColors.champagneGold : border,
+                      color: _allowAi ? context.tokens.accent : border,
                     ),
                   ),
                   child: Column(
@@ -220,7 +221,7 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                           ),
                           Switch.adaptive(
                             value: _allowAi,
-                            activeTrackColor: LabColors.champagneGold,
+                            activeTrackColor: context.tokens.accent,
                             onChanged: _toggleAi,
                           ),
                         ],
@@ -246,13 +247,13 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF4F4F5),
-                    borderRadius: BorderRadius.circular(8),
+                    color: context.tokens.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: border),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.lock_outline_rounded, size: 16, color: LabColors.champagneGold),
+                      Icon(Icons.lock_outline_rounded, size: 16, color: context.tokens.accent),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -275,17 +276,17 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                     Navigator.pop(context);
                     JournalMemorySheet.show(context);
                   },
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF141414) : const Color(0xFFF7F7F9),
-                      borderRadius: BorderRadius.circular(8),
+                      color: context.tokens.surfaceSecondary,
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: border),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.psychology_outlined, size: 20, color: LabColors.champagneGold),
+                        Icon(Icons.psychology_outlined, size: 20, color: context.tokens.accent),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(

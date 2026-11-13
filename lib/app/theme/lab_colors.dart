@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../features/investigation/domain/label_type.dart';
 
-/// Mind Forensics Calm & Intelligent Design System Palette.
+/// Mind Forensics Calm & Intelligent Design System Palette (Warm Linen & Mineral Sage).
 ///
-/// Implements the organic Earth/Sage palette:
-/// - Light: Linen / Sage (#F7F8F5, #FFFFFF, #E5ECE6, #668274, #34443B)
-/// - Dark: Deep Slate Botanical (#151B19, #202925, #303E37, #91AD9A, #F0F2EC)
+/// Implements the soft, modern organic palette:
+/// - Light (Warm Linen & Mineral Sage): `#F7F5F0` canvas, `#FFFFFF` cards, `#EDE9E0` subtle wells,
+///   `#E5E0D6` 1px hairline borders, `#3B5242` mineral forest accent, `#E8EFEA` soft sage tint.
+/// - Dark (Soft Slate Obsidian & Sage Glow): `#121614` canvas, `#1A211E` cards, `#232C28` elevated,
+///   `#2B3631` hairline borders, `#8EB19B` glowing sage accent, `#EFF2EE` primary text.
 ///
 /// Replaces harsh clinical pitch-black and cosmic metaphors with a grounded,
 /// emotionally reassuring, accessible, and sophisticated visual identity.
@@ -38,57 +40,57 @@ class LabColors {
   static const Color interpretationBorder = interpretationBorderLight;
 
   // ===========================================================================
-  // MASTER MIND FORENSICS DESIGN SYSTEM (REFERENCE SPECIFICATION)
-  // Warm Ivory with Deep Forest-Green Accents
+  // MASTER MIND FORENSICS DESIGN SYSTEM (OPTION A: WARM LINEN & MINERAL SAGE)
+  // Soft airy linen canvas, crisp white cards, and mineral forest accents
   // ===========================================================================
-  static const Color forestGreen = Color(0xFF303A29); // Primary forest green
-  static const Color secondaryOlive = Color(0xFF687157); // Secondary olive
-  static const Color lightOlive = Color(0xFF92977D); // Light olive
-  static const Color warmIvory = Color(0xFFF5EEE3); // Main background (warm ivory)
-  static const Color secondaryIvory = Color(0xFFEAE0D1); // Secondary background
-  static const Color cardIvory = Color(0xFFE9DFD0); // Card background
-  static const Color primaryText = Color(0xFF29291F); // Primary text
-  static const Color secondaryText = Color(0xFF777365); // Secondary text
-  static const Color borderIvory = Color(0xFFD9CFBF); // Borders
+  static const Color forestGreen = Color(0xFF3B5242); // Primary mineral forest green
+  static const Color secondaryOlive = Color(0xFF5B7563); // Secondary mineral sage
+  static const Color lightOlive = Color(0xFF8EB19B); // Soft sage glow
+  static const Color warmIvory = Color(0xFFF7F5F0); // Main background (Warm Linen)
+  static const Color secondaryIvory = Color(0xFFEDE9E0); // Subtle inset well
+  static const Color cardIvory = Color(0xFFFFFFFF); // Crisp lifted card surface
+  static const Color primaryText = Color(0xFF1F2420); // Deep slate botanical text
+  static const Color secondaryText = Color(0xFF646D66); // Muted mineral slate
+  static const Color borderIvory = Color(0xFFE5E0D6); // Soft linen 1px border
 
   // ===========================================================================
-  // DAYLIGHT PALETTE (Warm Ivory & Deep Forest-Green)
+  // DAYLIGHT PALETTE (Warm Linen & Mineral Sage)
   // ===========================================================================
-  static const Color daylightBackground = warmIvory; // #F5EEE3
-  static const Color daylightSurface = cardIvory; // #E9DFD0
-  static const Color daylightSurfaceSubtle = secondaryIvory; // #EAE0D1
-  static const Color daylightBorder = borderIvory; // #D9CFBF
-  static const Color daylightTextPrimary = primaryText; // #29291F
-  static const Color daylightTextSecondary = secondaryText; // #777365
-  static const Color daylightAccent = forestGreen; // #303A29
-  static const Color daylightAccentSoft = Color(0xFFE3DCCE); // Soft muted ivory-olive tint
+  static const Color daylightBackground = warmIvory; // #F7F5F0
+  static const Color daylightSurface = cardIvory; // #FFFFFF
+  static const Color daylightSurfaceSubtle = secondaryIvory; // #EDE9E0
+  static const Color daylightBorder = borderIvory; // #E5E0D6
+  static const Color daylightTextPrimary = primaryText; // #1F2420
+  static const Color daylightTextSecondary = secondaryText; // #646D66
+  static const Color daylightAccent = forestGreen; // #3B5242
+  static const Color daylightAccentSoft = Color(0xFFE8EFEA); // Soft sage tint
 
   // ===========================================================================
   // MUTED OLIVE & EDITORIAL BOTANICAL TOKENS
   // ===========================================================================
-  static const Color mutedOlive = forestGreen; // Deep forest green (#303A29)
-  static const Color mutedOliveDeep = Color(0xFF242C1F); // Ultra deep forest
-  static const Color mutedOliveMedium = secondaryOlive; // #687157
-  static const Color mutedOliveLight = lightOlive; // #92977D
-  static const Color mutedOliveSoft = secondaryIvory; // #EAE0D1
-  static const Color mutedOliveBadgeBg = Color(0xFFDFD6C6); // Editorial badge pill background (Light)
-  static const Color warmIvorySurface = cardIvory; // #E9DFD0
-  static const Color warmIvoryBorder = borderIvory; // #D9CFBF
+  static const Color mutedOlive = forestGreen; // Mineral forest green (#3B5242)
+  static const Color mutedOliveDeep = Color(0xFF2B3D31); // Deep forest
+  static const Color mutedOliveMedium = secondaryOlive; // #5B7563
+  static const Color mutedOliveLight = lightOlive; // #8EB19B
+  static const Color mutedOliveSoft = secondaryIvory; // #EDE9E0
+  static const Color mutedOliveBadgeBg = Color(0xFFEAE6DC); // Editorial badge pill background (Light)
+  static const Color warmIvorySurface = cardIvory; // #FFFFFF
+  static const Color warmIvoryBorder = borderIvory; // #E5E0D6
 
   // ===========================================================================
-  // NIGHT PALETTE (Deep Slate Botanical & Sage Glow)
+  // NIGHT PALETTE (Soft Slate Obsidian & Sage Glow)
   // ===========================================================================
-  static const Color nightBackground = Color(0xFF151B19); // Deep calm botanical background
-  static const Color nightSurface = Color(0xFF202925); // Elevated slate surface (Card)
-  static const Color nightSurfaceElevated = Color(0xFF26322C); // Level 2 elevated surface
-  static const Color nightSurfaceSubtle = Color(0xFF303E37); // Secondary surface
-  static const Color nightBorder = Color(0xFF34433C); // Subtle boundary (1.0px)
-  static const Color nightBorderSubtle = Color(0xFF25332C);
-  static const Color nightTextPrimary = Color(0xFFF0F2EC); // Calm ivory primary text
-  static const Color nightTextSecondary = Color(0xFF9EABA2); // Muted neutral secondary text
-  static const Color nightAccent = Color(0xFF91AD9A); // Glowing sage interactive accent
+  static const Color nightBackground = Color(0xFF121614); // Soft calm obsidian slate
+  static const Color nightSurface = Color(0xFF1A211E); // Elevated slate card surface
+  static const Color nightSurfaceElevated = Color(0xFF232C28); // Level 2 elevated surface
+  static const Color nightSurfaceSubtle = Color(0xFF232C28); // Secondary surface
+  static const Color nightBorder = Color(0xFF2B3631); // Subtle boundary (1.0px)
+  static const Color nightBorderSubtle = Color(0xFF202925);
+  static const Color nightTextPrimary = Color(0xFFEFF2EE); // Calm warm ivory primary text
+  static const Color nightTextSecondary = Color(0xFF9CA9A0); // Muted neutral sage secondary text
+  static const Color nightAccent = Color(0xFF8EB19B); // Soft sage interactive glow
   static const Color nightAccentBlue = Color(0xFF38BDF8);
-  static const Color nightAccentSoft = Color(0xFF23322B);
+  static const Color nightAccentSoft = Color(0xFF213028);
 
   // Dark Forest Semantic Aliases
   static const Color darkForestBackground = nightBackground;
@@ -101,32 +103,32 @@ class LabColors {
   // ===========================================================================
   // HARMONIZED MOOD PALETTE (Distinct, dignified, grounded in nature)
   // ===========================================================================
-  static const Color moodCalm = Color(0xFF91AD9A); // Botanical Sage
-  static const Color moodAnxious = Color(0xFFD4976A); // Warm Sand / Desert Dune (replaces bright pink)
-  static const Color moodFrustrated = Color(0xFFFBBF24); // Warm Amber Gold
-  static const Color moodHeavy = Color(0xFFA78BFA); // Soft Iris Slate
-  static const Color moodRestless = Color(0xFF38BDF8); // Mineral Mist / Crisp Sky
+  static const Color moodCalm = Color(0xFF8EB19B); // Botanical Sage
+  static const Color moodAnxious = Color(0xFFD4976A); // Warm Sand / Desert Dune
+  static const Color moodFrustrated = Color(0xFFE5A93C); // Soft Amber Gold
+  static const Color moodHeavy = Color(0xFF9B8CE0); // Soft Iris Slate
+  static const Color moodRestless = Color(0xFF5FA8D3); // Mineral Mist Sky
 
   // ===========================================================================
   // SAFETY & CRISIS WARMTH (Restrained Terracotta / Warm Clay)
   // Highly visible emergency support without harsh neon red or decorative pink
   // ===========================================================================
-  static const Color safetyWarmth = Color(0xFFC04B22); // Rich Terracotta (Light contrast 5.2:1)
-  static const Color safetyWarmthDark = Color(0xFFE57A58); // Terracotta Ember (Dark contrast 6.2:1)
-  static const Color safetySoftBgLight = Color(0xFFFDF4EF);
-  static const Color safetySoftBgDark = Color(0xFF2C1D17);
-  static const Color safetyBorderLight = Color(0xFFF5D6C8);
-  static const Color safetyBorderDark = Color(0xFF4D2F23);
+  static const Color safetyWarmth = Color(0xFFC4512D); // Rich Terracotta (Light)
+  static const Color safetyWarmthDark = Color(0xFFE58363); // Terracotta Ember (Dark)
+  static const Color safetySoftBgLight = Color(0xFFFDF3EE);
+  static const Color safetySoftBgDark = Color(0xFF2B1C17);
+  static const Color safetyBorderLight = Color(0xFFF2CFC2);
+  static const Color safetyBorderDark = Color(0xFF4E2F24);
   static const Color safetySoftBg = safetySoftBgLight;
 
-  // Harmonized warm grounding accents (replaces cherry red & bright pink)
-  static const Color cherryRed = Color(0xFFC04B22);
-  static const Color cherryRedGlow = Color(0xFFD4976A); // Warm Sand / Ember (replaces #FB7185)
+  // Harmonized warm grounding accents
+  static const Color cherryRed = safetyWarmth;
+  static const Color cherryRedGlow = Color(0xFFD4976A);
   static const Color cherryRedDeep = Color(0xFF8B3A1C);
-  static const Color cherryBgDark = Color(0xFF2C1D17);
-  static const Color cherryBorderDark = Color(0xFF4D2F23);
-  static const Color cherryBgLight = Color(0xFFFDF4EF);
-  static const Color cherryBorderLight = Color(0xFFF5D6C8);
+  static const Color cherryBgDark = safetySoftBgDark;
+  static const Color cherryBorderDark = safetyBorderDark;
+  static const Color cherryBgLight = safetySoftBgLight;
+  static const Color cherryBorderLight = safetyBorderLight;
 
   // Warm Cashmere Beige
   static const Color warmBeige = Color(0xFFD9B9A9);
@@ -139,31 +141,31 @@ class LabColors {
   static const Color warmBeigeBorderLight = Color(0xFFE8DECF);
 
   // Sage Green & Parasympathetic Equilibrium
-  static const Color sageGreen = Color(0xFF91AD9A);
+  static const Color sageGreen = Color(0xFF8EB19B);
   static const Color sageGreenGlow = Color(0xFFA7C2B0);
-  static const Color sageBgDark = Color(0xFF1E2B24);
-  static const Color sageBorderDark = Color(0xFF2E4137);
-  static const Color sageBgLight = Color(0xFFEBF1ED);
-  static const Color sageBorderLight = Color(0xFFC7D7CC);
+  static const Color sageBgDark = Color(0xFF1D2923);
+  static const Color sageBorderDark = Color(0xFF2D4036);
+  static const Color sageBgLight = Color(0xFFE8EFEA);
+  static const Color sageBorderLight = Color(0xFFC9D9CE);
 
-  // Backward compatibility tokens mapped directly to Earth/Sage palette
+  // Backward compatibility tokens mapped directly to Option A palette
   static const Color surface0 = nightBackground;
   static const Color surface1 = nightSurface;
   static const Color surfaceElevated = nightSurfaceElevated;
   static const Color borderSubtle = nightBorder;
   static const Color textPrimary = nightTextPrimary;
   static const Color textSecondary = nightTextSecondary;
-  static const Color textTertiary = Color(0xFF78887F);
-  static const Color deepBurgundy = Color(0xFF2E3D36);
-  static const Color darkWine = Color(0xFF202925);
-  static const Color almostBlackBurgundy = Color(0xFF151B19);
-  static const Color softBeige = Color(0xFFE5ECE6);
-  static const Color champagneGold = Color(0xFF91AD9A); // Calm Sage Accent
+  static const Color textTertiary = Color(0xFF738178);
+  static const Color deepBurgundy = Color(0xFF2B3D31);
+  static const Color darkWine = nightSurface;
+  static const Color almostBlackBurgundy = nightBackground;
+  static const Color softBeige = Color(0xFFE8EFEA);
+  static const Color champagneGold = Color(0xFF8EB19B); // Calm Sage Accent
   static const Color champagneGlow = Color(0xFFA7C2B0);
-  static const Color wineBorder = Color(0xFF34433C); // Slate Border
-  static const Color burgundyRose = Color(0xFF91AD9A);
-  static const Color burgundyMaroon = Color(0xFF668274);
-  static const Color burgundyDark = Color(0xFF202925);
+  static const Color wineBorder = nightBorder; // Slate Border
+  static const Color burgundyRose = Color(0xFF8EB19B);
+  static const Color burgundyMaroon = Color(0xFF5B7563);
+  static const Color burgundyDark = nightSurface;
 
   // Helper Methods
   static Color cherryBackground({bool isDark = false}) => isDark ? cherryBgDark : cherryBgLight;
