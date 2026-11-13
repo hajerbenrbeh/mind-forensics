@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../controllers/mind_trace_controller.dart';
 import '../../domain/mind_trace_model.dart';
 import '../../domain/trace_milestone.dart';
@@ -226,17 +227,17 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
         HapticFeedback.selectionClick();
         setState(() => _selectedWindowDays = days);
       },
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(context.tokens.chipRadius),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 140),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? const Color(0xFF222222) : const Color(0xFFE4E4E7))
+              ? context.tokens.accentSoft
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(context.tokens.chipRadius),
           border: Border.all(
-            color: isSelected ? (isDark ? Colors.white : Colors.black) : borderColor,
+            color: isSelected ? context.tokens.accent : borderColor,
             width: 0.8,
           ),
         ),
@@ -246,7 +247,7 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
             fontSize: 10,
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
             letterSpacing: 0.5,
-            color: isSelected ? textPrimary : textSecondary,
+            color: isSelected ? context.tokens.accent : textSecondary,
           ),
         ),
       ),
@@ -388,13 +389,13 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
                     ),
                     const SizedBox(height: 4),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(3),
                       child: LinearProgressIndicator(
                         value: ratio,
-                        minHeight: 4,
-                        backgroundColor: const Color(0xFF1F1F1F),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          LabColors.burgundyRose,
+                        minHeight: 5,
+                        backgroundColor: context.tokens.surfaceSecondary,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          context.tokens.accent,
                         ),
                       ),
                     ),
@@ -442,16 +443,16 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
         children: [
           Row(
             children: [
-              const Icon(Icons.psychology_outlined,
-                  size: 14, color: LabColors.burgundyRose),
+              Icon(Icons.psychology_outlined,
+                  size: 14, color: context.tokens.accent),
               const SizedBox(width: 6),
               Text(
                 strings.isArabic ? 'أنماط السياق والاستجابة' : 'RECURRING CONTEXT & COPING THEMES',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.8,
-                  color: LabColors.burgundyRose,
+                  color: context.tokens.accent,
                 ),
               ),
             ],
@@ -639,10 +640,10 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: surfaceColor,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isUnlocked
-                ? (isDark ? LabColors.burgundyRose.withValues(alpha: 0.4) : LabColors.burgundyMaroon)
+                ? context.tokens.accent
                 : borderColor,
             width: 1,
           ),
@@ -655,10 +656,10 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isUnlocked
-                    ? LabColors.burgundyDark.withValues(alpha: 0.5)
-                    : (isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5)),
+                    ? context.tokens.accentSoft
+                    : context.tokens.surfaceSecondary,
                 border: Border.all(
-                  color: isUnlocked ? LabColors.burgundyRose : borderColor,
+                  color: isUnlocked ? context.tokens.accent : borderColor,
                   width: 0.8,
                 ),
               ),
@@ -666,7 +667,7 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
               child: Icon(
                 isUnlocked ? Icons.bookmark_added_rounded : Icons.bookmark_border_rounded,
                 size: 16,
-                color: isUnlocked ? LabColors.burgundyRose : textSecondary,
+                color: isUnlocked ? context.tokens.accent : textSecondary,
               ),
             ),
             const SizedBox(width: 12),
@@ -688,8 +689,8 @@ class _PatternDiscoveryViewState extends ConsumerState<PatternDiscoveryView> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1C1C1C) : const Color(0xFFE4E4E7),
-                          borderRadius: BorderRadius.circular(3),
+                          color: context.tokens.surfaceSecondary,
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           milestone.symbolName,

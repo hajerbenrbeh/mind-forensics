@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/botanical_emblem.dart';
 import '../../../core/widgets/mind_card.dart';
@@ -175,14 +176,14 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
           padding: const EdgeInsets.symmetric(vertical: 7),
           decoration: BoxDecoration(
             color: isSelected
-                ? (isDark ? const Color(0xFF222222) : const Color(0xFFE4E4E7))
+                ? context.tokens.accentSoft
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(context.tokens.chipRadius),
             border: Border.all(
               color: isSelected
-                  ? (isDark ? Colors.white : Colors.black)
+                  ? context.tokens.accent
                   : Colors.transparent,
-              width: 0.8,
+              width: 1,
             ),
           ),
           alignment: Alignment.center,
@@ -407,16 +408,12 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? (isDark
-                            ? const Color(0xFF202020)
-                            : const Color(0xFFE4E4E7))
-                        : (isDark
-                            ? const Color(0xFF0F0F0F)
-                            : const Color(0xFFFAFAFA)),
-                    borderRadius: BorderRadius.circular(6),
+                        ? context.tokens.accentSoft
+                        : context.tokens.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                     border: Border.all(
                       color: isSelected
-                          ? (isDark ? Colors.white : Colors.black)
+                          ? context.tokens.accent
                           : borderColor,
                       width: 1,
                     ),
@@ -612,14 +609,12 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: activity.isCompleted
-                          ? LabColors.sageBackground(isDark: isDark)
-                          : (isDark
-                              ? const Color(0xFF141414)
-                              : const Color(0xFFF4F4F5)),
-                      borderRadius: BorderRadius.circular(4),
+                          ? context.tokens.accentSoft
+                          : context.tokens.surfaceSecondary,
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: activity.isCompleted
-                            ? LabColors.sageGreenGlow
+                            ? context.tokens.accent
                             : borderColor,
                         width: 0.8,
                       ),

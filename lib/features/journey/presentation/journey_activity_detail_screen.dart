@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/bouncing_widget.dart';
 import '../controllers/journey_controller.dart';
@@ -160,10 +161,8 @@ class _JourneyActivityDetailScreenState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF141414)
-                        : const Color(0xFFF4F4F5),
-                    borderRadius: BorderRadius.circular(4),
+                    color: context.tokens.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: borderColor, width: 1),
                   ),
                   child: Text(
@@ -178,20 +177,18 @@ class _JourneyActivityDetailScreenState
                 ),
                 InkWell(
                   onTap: _toggleCompleted,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(8),
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: _isCompleted
-                          ? LabColors.sageBackground(isDark: isDark)
-                          : (isDark
-                              ? const Color(0xFF181818)
-                              : const Color(0xFFF0F0F2)),
-                      borderRadius: BorderRadius.circular(4),
+                          ? context.tokens.accentSoft
+                          : context.tokens.surfaceSecondary,
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: _isCompleted
-                            ? LabColors.sageGreenGlow
+                            ? context.tokens.accent
                             : borderColor,
                         width: 1,
                       ),
@@ -283,10 +280,8 @@ class _JourneyActivityDetailScreenState
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF0F0F0F)
-                    : const Color(0xFFFAFAFA),
-                borderRadius: BorderRadius.circular(10),
+                color: context.tokens.surfaceSecondary,
+                borderRadius: BorderRadius.circular(context.tokens.cardRadius),
                 border: Border.all(color: borderColor, width: 1),
               ),
               child: Text(
@@ -435,25 +430,23 @@ class _JourneyActivityDetailScreenState
                             color: textSecondary.withValues(alpha: 0.6),
                           ),
                           filled: true,
-                          fillColor: isDark
-                              ? const Color(0xFF101010)
-                              : const Color(0xFFF4F4F5),
+                          fillColor: context.tokens.surfaceSecondary,
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(14),
                             borderSide:
                                 BorderSide(color: borderColor, width: 1),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(14),
                             borderSide:
                                 BorderSide(color: borderColor, width: 1),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(14),
                             borderSide:
-                                BorderSide(color: textPrimary, width: 1),
+                                BorderSide(color: context.tokens.accent, width: 1.2),
                           ),
                         ),
                       ),
@@ -491,21 +484,20 @@ class _JourneyActivityDetailScreenState
                   color: textSecondary.withValues(alpha: 0.6),
                 ),
                 filled: true,
-                fillColor:
-                    isDark ? const Color(0xFF101010) : const Color(0xFFF4F4F5),
+                fillColor: context.tokens.surfaceSecondary,
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide(color: borderColor, width: 1),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide(color: borderColor, width: 1),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: textPrimary, width: 1),
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: context.tokens.accent, width: 1.2),
                 ),
               ),
             ),
@@ -519,8 +511,8 @@ class _JourneyActivityDetailScreenState
                 width: double.infinity,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white : Colors.black,
-                  borderRadius: BorderRadius.circular(8),
+                  color: context.tokens.accent,
+                  borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -529,7 +521,7 @@ class _JourneyActivityDetailScreenState
                     fontSize: 12.5,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.6,
-                    color: isDark ? Colors.black : Colors.white,
+                    color: isDark ? context.tokens.background : Colors.white,
                   ),
                 ),
               ),

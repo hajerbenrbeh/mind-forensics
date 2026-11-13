@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../journey/controllers/journey_controller.dart';
 
 /// Micro-Action Behavioral Activation Card:
@@ -225,12 +226,12 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
                     });
                   }
                 },
-                selectedColor: textPrimary,
-                backgroundColor: isDark ? const Color(0xFF141414) : const Color(0xFFF3F4F6),
+                selectedColor: context.tokens.accent,
+                backgroundColor: context.tokens.surfaceSecondary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                   side: BorderSide(
-                    color: isSelected ? textPrimary : borderColor,
+                    color: isSelected ? context.tokens.accent : borderColor,
                     width: 1,
                   ),
                 ),
