@@ -7,7 +7,12 @@ import 'package:mind_forensics/app/theme/lab_theme.dart';
 import 'package:mind_forensics/core/widgets/mind_button.dart';
 import 'package:mind_forensics/core/widgets/mind_card.dart';
 import 'package:mind_forensics/features/insights/presentation/insights_screen.dart';
+import 'package:mind_forensics/features/mind_trace/controllers/mind_trace_controller.dart';
+import 'package:mind_forensics/features/mind_trace/domain/mind_trace_model.dart';
+import 'package:mind_forensics/features/mind_trace/presentation/widgets/daily_mind_trace_stepper.dart';
 import 'package:mind_forensics/features/track/presentation/track_screen.dart';
+import 'package:mind_forensics/features/track/presentation/widgets/track_entry_detail_sheet.dart';
+import 'package:mind_forensics/features/track/presentation/widgets/track_month_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Widget createTestHarness(Widget child) {
@@ -34,76 +39,265 @@ void main() {
   });
 
   group('TrackScreen & Self-Observation Widget Tests', () {
-    testWidgets('TrackScreen renders tabs, mood options, telemetry sliders, and save action', (tester) async {
-      await tester.pumpWidget(createTestHarness(const TrackScreen()));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'TrackScreen renders 2 consolidated tabs, 5 core states, collapsed optional context, and guided trigger',
+      (tester) async {
+        await tester.pumpWidget(createTestHarness(const TrackScreen()));
+        await tester.pumpAndSettle();
 
-      // Verify TabBar
-      expect(find.text('Quick Check-in'), findsOneWidget);
-      expect(find.text('Detailed Trace'), findsOneWidget);
-      expect(find.text('Trace History'), findsOneWidget);
+        // Exactly 2 consolidated tabs + Full Calendar action
+        expect(find.byType(Tab), findsNWidgets(2));
+        expect(find.text('Check-In Today'), findsOneWidget);
+        expect(find.text('History & Calendar'), findsOneWidget);
+        expect(find.byTooltip('Full Calendar & Analytics'), findsOneWidget);
 
-      // Verify Core State Options
-      expect(find.text("TODAY'S CORE STATE"), findsOneWidget);
-      expect(find.text('Calm'), findsOneWidget);
-      expect(find.text('Anxious'), findsOneWidget);
-      expect(find.text('Frustrated'), findsOneWidget);
-      expect(find.text('Heavy'), findsOneWidget);
-      expect(find.text('Restless'), findsOneWidget);
+        // 5 Core State cards ('Calm' also appears as the slider left anchor)
+        expect(find.text("TODAY'S CORE STATE"), findsOneWidget);
+        expect(find.text('Calm'), findsAtLeastNWidgets(1));
+        expect(find.text('Anxious'), findsOneWidget);
+        expect(find.text('Frustrated'), findsOneWidget);
+        expect(find.text('Heavy'), findsOneWidget);
+        expect(find.text('Restless'), findsOneWidget);
 
-      // Verify primary intensity slider and progressive disclosure toggle
-      expect(find.text('Intensity'), findsOneWidget);
-      expect(find.text('Add context (optional)'), findsOneWidget);
-      expect(find.text('Sleep Duration'), findsNothing);
+        // Primary Intensity slider is visible immediately; context sliders are collapsed initially
+        expect(find.text('Intensity'), findsOneWidget);
+        expect(find.text('Add context (optional)'), findsOneWidget);
+        expect(find.text('Sleep Duration'), findsNothing);
+        expect(find.text('Energy Level'), findsNothing);
+        expect(find.text('Stress & Anxiety'), findsNothing);
 
-      // Expand optional context block cleanly on demand
-      await tester.ensureVisible(find.text('Add context (optional)'));
-      await tester.tap(find.text('Add context (optional)'));
-      await tester.pumpAndSettle();
+        // Expand Add context (optional)
+        await tester.ensureVisible(find.text('Add context (optional)'));
+        await tester.tap(find.text('Add context (optional)'));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Sleep Duration'), findsOneWidget);
-      expect(find.text('Energy Level'), findsOneWidget);
-      expect(find.text('Stress & Anxiety'), findsOneWidget);
+        expect(find.text('Work / Demands'), findsOneWidget);
+        expect(find.text('Sleep Disruption'), findsOneWidget);
+        expect(find.text('What helped today? (optional)'), findsOneWidget);
+        expect(find.text('Sleep Duration'), findsOneWidget);
+        expect(find.text('Energy Level'), findsOneWidget);
+        expect(find.text('Stress & Anxiety'), findsOneWidget);
 
-      // Verify Trigger options
-      expect(find.text('TRIGGERS & CONTEXT'), findsOneWidget);
-      expect(find.text('Work / Demands'), findsOneWidget);
-      expect(find.text('Sleep Disruption'), findsOneWidget);
+        // Verify Save Check-In & guided link
+        expect(find.text('Save Check-In'), findsOneWidget);
+        expect(find.text('Prefer step-by-step check-in?'), findsOneWidget);
+      },
+    );
 
-      // Verify Save button
-      expect(find.text('Log Daily Check-in'), findsOneWidget);
-    });
+    testWidgets(
+      'TrackScreen saves check-in, switches primary CTA to Update Today’s Entry, and opens guided stepper sheet',
+      (tester) async {
+        await tester.pumpWidget(createTestHarness(const TrackScreen()));
+        await tester.pumpAndSettle();
 
-    testWidgets('Selecting a mood and tapping trigger updates state without error', (tester) async {
-      await tester.pumpWidget(createTestHarness(const TrackScreen()));
-      await tester.pumpAndSettle();
+        // Select Anxious mood card
+        await tester.tap(find.text('Anxious'));
+        await tester.pumpAndSettle();
 
-      // Tap Anxious mood card
-      await tester.tap(find.text('Anxious'));
-      await tester.pumpAndSettle();
+        // Enter optional note
+        await tester.enterText(find.byType(TextField), 'Tight deadline today.');
+        await tester.pumpAndSettle();
 
-      // Expand optional context and tap Trigger chip
-      final contextToggle = find.text('Add context (optional)');
-      await tester.ensureVisible(contextToggle);
-      await tester.tap(contextToggle);
-      await tester.pumpAndSettle();
+        // Expand optional context and choose a trigger
+        await tester.ensureVisible(find.text('Add context (optional)'));
+        await tester.tap(find.text('Add context (optional)'));
+        await tester.pumpAndSettle();
 
-      final triggerFinder = find.text('Work / Demands');
-      await tester.ensureVisible(triggerFinder);
-      await tester.pumpAndSettle();
-      await tester.tap(triggerFinder);
-      await tester.pumpAndSettle();
+        final triggerFinder = find.text('Work / Demands');
+        await tester.ensureVisible(triggerFinder);
+        await tester.tap(triggerFinder);
+        await tester.pumpAndSettle();
 
-      // Scroll and Tap Save button
-      final saveFinder = find.text('Log Daily Check-in');
-      await tester.ensureVisible(saveFinder);
-      await tester.pumpAndSettle();
-      await tester.tap(saveFinder);
-      await tester.pumpAndSettle();
+        // Tap Save Check-In
+        final saveFinder = find.text('Save Check-In');
+        await tester.ensureVisible(saveFinder);
+        await tester.pumpAndSettle();
+        await tester.tap(saveFinder);
+        await tester.pumpAndSettle();
 
-      // Verify Snackbar confirms save
-      expect(find.text('Daily check-in and note saved'), findsOneWidget);
-    });
+        expect(find.text('Daily check-in and note saved'), findsOneWidget);
+        expect(find.text("Update Today's Entry"), findsOneWidget);
+
+        // Open discreet step-by-step guided modal sheet
+        final guidedFinder = find.text('Prefer step-by-step check-in?');
+        await tester.ensureVisible(guidedFinder);
+        await tester.tap(guidedFinder);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(DailyMindTraceStepper), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'History & Calendar tab renders empty CTA -> Tab 0, calendar day filtering, edit, and delete confirmation',
+      (tester) async {
+        late ProviderContainer container;
+        await tester.pumpWidget(
+          ProviderScope(
+            child: Consumer(
+              builder: (context, ref, _) {
+                container = ProviderScope.containerOf(context);
+                final locale = ref.watch(localeControllerProvider);
+                return MaterialApp(
+                  theme: LabTheme.daylightTheme,
+                  darkTheme: LabTheme.nightTheme,
+                  locale: locale,
+                  home: const Scaffold(body: TrackScreen(initialTab: 1)),
+                );
+              },
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Empty History state shows prompt + Log Today -> navigates back to Check-In Today
+        expect(find.byType(TrackMonthCalendar), findsOneWidget);
+        expect(find.text('Your timeline builds as you log'), findsOneWidget);
+        await tester.ensureVisible(find.text('Log Today'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Log Today'));
+        await tester.pumpAndSettle();
+        expect(find.text('Save Check-In'), findsOneWidget);
+
+        // Seed two traces (a non-today trace in current month + today)
+        final now = DateTime.now();
+        final altDay = now.day > 1 ? now.day - 1 : 2;
+        final pastDate = DateTime(now.year, now.month, altDay);
+        final todayDate = DateTime(now.year, now.month, now.day);
+
+        final pastTrace = MindTraceModel(
+          id: 'trace-past-1',
+          date: pastDate,
+          overallMood: 'heavy',
+          selectedEmotions: const ['heavy'],
+          moodIntensity: 7,
+          situation: 'Work / Demands',
+          journalText: 'Long afternoon debugging.',
+          createdAt: pastDate,
+          updatedAt: pastDate,
+        );
+        final todayTrace = MindTraceModel(
+          id: 'trace-today-1',
+          date: todayDate,
+          overallMood: 'calm',
+          selectedEmotions: const ['calm'],
+          moodIntensity: 4,
+          journalText: 'Quiet morning walk.',
+          createdAt: todayDate,
+          updatedAt: todayDate,
+        );
+
+        await container
+            .read(mindTraceControllerProvider.notifier)
+            .recordCheckIn(pastTrace, generateAi: false);
+        await container
+            .read(mindTraceControllerProvider.notifier)
+            .recordCheckIn(todayTrace, generateAi: false);
+
+        await tester.tap(find.text('History & Calendar'));
+        await tester.pumpAndSettle();
+
+        final scrollableFinder = find.byType(Scrollable).last;
+        await tester.scrollUntilVisible(
+          find.text('Long afternoon debugging.'),
+          150,
+          scrollable: scrollableFinder,
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Long afternoon debugging.'), findsOneWidget);
+
+        // Scroll back to calendar top and tap past calendar day to filter history list
+        await tester.ensureVisible(find.text('$altDay'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('$altDay'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Show all'), findsOneWidget);
+        expect(find.text('Long afternoon debugging.'), findsAtLeastNWidgets(1));
+        expect(find.text('Quiet morning walk.'), findsNothing);
+
+        // Clear day filter with Show all
+        await tester.ensureVisible(find.text('Show all'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Show all'));
+        await tester.pumpAndSettle();
+        expect(find.text('Quiet morning walk.'), findsOneWidget);
+
+        // Tap past entry card -> opens TrackEntryDetailSheet -> Edit historical entry
+        await tester.scrollUntilVisible(
+          find.text('Long afternoon debugging.'),
+          150,
+          scrollable: find.byType(Scrollable).last,
+        );
+        await tester.ensureVisible(find.text('Long afternoon debugging.'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Long afternoon debugging.'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TrackEntryDetailSheet), findsOneWidget);
+        expect(find.text('Explore with AI Guide'), findsOneWidget);
+        expect(find.text('Edit'), findsOneWidget);
+        expect(find.text('Delete'), findsOneWidget);
+
+        await tester.ensureVisible(find.text('Edit'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Edit'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(EditPastTraceSheet), findsOneWidget);
+        expect(find.textContaining('Edit Check-In Entry'), findsOneWidget);
+        await tester.enterText(
+          find.descendant(
+            of: find.byType(EditPastTraceSheet),
+            matching: find.byType(TextField),
+          ),
+          'Updated evening reflection.',
+        );
+        await tester.ensureVisible(find.text('Save Changes'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Save Changes'));
+        await tester.pumpAndSettle();
+
+        await tester.scrollUntilVisible(
+          find.text('Updated evening reflection.'),
+          150,
+          scrollable: find.byType(Scrollable).last,
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Updated evening reflection.'), findsOneWidget);
+
+        // Open detail again -> Delete -> Cancel keeps entry -> Confirm Delete removes entry
+        await tester.ensureVisible(find.text('Updated evening reflection.'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Updated evening reflection.'));
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Delete'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Delete'));
+        await tester.pumpAndSettle();
+        expect(find.text('Delete Trace Entry?'), findsOneWidget);
+
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+        expect(find.byType(TrackEntryDetailSheet), findsOneWidget);
+
+        await tester.ensureVisible(find.text('Delete'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Delete'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.text('Delete'),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Updated evening reflection.'), findsNothing);
+        expect(find.text('Quiet morning walk.'), findsOneWidget);
+      },
+    );
   });
 
   group('InsightsScreen Widget Tests', () {

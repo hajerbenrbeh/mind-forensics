@@ -186,7 +186,11 @@ class AppRouter {
               GoRoute(
                 path: track,
                 name: 'track_nav',
-                builder: (context, state) => const TrackScreen(),
+                builder: (context, state) {
+                  final tabIndex =
+                      int.tryParse(state.uri.queryParameters['tab'] ?? '') ?? 0;
+                  return TrackScreen(initialTab: tabIndex.clamp(0, 1));
+                },
               ),
             ],
           ),

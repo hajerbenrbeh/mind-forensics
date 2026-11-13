@@ -1307,16 +1307,100 @@ class AppStrings {
   String get nextStepThoughtPrompt => isArabic ? 'تحبّ نفرقو بين الحقيقة والافتراض في اللي صار؟' : (isFrench ? 'Séparer les faits des hypothèses ?' : 'Separate facts from what your mind assumed?');
   String get nextStepAnchorPrompt => isArabic ? 'لحظة هادئة — تحبّ تحفظ مرساة لليوم؟' : (isFrench ? 'Un moment calme — enregistrer un repère ?' : 'A calm moment — want to save one anchor for today?');
 
-  String get trackPageTitle => isArabic ? 'تتبّع وملاحظة' : (isFrench ? 'Suivi & Observation' : 'Track & Observe');
+  String get trackPageTitle => isArabic ? 'تتبّع وملاحظة' : (isFrench ? 'Suivi & Observation' : 'Track');
+  String get checkInTodayTab => isArabic ? 'تسجيل اليوم' : (isFrench ? 'Bilan du jour' : 'Check-In Today');
+  String get historyAndCalendarTab => isArabic ? 'السجل والتقويم' : (isFrench ? 'Historique & Calendrier' : 'History & Calendar');
+  String get fullCalendarTooltip => isArabic ? 'التقويم الكامل والتحليلات' : (isFrench ? 'Calendrier complet & Analyses' : 'Full Calendar & Analytics');
   String get fullTraceTab => isArabic ? 'رصد معمّق' : (isFrench ? 'Trace complète' : 'Full Trace');
   String get howFeelingRightNow => isArabic ? 'كيفاش حاسس روحك توّا؟' : (isFrench ? 'Comment vous sentez-vous en ce moment ?' : 'How are you feeling right now?');
   String get todaysCoreState => isArabic ? 'الحالة الأساسية لليوم' : (isFrench ? 'ÉTAT PRINCIPAL DU JOUR' : "TODAY'S CORE STATE");
+  String get intenseAnchorLabel => isArabic ? 'شديد' : (isFrench ? 'Intense' : 'Intense');
   String get addNoteOptionalHint => isArabic ? 'زيد ملاحظة صغيرة (اختياري)...' : (isFrench ? 'Ajouter une note (optionnel)...' : 'Add a note (optional)...');
+  String get addContextOptionalTitle => isArabic ? 'إضافة تفاصيل اختيارية' : (isFrench ? 'Ajouter du contexte (optionnel)' : 'Add context (optional)');
+  String get addContextOptionalSub => isArabic ? 'المحفزات، النوم، والطاقة' : (isFrench ? 'Déclencheurs, sommeil et énergie' : 'Triggers, sleep, and energy');
+  String get whatHelpedTodayLabel => isArabic ? 'شنوّة اللي ساعدك اليوم؟ (اختياري)' : (isFrench ? 'Qu’est-ce qui vous a aidé ? (optionnel)' : 'What helped today? (optional)');
   String get whatsInfluencingMood => isArabic ? 'شنوّة اللي مأثّر على مزاجك؟' : (isFrench ? 'Qu’est-ce qui influence votre humeur ?' : "What's influencing your mood?");
   String get triggersContextHeader => isArabic ? 'المحفّزات والسياق' : (isFrench ? 'DÉCLENCHEURS & CONTEXTE' : 'TRIGGERS & CONTEXT');
-  String get saveEntryBtn => isArabic ? 'حفظ التسجيل' : (isFrench ? 'Enregistrer' : 'Save Entry');
-  String get deepenReflectionCta => isArabic ? 'تعميق الملاحظة (5 خطوات)' : (isFrench ? 'Approfondir (5 étapes)' : 'Deepen Observation (5 steps)');
+  String get saveCheckInAction => isArabic ? 'حفظ التسجيل' : (isFrench ? 'Enregistrer le bilan' : 'Save Check-In');
+  String get updateTodaysEntryAction => isArabic ? 'تحديث تسجيل اليوم' : (isFrench ? 'Mettre à jour aujourd’hui' : "Update Today's Entry");
+  String get preferStepByStepLabel => isArabic ? 'تحبّ تسجيل مفصّل خطوة بخطوة؟' : (isFrench ? 'Préférez-vous un bilan étape par étape ?' : 'Prefer step-by-step check-in?');
+  String get saveEntryBtn => saveCheckInAction;
+  String get deepenReflectionCta => preferStepByStepLabel;
   String get calendarTitle => isArabic ? 'تقويم الملاحظات' : (isFrench ? 'Calendrier d’observation' : 'Observation Calendar');
+  String get timelineBuildsTitle => isArabic ? 'سجلك الزمني يتبنى مع كل ملاحظة تسجلها' : (isFrench ? 'Votre historique se construit au fil des bilans' : 'Your timeline builds as you log');
+  String get logTodayBtn => isArabic ? 'سجّل اليوم' : (isFrench ? 'Noter aujourd’hui' : 'Log Today');
+  String get showAllEntriesBtn => isArabic ? 'عرض الكل' : (isFrench ? 'Tout voir' : 'Show all');
+  String filteredByDateLabel(String dateKey) => isArabic
+      ? 'التاريخ المحدد: $dateKey'
+      : (isFrench ? 'Filtre : $dateKey' : 'Selected: $dateKey');
+  String get noEntriesForDayNote => isArabic
+      ? 'ما فماش تسجيل في النهار هذا.'
+      : (isFrench ? 'Aucun bilan enregistré ce jour-là.' : 'No check-in logged on this day.');
+  String get exploreWithAiGuideBtn => isArabic ? 'استكشاف مع المساعد' : (isFrench ? 'Explorer avec l’Assistant IA' : 'Explore with AI Guide');
+  String get editEntryTitle => isArabic ? 'تعديل التسجيل' : (isFrench ? 'Modifier le bilan' : 'Edit Check-In Entry');
+  String get saveChangesBtn => isArabic ? 'حفظ التعديلات' : (isFrench ? 'Enregistrer' : 'Save Changes');
+  String get cancelActionLabel => isArabic ? 'إلغاء' : (isFrench ? 'Annuler' : 'Cancel');
+
+  String trackTriggerDisplay(String key) {
+    switch (key) {
+      case 'Work / Demands':
+        return isArabic ? 'ضغط العمل' : (isFrench ? 'Travail / Charge' : 'Work / Demands');
+      case 'Sleep Disruption':
+        return isArabic ? 'اضطراب النوم' : (isFrench ? 'Sommeil perturbé' : 'Sleep Disruption');
+      case 'Studies':
+        return isArabic ? 'الدراسة' : (isFrench ? 'Études' : 'Studies');
+      case 'Social':
+        return isArabic ? 'علاقات اجتماعية' : (isFrench ? 'Social' : 'Social');
+      case 'Health':
+        return isArabic ? 'الصحة' : (isFrench ? 'Santé' : 'Health');
+      case 'Overload':
+        return isArabic ? 'إرهاق ذهني' : (isFrench ? 'Surcharge' : 'Overload');
+      default:
+        return key;
+    }
+  }
+
+  String trackHelpedDisplay(String key) {
+    switch (key) {
+      case 'Walk':
+        return isArabic ? 'مشي هادئ' : (isFrench ? 'Marche' : 'Walk');
+      case 'Quiet time':
+        return isArabic ? 'وقت هادئ' : (isFrench ? 'Moment calme' : 'Quiet time');
+      case 'Breathing':
+        return isArabic ? 'تنفّس' : (isFrench ? 'Respiration' : 'Breathing');
+      case 'Talked':
+        return isArabic ? 'فضفضة مع قريب' : (isFrench ? 'Échange' : 'Talked');
+      case 'Rest':
+        return isArabic ? 'راحة' : (isFrench ? 'Repos' : 'Rest');
+      default:
+        return key;
+    }
+  }
+
+  List<String> get weekdayShortLabels {
+    if (isArabic) return const ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح'];
+    if (isFrench) return const ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    return const ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  }
+
+  String monthName(int month) {
+    const en = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    const fr = [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+    ];
+    const ar = [
+      'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
+      'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+    ];
+    final idx = (month - 1).clamp(0, 11);
+    if (isArabic) return ar[idx];
+    if (isFrench) return fr[idx];
+    return en[idx];
+  }
 
   String get observatoryHeroSubtitle => isArabic ? 'نظرة هادئة وأعمق على أفكارك' : (isFrench ? 'Un regard calme et lucide sur votre esprit' : 'A deeper, calmer look into your mind');
   String get thoughtPatternsLabel => isArabic ? 'أنماط الأفكار' : (isFrench ? 'Schémas de pensée' : 'Thought Patterns');
