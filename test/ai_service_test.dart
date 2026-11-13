@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,15 +9,37 @@ import 'package:mind_forensics/features/investigation/data/mock_investigator_ser
 import 'package:mind_forensics/features/investigation/domain/ai_service.dart';
 import 'package:mind_forensics/features/investigation/domain/case_model.dart';
 import 'package:mind_forensics/features/investigation/domain/case_stage.dart';
+import 'package:mind_forensics/features/investigation/domain/conversation_mode.dart';
 import 'package:mind_forensics/features/investigation/domain/forensic_chain.dart';
 import 'package:mind_forensics/features/investigation/domain/label_type.dart';
 import 'package:mind_forensics/features/investigation/domain/statement.dart';
 import 'package:mind_forensics/features/investigation/presentation/flash_case_screen.dart';
+import 'package:mind_forensics/features/journal/domain/journal_memory_model.dart';
+import 'package:mind_forensics/features/journey/domain/journey_state_model.dart';
 import 'package:mind_forensics/features/mind_trace/data/mind_trace_ai_service.dart';
 import 'package:mind_forensics/features/mind_trace/domain/mind_trace_model.dart';
 import 'package:mind_forensics/features/profile/domain/psychological_profile_model.dart';
 import 'package:mind_forensics/features/settings/presentation/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _TimeoutThrowingInvestigatorService extends MockInvestigatorService {
+  @override
+  Future<String> getNextQuestion({
+    required CaseModel currentCase,
+    required List<Statement> conversationHistory,
+    bool includePastCaseSummaries = true,
+    String? languageCode,
+    PsychologicalProfileModel? profile,
+    JourneyStateModel? journey,
+    ConversationMode? conversationMode,
+    MindTraceModel? latestTrace,
+    List<MindTraceModel>? historicalTraces,
+    List<JournalMemoryModel>? compressedMemories,
+    String? sessionSummary,
+  }) {
+    throw TimeoutException('Simulated upstream timeout');
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -213,6 +236,10 @@ void main() {
     testWidgets('Renders direct chat with AI and processes interactive dialogue',
         (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
         const ProviderScope(
@@ -223,13 +250,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Verify header and chat input field
-      expect(find.text('AI GUIDE'), findsAtLeastNWidgets(1));
+      // Verify clean Step 7 header and chat input field
+      expect(find.text('AI Guide'), findsAtLeastNWidgets(1));
+      expect(find.text('Explore a Thought'), findsOneWidget);
       expect(find.text('Talk with your companion...'), findsOneWidget);
 
-      // Verify Socratic quick suggestion pills
-      expect(find.text('It feels like an assumption'), findsOneWidget);
-      expect(find.text('What are the raw facts?'), findsOneWidget);
+      // Verify Options-First suggested next replies bar
+      expect(find.text('Separate facts vs guesses'), findsOneWidget);
+      expect(find.text('I need grounding first'), findsOneWidget);
 
       // Send a test user message via text input
       await tester.enterText(
@@ -239,9 +267,49 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500)); // Process mock investigator reply
       await tester.pumpAndSettle();
 
-      // Verify both user message and investigator response are visible in conversation
+      // Verify both user message, accessible Fact/Guess/Story chip, and AI Guide response
       expect(find.text('I am worried about my project deadline.'), findsOneWidget);
-      expect(find.text('[A] Assumption'), findsAtLeastNWidgets(1));
+      expect(find.text('Guess'), findsAtLeastNWidgets(1));
+      expect(find.text('Save key takeaway'), findsOneWidget);
+
+      // Tapping statement tag cycles Guess -> Fact -> Story with matching icon & text
+      await tester.tap(find.text('Guess').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Fact'), findsAtLeastNWidgets(1));
+    });
+
+    testWidgets(
+        'Network timeout falls back silently to MockInvestigatorService with zero crash',
+        (WidgetTester tester) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            investigatorServiceProvider
+                .overrideWithValue(_TimeoutThrowingInvestigatorService()),
+          ],
+          child: const MaterialApp(
+            home: FlashCaseScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+          find.byType(TextField), 'My supervisor seemed distant.');
+      await tester.tap(find.byIcon(Icons.arrow_upward_rounded));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(find.text('My supervisor seemed distant.'), findsOneWidget);
+      // Fallback mock investigator reply added at least one AI bubble after user statement
+      expect(find.text('AI Guide'), findsAtLeastNWidgets(2));
     });
   });
 

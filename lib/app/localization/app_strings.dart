@@ -1450,6 +1450,179 @@ class AppStrings {
   String get addItemTooltip => isArabic ? 'إضافة' : (isFrench ? 'Ajouter' : 'Add');
   String get viewDetailsTooltip => isArabic ? 'عرض التفاصيل' : (isFrench ? 'Voir les détails' : 'View details');
 
+  // Step 7 — AI Guide Header Clarity, Mode Chooser & Welcome Starters
+  String get engineBadgeOffline => isArabic ? 'محلي' : (isFrench ? 'Local' : 'Local');
+  String get engineBadgeGroq => 'Groq';
+  String get engineBadgeGemini => 'Gemini';
+  String get aiEngineTooltip => isArabic
+      ? 'إعدادات محرّك الذكاء الاصطناعي'
+      : (isFrench ? 'Réglages du moteur IA' : 'AI engine settings');
+  String get modesAndHistoryTooltip => isArabic
+      ? 'الأساليب والجلسات السابقة'
+      : (isFrench ? 'Modes & historique' : 'Modes & History');
+  String get changeModeTooltip => isArabic ? 'تغيير الأسلوب' : (isFrench ? 'Changer de mode' : 'Switch mode');
+  String get chooseModeSheetTitle => isArabic
+      ? 'اختار أسلوب الحديث'
+      : (isFrench ? 'Choisir un style d’échange' : 'Choose a conversation style');
+  String get chooseModeSheetSub => isArabic
+      ? 'تنجم تبدّل الأسلوب في أي وقت وحوارك يقعد محفوظ.'
+      : (isFrench
+          ? 'Changez de style à tout moment sans perdre votre fil.'
+          : 'Switch anytime — your current conversation stays intact.');
+  String get welcomeQuestionHeadline => isArabic
+      ? 'شنوة اللي شاغل بالك توّا؟'
+      : (isFrench ? 'Qu’avez-vous en tête ?' : "What's on your mind?");
+  String get welcomePickOrTypeSub => isArabic
+      ? 'اختار نقطة بداية من الأسفل أو اكتب سطر كي تحس روحك حاضر.'
+      : (isFrench
+          ? 'Choisissez un point de départ ou écrivez une ligne quand vous voulez.'
+          : 'Pick a starting point below or type a line whenever you feel ready.');
+  String get privacyLocalTag => isArabic
+      ? 'محلي على جهازك'
+      : (isFrench ? 'Local sur l’appareil' : 'Local On-Device');
+  String get privacyCloudConsentedTag => isArabic
+      ? 'سحابي مشفّر بموافقتك'
+      : (isFrench ? 'Cloud chiffré autorisé' : 'Encrypted Cloud Consented');
+  String get privacyPrivateSessionTag => isArabic
+      ? 'جلسة خاصة (محلية فقط)'
+      : (isFrench ? 'Session privée (Locale)' : 'Private Session (Local Only)');
+  String get saveTakeawayReportBtn => isArabic
+      ? 'حفظ تقرير الجلسة'
+      : (isFrench ? 'Créer le bilan' : 'Save Takeaway Report');
+  String get openSelfCareToolsShort => isArabic
+      ? 'أدوات التهدئة'
+      : (isFrench ? 'Outils bien-être' : 'Self-Care Tools');
+  String get userSpeakerYou => isArabic ? 'أنت' : (isFrench ? 'Vous' : 'You');
+  String get tagFactGuessStoryHint => isArabic
+      ? '+ تصنيف (حقيقة / تخمين / تأويل)'
+      : (isFrench ? '+ Fait / Hypothèse / Récit' : '+ Fact / Guess / Story');
+  String get labelFactHuman => isArabic ? 'حقيقة' : (isFrench ? 'Fait' : 'Fact');
+  String get labelGuessHuman => isArabic ? 'تخمين' : (isFrench ? 'Hypothèse' : 'Guess');
+  String get labelStoryHuman => isArabic ? 'تأويل' : (isFrench ? 'Récit' : 'Story');
+  String get suggestedReplyFactsVsGuesses => isArabic
+      ? 'نفرّق بين الحقيقة والتخمين'
+      : (isFrench ? 'Distinguer faits et hypothèses' : 'Separate facts vs guesses');
+  String get suggestedReplyGroundingFirst => isArabic
+      ? 'نحتاج تثبيت وتنفّس قبل'
+      : (isFrench ? 'Besoin d’ancrage d’abord' : 'I need grounding first');
+  String get suggestedReplySaveTakeaway => isArabic
+      ? 'نحفظ الخلاصة المهمة'
+      : (isFrench ? 'Sauvegarder l’essentiel' : 'Save key takeaway');
+
+  List<String> localizedStartersForMode(String modeName) {
+    switch (modeName) {
+      case 'understandEmotion':
+        return isArabic
+            ? const [
+                'حاسس بثقل وضغط في صدري اليوم.',
+                'نحب نفهم علاش حاسس بالطريقة هذي.',
+                'مزاجي تبدّل فجأة وحاسس بعدم ارتياح.',
+              ]
+            : (isFrench
+                ? const [
+                    'Je sens une lourdeur dans ma poitrine.',
+                    'Je veux comprendre ce que je ressens.',
+                    'Mon humeur a changé d’un coup aujourd’hui.',
+                  ]
+                : const [
+                    'I feel a heavy tightness in my chest today.',
+                    'I want to understand why I feel this way.',
+                    'My emotions shifted suddenly and feel unsettled.',
+                  ]);
+      case 'psychologicalAnalysis':
+        return isArabic
+            ? const [
+                'نجمو نفهمو نمط متكرر في ردود فعلي؟',
+                'لاحظت ديما نهرب مالضغط كي نتحاصر.',
+                'عاوني نشوف العلاقة بين أفكاري ومزاجي.',
+              ]
+            : (isFrench
+                ? const [
+                    'Explorer un schéma récurrent dans mes réactions ?',
+                    'J’ai remarqué que j’évite souvent la pression.',
+                    'Quel lien entre mes pensées et mon humeur ?',
+                  ]
+                : const [
+                    'Can we explore a recurring pattern in my reactions?',
+                    'I noticed I pull away whenever things feel tense.',
+                    'Help me see the link between my mood and thoughts.',
+                  ]);
+      case 'guidedReflection':
+        return isArabic
+            ? const [
+                'عاوني نرتّب الأفكار اللي في بالي خطوة بخطوة.',
+                'صار نقاش صعيب اليوم ونحب نفهمو.',
+                'نحب نراجع كيفاش تفاعلت مع موقف مقلق.',
+              ]
+            : (isFrench
+                ? const [
+                    'Aidez-moi à organiser mes pensées pas à pas.',
+                    'Une discussion difficile m’a marqué aujourd’hui.',
+                    'Je veux revoir ma réaction face à un imprévu.',
+                  ]
+                : const [
+                    'Help me organize what is happening step by step.',
+                    'A difficult conversation weighed on me today.',
+                    'I want to review how I reacted to a challenge.',
+                  ]);
+      case 'justTalk':
+        return isArabic
+            ? const [
+                'نحتاج نحكي بهدوء من غير ما نحكم على روحي.',
+                'اليوم كان طويل وتعبني برشا.',
+                'في بالي برشا حاجات وما نعرفش منين نبدا.',
+              ]
+            : (isFrench
+                ? const [
+                    'J’ai simplement besoin qu’on m’écoute sans juger.',
+                    'La journée a été longue et épuisante.',
+                    'Beaucoup de choses me pèsent sans savoir par où commencer.',
+                  ]
+                : const [
+                    'I need a calm space to talk without judgment.',
+                    'Today felt long and exhausting.',
+                    'I have a lot on my mind and do not know where to start.',
+                  ]);
+      case 'grounding':
+        return isArabic
+            ? const [
+                'عاوني نعمل تثبيت حسي 5-4-3-2-1.',
+                'حاسس بإرهاق ونحتاج نهبط التوتر شوية.',
+                'عاوني ننظم تنفّسي توا.',
+              ]
+            : (isFrench
+                ? const [
+                    'Guidez-moi pour un ancrage 5-4-3-2-1.',
+                    'Je me sens débordé et j’ai besoin de ralentir.',
+                    'Aidez-moi à calmer ma respiration.',
+                  ]
+                : const [
+                    'Guide me through a 5-4-3-2-1 sensory grounding.',
+                    'I feel overwhelmed and need to slow down.',
+                    'Help me settle my breathing right now.',
+                  ]);
+      case 'exploreThought':
+      default:
+        return isArabic
+            ? const [
+                'فمّا فكرة مش راضية تخرج من بالي.',
+                'حاسس روحي غلطت غلطة كبيرة اليوم.',
+                'عاوني نفرّق بين الحقيقة والافتراض لهنا.',
+              ]
+            : (isFrench
+                ? const [
+                    'Une pensée tourne en boucle dans ma tête.',
+                    'J’ai l’impression d’avoir fait une grosse erreur.',
+                    'Aidez-moi à séparer les faits de mes suppositions.',
+                  ]
+                : const [
+                    'There is a thought I cannot stop replaying.',
+                    'I keep doubting myself even when things go well.',
+                    'Help me separate facts from what my mind guessed.',
+                  ]);
+    }
+  }
+
   // Helper factory
   static AppStrings of(BuildContext context) {
     final locale = Localizations.localeOf(context);

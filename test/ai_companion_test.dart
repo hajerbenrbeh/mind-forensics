@@ -9,6 +9,8 @@ import 'package:mind_forensics/features/investigation/domain/case_stage.dart';
 import 'package:mind_forensics/features/investigation/domain/conversation_mode.dart';
 import 'package:mind_forensics/features/investigation/presentation/ai_companion_hub_view.dart';
 import 'package:mind_forensics/features/investigation/presentation/flash_case_screen.dart';
+import 'package:mind_forensics/features/investigation/presentation/widgets/ai_engine_config_sheet.dart';
+import 'package:mind_forensics/features/investigation/presentation/widgets/mode_chooser_sheet.dart';
 import 'package:mind_forensics/features/mind_trace/domain/mind_trace_model.dart';
 import 'package:mind_forensics/features/profile/domain/condition_type.dart';
 import 'package:mind_forensics/features/profile/domain/diagnostic_status.dart';
@@ -295,8 +297,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Initially active conversation dialogue is open
-      expect(find.text('AI GUIDE'), findsAtLeastNWidgets(1));
+      // Initially active conversation dialogue & warm welcome state are open
+      expect(find.text('AI Guide'), findsAtLeastNWidgets(1));
+      expect(find.text("What's on your mind?"), findsOneWidget);
+      expect(find.text('Local On-Device'), findsOneWidget);
       expect(find.text('Talk with your companion...'), findsOneWidget);
 
       // Tap grid icon in AppBar to toggle Hub view
@@ -314,6 +318,63 @@ void main() {
 
       // Verify returned to dialogue
       expect(find.text('Talk with your companion...'), findsOneWidget);
+    });
+
+    testWidgets(
+        'FlashCaseScreen header exposes tappable Mode Switcher & Engine Badge and sends welcome starter cleanly',
+        (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: FlashCaseScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Engine badge (Local) opens AiEngineConfigSheet directly
+      expect(find.text('Local'), findsOneWidget);
+      await tester.tap(find.text('Local'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AiEngineConfigSheet), findsOneWidget);
+
+      Navigator.of(tester.element(find.byType(AiEngineConfigSheet))).pop();
+      await tester.pumpAndSettle();
+
+      // Mode Switcher Pill opens ModeChooserSheet with all 6 modes
+      await tester.tap(find.text('Explore a Thought'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ModeChooserSheet), findsOneWidget);
+      expect(find.text('Choose a conversation style'), findsOneWidget);
+
+      await tester.tap(find.text('Grounding'));
+      await tester.pumpAndSettle();
+
+      // Mode pill + starters updated cleanly for Grounding
+      expect(find.text('Grounding'), findsOneWidget);
+      expect(
+        find.text('Guide me through a 5-4-3-2-1 sensory grounding.'),
+        findsOneWidget,
+      );
+
+      // Tapping starter sends message and enters active conversation
+      await tester.tap(
+        find.text('Guide me through a 5-4-3-2-1 sensory grounding.'),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Guide me through a 5-4-3-2-1 sensory grounding.'),
+        findsOneWidget,
+      );
+      expect(find.text('Save Takeaway Report'), findsOneWidget);
     });
   });
 }
