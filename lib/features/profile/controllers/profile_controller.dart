@@ -16,16 +16,16 @@ class ProfileNotifier extends AsyncNotifier<PsychologicalProfileModel> {
   @override
   Future<PsychologicalProfileModel> build() async {
     final repo = ref.watch(profileRepositoryProvider);
-    final authUser = ref.watch(authControllerProvider).user;
-    final userId = authUser?.id;
+    final userId = ref.watch(authControllerProvider.select((s) => s.user?.id));
+    final codename = ref.watch(authControllerProvider.select((s) => s.user?.codename));
 
     final profile = await repo.getProfile(userId: userId);
 
     // Pre-populate preferredName from auth codename if not yet set
     if (profile.preferredName.isEmpty &&
-        authUser != null &&
-        authUser.codename.isNotEmpty) {
-      return profile.copyWith(preferredName: authUser.codename);
+        codename != null &&
+        codename.isNotEmpty) {
+      return profile.copyWith(preferredName: codename);
     }
 
     return profile;

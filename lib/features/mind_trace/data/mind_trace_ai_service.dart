@@ -146,7 +146,7 @@ ${languageCode == 'ar' ? '''
     }
 
     final url = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=$apiKey',
+      'https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent',
     );
 
     final payload = {
@@ -174,6 +174,7 @@ ${languageCode == 'ar' ? '''
       client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
       final request = await client.postUrl(url);
       request.headers.contentType = ContentType.json;
+      request.headers.set('x-goog-api-key', apiKey.trim());
       request.write(jsonEncode(payload));
 
       final response = await request.close();

@@ -122,10 +122,10 @@ final aiConfigProvider =
 
 /// Provider for Case persistence with user-level isolation.
 final caseRepositoryProvider = Provider<CaseRepository>((ref) {
-  final authState = ref.watch(authControllerProvider);
+  final userId = ref.watch(authControllerProvider.select((s) => s.user?.id));
   final keyManager = ref.watch(secureKeyManagerProvider);
   return LocalCaseRepository(
-    userId: authState.user?.id,
+    userId: userId,
     keyManager: keyManager,
   );
 });

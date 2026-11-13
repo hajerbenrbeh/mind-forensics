@@ -161,6 +161,40 @@ void main() {
       expect(todayTrace?.overallMood, equals('calm'));
     });
 
+    testWidgets('Entering optional note in Home check-in persists note to journalText', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(tester.view.reset);
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            home: HomeScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final noteField = find.byType(TextField);
+      expect(noteField, findsOneWidget);
+      await tester.ensureVisible(noteField);
+      await tester.enterText(noteField, 'Felt peaceful during evening walk');
+      await tester.pumpAndSettle();
+
+      final saveBtn = find.text('Log Daily Check-in');
+      await tester.ensureVisible(saveBtn);
+      await tester.tap(saveBtn);
+      await tester.pumpAndSettle();
+
+      final todayTrace = container.read(todayTraceProvider);
+      expect(todayTrace, isNotNull);
+      expect(todayTrace?.journalText, equals('Felt peaceful during evening walk'));
+    });
+
     testWidgets('Tapping Relieve stress opens the 4-4-4-4 Vagal Breathing sheet', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
@@ -178,6 +212,8 @@ void main() {
       // Tap on Relieve stress exercise card
       final exerciseCard = find.text('Relieve stress');
       expect(exerciseCard, findsOneWidget);
+      await tester.ensureVisible(exerciseCard);
+      await tester.pumpAndSettle();
       await tester.tap(exerciseCard);
       // Use fixed pump duration because Vagal Breathing has an active Timer.periodic
       await tester.pump(const Duration(milliseconds: 500));

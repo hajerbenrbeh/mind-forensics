@@ -10,10 +10,10 @@ import '../data/local_journal_memory_repository.dart';
 import '../domain/journal_memory_model.dart';
 
 final journalMemoryRepositoryProvider = Provider<JournalMemoryRepository>((ref) {
-  final authUser = ref.watch(authControllerProvider).user;
+  final userId = ref.watch(authControllerProvider.select((s) => s.user?.id));
   final keyManager = ref.watch(secureKeyManagerProvider);
   return LocalJournalMemoryRepository(
-    userId: authUser?.id,
+    userId: userId,
     keyManager: keyManager,
   );
 });

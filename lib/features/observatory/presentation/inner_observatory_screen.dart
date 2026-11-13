@@ -84,92 +84,94 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
+        child: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
             // Top Phone 5 Hero Banner (3D Neural Brain & Exploration Cards)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: _buildPhone5Hero(isDark, textPrimary, textSecondary),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: _buildPhone5Hero(isDark, textPrimary, textSecondary),
+              ),
             ),
 
             // Section Switcher Tabs
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: surfaceColor,
-                border: Border(bottom: BorderSide(color: borderColor, width: 1)),
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildSectionTab(
-                      index: 0,
-                      label: strings.sectionPerspectiveExploration,
-                      icon: Icons.psychology_outlined,
-                      isDark: isDark,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      borderColor: borderColor,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildSectionTab(
-                      index: 1,
-                      label: strings.sectionExperimentsStrategies,
-                      icon: Icons.lightbulb_outline_rounded,
-                      isDark: isDark,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      borderColor: borderColor,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildSectionTab(
-                      index: 2,
-                      label: strings.sectionPersonalDiscoveries,
-                      icon: Icons.auto_awesome_outlined,
-                      isDark: isDark,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      borderColor: borderColor,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildSectionTab(
-                      index: 3,
-                      label: strings.sectionSymptomExploration,
-                      icon: Icons.radar_outlined,
-                      isDark: isDark,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      borderColor: borderColor,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildSectionTab(
-                      index: 4,
-                      label: isAr ? 'التحليل الطولي والأنماط' : 'Longitudinal & Patterns',
-                      icon: Icons.insights_outlined,
-                      isDark: isDark,
-                      textPrimary: textPrimary,
-                      textSecondary: textSecondary,
-                      borderColor: borderColor,
-                    ),
-                  ],
+            SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: surfaceColor,
+                  border: Border(bottom: BorderSide(color: borderColor, width: 1)),
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildSectionTab(
+                        index: 0,
+                        label: strings.sectionPerspectiveExploration,
+                        icon: Icons.psychology_outlined,
+                        isDark: isDark,
+                        textPrimary: textPrimary,
+                        textSecondary: textSecondary,
+                        borderColor: borderColor,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildSectionTab(
+                        index: 1,
+                        label: strings.sectionExperimentsStrategies,
+                        icon: Icons.lightbulb_outline_rounded,
+                        isDark: isDark,
+                        textPrimary: textPrimary,
+                        textSecondary: textSecondary,
+                        borderColor: borderColor,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildSectionTab(
+                        index: 2,
+                        label: strings.sectionPersonalDiscoveries,
+                        icon: Icons.auto_awesome_outlined,
+                        isDark: isDark,
+                        textPrimary: textPrimary,
+                        textSecondary: textSecondary,
+                        borderColor: borderColor,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildSectionTab(
+                        index: 3,
+                        label: strings.sectionSymptomExploration,
+                        icon: Icons.radar_outlined,
+                        isDark: isDark,
+                        textPrimary: textPrimary,
+                        textSecondary: textSecondary,
+                        borderColor: borderColor,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildSectionTab(
+                        index: 4,
+                        label: isAr ? 'التحليل الطولي والأنماط' : 'Longitudinal & Patterns',
+                        icon: Icons.insights_outlined,
+                        isDark: isDark,
+                        textPrimary: textPrimary,
+                        textSecondary: textSecondary,
+                        borderColor: borderColor,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-
-            // Section Content Body
-            Expanded(
-              child: _buildSectionContent(
-                isDark: isDark,
-                strings: strings,
-                isAr: isAr,
-                surfaceColor: surfaceColor,
-                borderColor: borderColor,
-                textPrimary: textPrimary,
-                textSecondary: textSecondary,
-              ),
-            ),
           ],
+
+          // Section Content Body
+          body: _buildSectionContent(
+            isDark: isDark,
+            strings: strings,
+            isAr: isAr,
+            surfaceColor: surfaceColor,
+            borderColor: borderColor,
+            textPrimary: textPrimary,
+            textSecondary: textSecondary,
+          ),
         ),
       ),
     );

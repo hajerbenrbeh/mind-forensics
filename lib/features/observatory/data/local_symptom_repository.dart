@@ -2,23 +2,49 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/security/encrypted_storage_helper.dart';
+import '../../../core/security/local_data_cipher.dart';
 import '../../../core/security/secure_key_manager.dart';
+import '../../auth/controllers/auth_controller.dart';
 import '../domain/default_symptom_library.dart';
 import '../domain/symptom_entry.dart';
 import '../domain/symptom_report.dart';
 
 final symptomRepositoryProvider = Provider<LocalSymptomRepository>((ref) {
+  final userId = ref.watch(authControllerProvider.select((s) => s.user?.id));
   final keyManager = ref.watch(secureKeyManagerProvider);
-  return LocalSymptomRepository(keyManager: keyManager);
+  return LocalSymptomRepository(
+    userId: userId,
+    keyManager: keyManager,
+  );
 });
 
 class LocalSymptomRepository {
-  LocalSymptomRepository({SecureKeyManager? keyManager})
+  LocalSymptomRepository({this.userId, SecureKeyManager? keyManager})
       : _keyManager = keyManager ?? SecureKeyManager();
 
+  final String? userId;
   final SecureKeyManager _keyManager;
-  static const String _customSymptomsKey = 'mf_custom_symptoms_v1';
-  static const String _reportsKey = 'mf_symptom_reports_v1';
+
+  static const String _legacyCustomSymptomsKey = 'mf_custom_symptoms_v1';
+  static const String _legacyReportsKey = 'mf_symptom_reports_v1';
+
+  String get _customSymptomsKey {
+    if (userId != null && userId!.trim().isNotEmpty && userId != 'local_user') {
+      return 'mf_custom_symptoms_${userId!.trim()}';
+    }
+    return _legacyCustomSymptomsKey;
+  }
+
+  String get _reportsKey {
+    if (userId != null && userId!.trim().isNotEmpty && userId != 'local_user') {
+      return 'mf_symptom_reports_${userId!.trim()}';
+    }
+    return _legacyReportsKey;
+  }
+
+  Future<LocalDataCipher> _getCipher() async {
+    return _keyManager.getCipherForUser(userId);
+  }
 
   // ---------------------------------------------------------------------------
   // Symptoms (Default Library + Custom Symptoms)
@@ -31,12 +57,25 @@ class LocalSymptomRepository {
 
   Future<List<SymptomEntry>> getCustomSymptoms() async {
     final prefs = await SharedPreferences.getInstance();
-    final cipher = await _keyManager.getCipherForUser('observatory_symptoms');
-    final raw = await EncryptedStorageHelper.readAndMigrate(
+    final cipher = await _getCipher();
+    var raw = await EncryptedStorageHelper.readAndMigrate(
       prefs: prefs,
       key: _customSymptomsKey,
       cipher: cipher,
     );
+
+    // Legacy migration check
+    if ((raw == null || raw.isEmpty) &&
+        _customSymptomsKey != _legacyCustomSymptomsKey &&
+        (userId == null || userId == 'local_user')) {
+      final legacyCipher = await _keyManager.getCipherForUser(null);
+      raw = await EncryptedStorageHelper.readAndMigrate(
+        prefs: prefs,
+        key: _legacyCustomSymptomsKey,
+        cipher: legacyCipher,
+      );
+    }
+
     if (raw == null || raw.isEmpty) return [];
 
     try {
@@ -59,7 +98,7 @@ class LocalSymptomRepository {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final cipher = await _keyManager.getCipherForUser('observatory_symptoms');
+    final cipher = await _getCipher();
     await EncryptedStorageHelper.writeEncrypted(
       prefs: prefs,
       key: _customSymptomsKey,
@@ -73,7 +112,7 @@ class LocalSymptomRepository {
     custom.removeWhere((s) => s.id == id);
 
     final prefs = await SharedPreferences.getInstance();
-    final cipher = await _keyManager.getCipherForUser('observatory_symptoms');
+    final cipher = await _getCipher();
     await EncryptedStorageHelper.writeEncrypted(
       prefs: prefs,
       key: _customSymptomsKey,
@@ -88,12 +127,25 @@ class LocalSymptomRepository {
 
   Future<List<SymptomReport>> getAllReports() async {
     final prefs = await SharedPreferences.getInstance();
-    final cipher = await _keyManager.getCipherForUser('observatory_reports');
-    final raw = await EncryptedStorageHelper.readAndMigrate(
+    final cipher = await _getCipher();
+    var raw = await EncryptedStorageHelper.readAndMigrate(
       prefs: prefs,
       key: _reportsKey,
       cipher: cipher,
     );
+
+    // Legacy migration check
+    if ((raw == null || raw.isEmpty) &&
+        _reportsKey != _legacyReportsKey &&
+        (userId == null || userId == 'local_user')) {
+      final legacyCipher = await _keyManager.getCipherForUser(null);
+      raw = await EncryptedStorageHelper.readAndMigrate(
+        prefs: prefs,
+        key: _legacyReportsKey,
+        cipher: legacyCipher,
+      );
+    }
+
     if (raw == null || raw.isEmpty) return [];
 
     try {
@@ -118,7 +170,7 @@ class LocalSymptomRepository {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final cipher = await _keyManager.getCipherForUser('observatory_reports');
+    final cipher = await _getCipher();
     await EncryptedStorageHelper.writeEncrypted(
       prefs: prefs,
       key: _reportsKey,
@@ -132,13 +184,19 @@ class LocalSymptomRepository {
     reports.removeWhere((r) => r.id == id);
 
     final prefs = await SharedPreferences.getInstance();
-    final cipher = await _keyManager.getCipherForUser('observatory_reports');
+    final cipher = await _getCipher();
     await EncryptedStorageHelper.writeEncrypted(
       prefs: prefs,
       key: _reportsKey,
       plaintext: jsonEncode(reports.map((r) => r.toJson()).toList()),
       cipher: cipher,
     );
+  }
+
+  Future<void> clearAllData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_customSymptomsKey);
+    await prefs.remove(_reportsKey);
   }
 
   /// Calculates frequency of each symptom ID over a given day window.
@@ -156,4 +214,3 @@ class LocalSymptomRepository {
     return counts;
   }
 }
-

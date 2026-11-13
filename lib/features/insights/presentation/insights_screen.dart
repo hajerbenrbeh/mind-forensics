@@ -16,6 +16,10 @@ import '../../../core/widgets/smooth_spline_chart.dart';
 import '../../case_file/presentation/clinical_export_preview_sheet.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
+import '../../mind_trace/controllers/mind_trace_controller.dart';
+import '../../mind_trace/domain/mind_trace_model.dart';
+import '../../progress/data/progress_analytics_service.dart';
+import '../../progress/domain/progress_analytics_model.dart';
 import '../data/pattern_awareness_service.dart';
 import '../domain/pattern_divergence_model.dart';
 import '../domain/personal_baseline_model.dart';
@@ -42,6 +46,8 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     final divergences = ref.watch(patternDivergencesProvider);
     final weeklySummary = ref.watch(weeklySummaryProvider);
     final cases = ref.watch(savedCasesProvider).value ?? [];
+    final traces = ref.watch(mindTraceControllerProvider).value ?? [];
+    final analytics = ref.watch(progressAnalyticsProvider);
 
     return Scaffold(
       backgroundColor: tokens.background,
@@ -107,11 +113,11 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          _buildMoodTrendsCard(context, tokens, isDark),
+          _buildMoodTrendsCard(context, tokens, isDark, traces, strings),
           const SizedBox(height: 20),
 
           // 3. Your Patterns Section (Phone 4)
-          _buildYourPatternsSection(context, tokens, isDark),
+          _buildYourPatternsSection(context, tokens, isDark, analytics, strings),
           const SizedBox(height: 16),
 
           // 4. Botanical Encouragement Banner (Phone 4)
@@ -188,9 +194,70 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
   );
 }
 
-  Widget _buildMoodTrendsCard(BuildContext context, MindTokens tokens, bool isDark) {
-    // 7 data points reflecting the smooth curve in Phone 4
-    final chartValues = [0.45, 0.65, 0.50, 0.75, 0.60, 0.85, 0.70];
+  Widget _buildMoodTrendsCard(
+    BuildContext context,
+    MindTokens tokens,
+    bool isDark,
+    List<MindTraceModel> traces,
+    AppStrings strings,
+  ) {
+    if (traces.length < 2) {
+      return MindCard(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+        borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+              ),
+              child: Icon(Icons.show_chart_rounded, size: 20, color: tokens.textSecondary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.isArabic ? 'منحنى المزاج قيد المعايرة' : 'Mood curve calibrating',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    strings.isArabic
+                        ? 'سجل يومين على الأقل من الملاحظات لرسم منحنى المزاج الخاص بك.'
+                        : 'At least 2 days of observations needed to render your personal mood curve.',
+                    style: TextStyle(fontSize: 11.5, color: tokens.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final sortedTraces = [...traces]..sort((a, b) => a.date.compareTo(b.date));
+    final recentTraces = sortedTraces.length > 7
+        ? sortedTraces.sublist(sortedTraces.length - 7)
+        : sortedTraces;
+    final chartValues = recentTraces
+        .map((t) => (t.moodIntensity / 10.0).clamp(0.05, 0.95))
+        .toList();
+    final lastTrace = recentTraces.last;
+    final monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final activeLabel =
+        '${monthNames[lastTrace.date.month - 1]} ${lastTrace.date.day}\n${lastTrace.overallMood.toUpperCase()}';
 
     return MindCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -222,13 +289,13 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
             ],
           ),
           const SizedBox(width: 10),
-          // Spline chart with callout tooltip matching Phone 4
+          // Spline chart with callout tooltip derived from authentic traces
           Expanded(
             child: SmoothSplineChart(
               values: chartValues,
               height: 120,
-              activePointIndex: 5,
-              activePointLabel: 'Nov 8\nCalm',
+              activePointIndex: chartValues.length - 1,
+              activePointLabel: activeLabel,
               lineColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
               showDots: true,
             ),
@@ -238,24 +305,14 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     );
   }
 
-  Widget _buildYourPatternsSection(BuildContext context, MindTokens tokens, bool isDark) {
-    final patterns = [
-      (
-        icon: Icons.nightlight_outlined,
-        title: 'Mood dips',
-        subtitle: 'Often linked to poor sleep',
-      ),
-      (
-        icon: Icons.menu_book_outlined,
-        title: 'Higher anxiety',
-        subtitle: 'During study periods',
-      ),
-      (
-        icon: Icons.eco_outlined,
-        title: 'More balance',
-        subtitle: 'On days with self-care',
-      ),
-    ];
+  Widget _buildYourPatternsSection(
+    BuildContext context,
+    MindTokens tokens,
+    bool isDark,
+    ProgressAnalyticsModel analytics,
+    AppStrings strings,
+  ) {
+    final insights = analytics.insights;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,63 +343,84 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        ...patterns.map((p) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: MindCard(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
-              borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
-              onTap: () => context.go('/progress'),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
-                    ),
-                    child: Icon(
-                      p.icon,
-                      size: 19,
-                      color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
-                    ),
+        if (insights.isEmpty)
+          MindCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+            borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+            child: Row(
+              children: [
+                Icon(Icons.auto_awesome_outlined, size: 20, color: tokens.accent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    strings.isArabic
+                        ? 'الأنماط قيد المعايرة: مع استمرارك في تسجيل الملاحظات اليومية، ستظهر هنا روابط دقيقة بين النوم والمزاج.'
+                        : 'Patterns calibrating: As you log observations over time, correlations between sleep, mood, and stress will appear here.',
+                    style: TextStyle(fontSize: 12, color: tokens.textSecondary, height: 1.4),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          p.title,
-                          style: TextStyle(
-                            color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          p.subtitle,
-                          style: TextStyle(
-                            color: tokens.textSecondary,
-                            fontSize: 11.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 18,
-                    color: tokens.textTertiary,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        }),
+          )
+        else
+          ...insights.take(3).map((item) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: MindCard(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
+                borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
+                onTap: () => context.go('/progress'),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
+                      ),
+                      child: Icon(
+                        item.icon,
+                        size: 19,
+                        color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.title,
+                            style: TextStyle(
+                              color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.description,
+                            style: TextStyle(
+                              color: tokens.textSecondary,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: tokens.textTertiary,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
       ],
     );
   }

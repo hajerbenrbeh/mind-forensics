@@ -380,18 +380,23 @@ class WeeklySummaryReport {
 
 // Providers
 final personalBaselineProvider = Provider<PersonalBaseline>((ref) {
-  final traces = ref.watch(mindTraceControllerProvider).value ?? [];
-  return PersonalBaseline.fromTraces(traces);
+  return ref.watch(mindTraceControllerProvider.select((asyncVal) {
+    return PersonalBaseline.fromTraces(asyncVal.value ?? []);
+  }));
 });
 
 final patternDivergencesProvider = Provider<List<PatternDivergence>>((ref) {
-  final traces = ref.watch(mindTraceControllerProvider).value ?? [];
-  final baseline = ref.watch(personalBaselineProvider);
-  return PatternAwarenessService.detectDivergences(traces: traces, baseline: baseline);
+  return ref.watch(mindTraceControllerProvider.select((asyncVal) {
+    final traces = asyncVal.value ?? [];
+    final baseline = PersonalBaseline.fromTraces(traces);
+    return PatternAwarenessService.detectDivergences(traces: traces, baseline: baseline);
+  }));
 });
 
 final weeklySummaryProvider = Provider<WeeklySummaryReport>((ref) {
-  final traces = ref.watch(mindTraceControllerProvider).value ?? [];
-  final baseline = ref.watch(personalBaselineProvider);
-  return WeeklySummaryReport.generate(traces: traces, baseline: baseline);
+  return ref.watch(mindTraceControllerProvider.select((asyncVal) {
+    final traces = asyncVal.value ?? [];
+    final baseline = PersonalBaseline.fromTraces(traces);
+    return WeeklySummaryReport.generate(traces: traces, baseline: baseline);
+  }));
 });

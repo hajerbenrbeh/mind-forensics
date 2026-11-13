@@ -6,6 +6,8 @@ import '../../../../app/localization/app_strings.dart';
 import '../../../../app/localization/locale_controller.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../../../app/theme/lab_theme.dart';
+import '../../../../core/safety/crisis_keywords.dart';
+import '../../../../core/safety/safety_interceptor.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
 import '../../../../core/widgets/fingerprint_thread_signature.dart';
 import '../../../profile/controllers/profile_controller.dart';
@@ -128,6 +130,17 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
       } else {
         // Intentionally cleared/deleted by user in this session:
         mergedDynamicAnswers.remove(entry.key);
+      }
+    }
+
+    // Layer 1 crisis pre-scan: Intercept Level 2 phrases immediately
+    for (final answer in mergedDynamicAnswers.values) {
+      if (CrisisKeywords.evaluateText(answer) == 2) {
+        setState(() => _isSaving = false);
+        if (mounted) {
+          SafetyInterceptor.showCrisisPauseDialog(context);
+        }
+        return;
       }
     }
 

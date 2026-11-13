@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../core/safety/crisis_keywords.dart';
+import '../../../core/safety/safety_interceptor.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/label_badge.dart';
 import '../../investigation/controllers/investigation_providers.dart';
@@ -87,6 +89,14 @@ class _CaseReportScreenState extends ConsumerState<CaseReportScreen> {
             onPressed: () async {
               HapticFeedback.lightImpact();
               final newConclusion = controller.text.trim();
+
+              // Layer 1 crisis pre-scan: Intercept Level 2 phrases immediately
+              if (CrisisKeywords.evaluateText(newConclusion) == 2) {
+                if (ctx.mounted) Navigator.of(ctx).pop();
+                SafetyInterceptor.showCrisisPauseDialog(context);
+                return;
+              }
+
               final updated = _case!.copyWith(
                 userConclusion: newConclusion,
                 updatedAt: DateTime.now(),

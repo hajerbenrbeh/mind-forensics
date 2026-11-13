@@ -7,6 +7,8 @@ import 'package:uuid/uuid.dart';
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/mind_tokens.dart';
+import '../../../core/safety/crisis_keywords.dart';
+import '../../../core/safety/safety_interceptor.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/mind_badge.dart';
 import '../../../core/widgets/mind_button.dart';
@@ -133,6 +135,15 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
 
       final situationStr = _selectedTriggers.isNotEmpty ? _selectedTriggers.join(', ') : null;
       final noteText = _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null;
+
+      // Layer 1 crisis pre-scan: Intercept Level 2 phrases immediately
+      if (noteText != null && CrisisKeywords.evaluateText(noteText) == 2) {
+        setState(() => _isSaving = false);
+        if (mounted) {
+          SafetyInterceptor.showCrisisPauseDialog(context);
+        }
+        return;
+      }
 
       final trace = (today != null)
           ? today.copyWith(

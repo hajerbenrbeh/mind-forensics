@@ -10,6 +10,8 @@ import '../../../app/localization/app_strings.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/mind_tokens.dart';
+import '../../../core/safety/crisis_keywords.dart';
+import '../../../core/safety/safety_interceptor.dart';
 import '../../../core/security/encrypted_storage_helper.dart';
 import '../../../core/security/secure_key_manager.dart';
 import '../../../core/safety/support_button.dart';
@@ -18,12 +20,12 @@ import '../../../core/widgets/fingerprint_thread_signature.dart';
 import '../../../core/widgets/mind_badge.dart';
 import '../../../core/widgets/mind_card.dart';
 import '../../../core/widgets/mind_pressable.dart';
-import '../../../core/widgets/neural_waveform_visualizer.dart';
 import '../../../core/widgets/organic_wave_art.dart';
 import '../../../core/widgets/quick_action_card.dart';
 import '../../../core/widgets/smooth_spline_chart.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../insights/data/pattern_awareness_service.dart';
+import '../../insights/domain/personal_baseline_model.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
 import '../../investigation/domain/case_stage.dart';
@@ -31,6 +33,8 @@ import '../../mind_trace/controllers/mind_trace_controller.dart';
 import '../../mind_trace/domain/mind_trace_model.dart';
 import '../../profile/controllers/profile_controller.dart';
 import '../../support/presentation/contextual_support_sheet.dart';
+import 'widgets/home_active_case_card.dart';
+import 'widgets/home_daily_check_in_card.dart';
 import 'widgets/home_metric_sparkline.dart';
 import 'widgets/home_organic_exercise_art.dart';
 import 'widgets/home_stress_bar_chart.dart';
@@ -62,6 +66,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<CaseModel> _recentCases = [];
   bool _isLoading = true;
   bool _initializedFromTrace = false;
+  final TextEditingController _todayNoteController = TextEditingController();
 
   final List<({String key, IconData icon})> _moodOptions = const [
     (key: 'calm', icon: Icons.spa_outlined),
@@ -75,10 +80,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _loadRecentCases();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _initializedFromTrace) return;
+      final today = ref.read(todayTraceProvider);
+      if (today != null) {
+        setState(() {
+          _hydrateFromTrace(today);
+        });
+      }
+    });
+  }
+
+  void _hydrateFromTrace(MindTraceModel trace) {
+    _initializedFromTrace = true;
+    final moodIdx = _moodOptions.indexWhere((m) => m.key == trace.overallMood);
+    if (moodIdx != -1) _selectedMoodIndex = moodIdx;
+    _moodIntensity = trace.moodIntensity.toDouble();
+    if (trace.journalText != null && trace.journalText!.isNotEmpty) {
+      _todayNoteController.text = trace.journalText!;
+    }
   }
 
   @override
   void dispose() {
+    _todayNoteController.dispose();
     super.dispose();
   }
 
@@ -101,13 +126,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final intensity = _moodIntensity.toInt();
     final todayTrace = ref.read(todayTraceProvider);
     final strings = ref.read(appStringsProvider);
+    final noteText = _todayNoteController.text.trim().isNotEmpty
+        ? _todayNoteController.text.trim()
+        : null;
+
+    // Layer 1 crisis pre-scan: Intercept Level 2 phrases immediately
+    if (noteText != null && CrisisKeywords.evaluateText(noteText) == 2) {
+      SafetyInterceptor.showCrisisPauseDialog(context);
+      return;
+    }
 
     if (todayTrace != null) {
-      // 1. Update existing trace for today (preserves any existing historical note)
+      // 1. Update existing trace for today
       final updated = todayTrace.copyWith(
         overallMood: activeMood,
         moodIntensity: intensity,
         selectedEmotions: [activeMood],
+        journalText: noteText ?? todayTrace.journalText,
         updatedAt: now,
       );
       await ref.read(mindTraceControllerProvider.notifier).updateCheckIn(updated);
@@ -121,7 +156,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         moodIntensity: intensity,
         energyLevel: (10 - intensity).clamp(1, 9),
         selectedEmotions: [activeMood],
-        journalText: null,
+        journalText: noteText,
         createdAt: now,
         updatedAt: now,
       );
@@ -241,14 +276,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final activeCase = ref.watch(activeCaseControllerProvider).value;
     final traces = ref.watch(mindTraceControllerProvider).value ?? [];
-    final todayTrace = ref.watch(todayTraceProvider);
+    final todayTrace = traces.todayTrace;
 
-    // Hydrate local check-in fields once from today's saved trace
     if (!_initializedFromTrace && todayTrace != null) {
       _initializedFromTrace = true;
-      final moodIdx = _moodOptions.indexWhere((m) => m.key == todayTrace.overallMood);
-      if (moodIdx != -1) _selectedMoodIndex = moodIdx;
-      _moodIntensity = todayTrace.moodIntensity.toDouble();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() {
+          _hydrateFromTrace(todayTrace);
+        });
+      });
     }
 
     // Build authentic map of dateKey -> moodColor from real user traces
@@ -293,9 +330,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       anxiousPct = ((aCount / traces.length) * 100).round();
       lowPct = ((lCount / traces.length) * 100).round();
     } else {
-      calmPct = 60;
-      anxiousPct = 20;
-      lowPct = 20;
+      calmPct = 0;
+      anxiousPct = 0;
+      lowPct = 0;
     }
 
     return Scaffold(
@@ -651,14 +688,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         lineColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
                       ),
                       const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildLegendItem('Calm', calmPct, LabColors.moodCalm),
-                          _buildLegendItem('Anxious', anxiousPct, LabColors.moodAnxious),
-                          _buildLegendItem('Low', lowPct, const Color(0xFFC04B22)),
-                        ],
-                      ),
+                      if (traces.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Center(
+                            child: Text(
+                              strings.isArabic
+                                  ? 'خط الاتجاه في وضع المعايرة (سجل أثرك للبدء)'
+                                  : 'Trend line calibrating (record a trace to begin)',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: tokens.textSecondary,
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildLegendItem('Calm', calmPct, LabColors.moodCalm),
+                            _buildLegendItem('Anxious', anxiousPct, LabColors.moodAnxious),
+                            _buildLegendItem('Low', lowPct, const Color(0xFFC04B22)),
+                          ],
+                        ),
                     ],
                   ),
                 ),
@@ -820,7 +873,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const SizedBox(height: 20),
 
                 // 8. PATTERN AWARENESS DIVERGENCE BANNER (20px radius)
-                _buildPatternAwarenessCard(tokens, strings, isDark),
+                _buildPatternAwarenessCard(tokens, strings, isDark, traces),
 
                 const SizedBox(height: 20),
 
@@ -1336,240 +1389,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     MindTraceModel? todayTrace,
     List<MindTraceModel> traces,
   ) {
-    final activeMood = _moodOptions[_selectedMoodIndex].key;
-    final activeMoodColor = _getMoodColor(activeMood);
-    final hasLoggedToday = todayTrace != null;
-
-    // Retrieve previous historical trace if today is not yet logged
-    final previousTrace = traces.firstOrNull;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: tokens.surface,
-        borderRadius: BorderRadius.circular(20.0),
-        border: Border.all(color: tokens.border, width: 1.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Authentic History Indicator: Today's recorded status or previous trace
-          if (hasLoggedToday) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              margin: const EdgeInsets.only(bottom: 14),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF26322C) : const Color(0xFFE5ECE6),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: tokens.accent.withValues(alpha: 0.5)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.check_circle_outline_rounded, size: 15, color: tokens.accent),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${strings.todayCheckInRecorded}: ${_getMoodLabel(todayTrace.overallMood, strings)} (${todayTrace.moodIntensity}/10)',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.textPrimary,
-                      ),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () => context.push('/mind-trace'),
-                    child: Text(
-                      (strings.isArabic ? 'عرض' : 'VIEW').toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.accent,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ] else if (previousTrace != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              margin: const EdgeInsets.only(bottom: 14),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF26322C) : const Color(0xFFE5ECE6),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: tokens.border),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.history_toggle_off_rounded, size: 15, color: tokens.accent),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${strings.lastMoodLabel.toUpperCase()}: ${_getMoodLabel(previousTrace.overallMood, strings)} (${previousTrace.moodIntensity}/10)',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: tokens.textPrimary,
-                    ),
-                  ),
-                  if (previousTrace.journalText != null && previousTrace.journalText!.isNotEmpty) ...[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '•  "${previousTrace.journalText!}"',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontStyle: FontStyle.italic,
-                          color: tokens.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${strings.moodIntensityLabel.toUpperCase()}: ${_moodIntensity.toInt()}/10',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                  letterSpacing: 0.5,
-                  color: tokens.textSecondary,
-                ),
-              ),
-              Icon(
-                _moodOptions[_selectedMoodIndex].icon,
-                size: 20,
-                color: activeMoodColor,
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-
-          // Slider
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: activeMoodColor,
-              thumbColor: activeMoodColor,
-              inactiveTrackColor: isDark ? const Color(0xFF303E37) : const Color(0xFFE5ECE6),
-              trackHeight: 3,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-            ),
-            child: Slider(
-              value: _moodIntensity,
-              min: 1,
-              max: 10,
-              divisions: 9,
-              onChanged: (val) {
-                HapticFeedback.selectionClick();
-                setState(() => _moodIntensity = val);
-              },
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Real-time animated neural waveform canvas
-          NeuralWaveformVisualizer(
-            intensity: _moodIntensity,
-            moodColor: activeMoodColor,
-            isDark: isDark,
-            strings: strings,
-          ),
-
-          const SizedBox(height: 14),
-
-          // Emotion selector pills (24px radius)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(_moodOptions.length, (index) {
-                final option = _moodOptions[index];
-                final isSelected = index == _selectedMoodIndex;
-                final label = _getMoodLabel(option.key, strings);
-                final moodColor = _getMoodColor(option.key);
-
-                return Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 8),
-                  child: BouncingWidget(
-                    onTap: () {
-                      setState(() => _selectedMoodIndex = index);
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? (isDark ? const Color(0xFF303E37) : const Color(0xFFE5ECE6))
-                            : tokens.surface,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                          color: isSelected ? moodColor : tokens.border,
-                          width: isSelected ? 1.5 : 1.0,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            option.icon,
-                            size: 15,
-                            color: isSelected ? moodColor : tokens.textSecondary,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            label,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                              color: isSelected ? tokens.textPrimary : tokens.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }),
-            ),
-          ),
-
-          const SizedBox(height: 14),
-
-          // Save / Update Action Button (20px pill radius)
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: FilledButton.icon(
-              onPressed: _saveDailyCheckIn,
-              icon: Icon(
-                hasLoggedToday ? Icons.refresh_rounded : Icons.check_circle_outline_rounded,
-                size: 16,
-              ),
-              label: Text(hasLoggedToday ? strings.updateCheckInButton : strings.saveCheckInButton),
-              style: FilledButton.styleFrom(
-                backgroundColor: isDark ? tokens.accent : const Color(0xFF34443B),
-                foregroundColor: isDark ? const Color(0xFF151B19) : Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return HomeDailyCheckInCard(
+      tokens: tokens,
+      strings: strings,
+      isDark: isDark,
+      todayTrace: todayTrace,
+      traces: traces,
+      selectedMoodIndex: _selectedMoodIndex,
+      moodIntensity: _moodIntensity,
+      todayNoteController: _todayNoteController,
+      moodOptions: _moodOptions,
+      onMoodSelected: (idx) => setState(() => _selectedMoodIndex = idx),
+      onIntensityChanged: (val) => setState(() => _moodIntensity = val),
+      onSave: _saveDailyCheckIn,
+      getMoodLabel: _getMoodLabel,
+      getMoodColor: _getMoodColor,
     );
   }
 
@@ -1579,73 +1413,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     AppStrings strings,
     bool isDark,
   ) {
-    final progress = c.currentStage.stepNumber / 6.0;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: tokens.surface,
-        borderRadius: BorderRadius.circular(20.0),
-        border: Border.all(color: tokens.border, width: 1.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              MindBadge(
-                label: '${strings.formatSessionNumber(c.caseNumber)}  •  ${strings.stageNumberLabel(c.currentStage.stepNumber)}',
-              ),
-              const Spacer(),
-              Icon(Icons.arrow_forward_ios_rounded, size: 12, color: tokens.textSecondary),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            c.title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 15.5,
-              color: tokens.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 4,
-              backgroundColor: tokens.surfaceSecondary,
-              valueColor: AlwaysStoppedAnimation<Color>(tokens.accent),
-            ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: () async {
-                HapticFeedback.mediumImpact();
-                await context.push('/investigation');
-                _loadRecentCases();
-              },
-              style: FilledButton.styleFrom(
-                backgroundColor: isDark ? tokens.accent : const Color(0xFF34443B),
-                foregroundColor: isDark ? const Color(0xFF151B19) : Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: Text(
-                strings.resumeInvestigation,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
-              ),
-            ),
-          ),
-        ],
-      ),
+    return HomeActiveCaseCard(
+      caseModel: c,
+      tokens: tokens,
+      strings: strings,
+      isDark: isDark,
+      onResume: () async {
+        await context.push('/investigation');
+        _loadRecentCases();
+      },
     );
   }
 
@@ -1795,9 +1571,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     MindTokens tokens,
     AppStrings strings,
     bool isDark,
+    List<MindTraceModel> traces,
   ) {
-    final divergences = ref.watch(patternDivergencesProvider);
-    final baseline = ref.watch(personalBaselineProvider);
+    final baseline = PersonalBaseline.fromTraces(traces);
+    final divergences = PatternAwarenessService.detectDivergences(traces: traces, baseline: baseline);
 
     if (divergences.isEmpty) {
       if (!baseline.hasSufficientData) return const SizedBox.shrink();

@@ -88,6 +88,47 @@ class CrisisKeywords {
     'denya dha9et',
   ];
 
+  static final List<String> _normalizedLevel2 =
+      level2CrisisPhrases.map(normalize).toList();
+  static final List<String> _normalizedLevel1 =
+      level1DistressPhrases.map(normalize).toList();
+
+  /// Normalizes Arabic and Latin characters: strips Tashkeel (diacritics),
+  /// Tatweel (Kashida), unifies Alef variants, converts Alef Maksura to Yaa,
+  /// Teh Marbuta to Ha, and cleans smart quotes and whitespace.
+  static String normalize(String text) {
+    if (text.isEmpty) return '';
+
+    var s = text.toLowerCase();
+
+    // 1. Normalize smart quotes and apostrophes
+    s = s
+        .replaceAll('’', "'")
+        .replaceAll('‘', "'")
+        .replaceAll('`', "'")
+        .replaceAll('“', '"')
+        .replaceAll('”', '"');
+
+    // 2. Strip Arabic diacritics / Tashkeel & Tatweel (Kashida)
+    // Range \u064B - \u065F covers Fathatan, Dammatan, Kasratan, Fatha, Damma, Kasra, Shadda, Sukun
+    // \u0670 is superscript alef; \u0640 is tatweel
+    s = s.replaceAll(RegExp(r'[\u064B-\u065F\u0670\u0640]'), '');
+
+    // 3. Normalize Arabic Alef variants [أ, إ, آ, ٱ] -> ا
+    s = s.replaceAll(RegExp(r'[أإآٱ]'), 'ا');
+
+    // 4. Normalize Arabic Alef Maksura (ى) -> Yaa (ي)
+    s = s.replaceAll('ى', 'ي');
+
+    // 5. Normalize Arabic Teh Marbuta (ة) -> Ha (ه)
+    s = s.replaceAll('ة', 'ه');
+
+    // 6. Collapse multiple spaces and trim
+    s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    return s;
+  }
+
   /// Evaluates text offline and returns:
   /// - 2 for immediate crisis indicators
   /// - 1 for elevated distress
@@ -95,18 +136,18 @@ class CrisisKeywords {
   static int evaluateText(String text) {
     if (text.trim().isEmpty) return 0;
 
-    final lower = text.toLowerCase();
+    final norm = normalize(text);
 
     // Check Level 2 first (highest risk)
-    for (final phrase in level2CrisisPhrases) {
-      if (lower.contains(phrase.toLowerCase())) {
+    for (final phrase in _normalizedLevel2) {
+      if (norm.contains(phrase)) {
         return 2;
       }
     }
 
     // Check Level 1
-    for (final phrase in level1DistressPhrases) {
-      if (lower.contains(phrase.toLowerCase())) {
+    for (final phrase in _normalizedLevel1) {
+      if (norm.contains(phrase)) {
         return 1;
       }
     }

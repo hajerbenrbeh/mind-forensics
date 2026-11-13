@@ -16,6 +16,10 @@ import '../../journey/data/default_journey_curriculum.dart';
 import '../../journey/domain/journey_state_model.dart';
 import '../../mind_trace/controllers/mind_trace_controller.dart';
 import '../../mind_trace/domain/mind_trace_model.dart';
+import '../../observatory/controllers/observatory_controllers.dart';
+import '../../observatory/data/local_symptom_repository.dart';
+import '../../observatory/domain/symptom_entry.dart';
+import '../../observatory/domain/symptom_report.dart';
 import '../../profile/controllers/profile_controller.dart';
 import '../../profile/domain/psychological_profile_model.dart';
 
@@ -114,6 +118,10 @@ class UnifiedBackupService {
       final journeyRepo = _ref.read(journeyRepositoryProvider);
       final journey = await journeyRepo.getJourneyState();
 
+      final symptomRepo = _ref.read(symptomRepositoryProvider);
+      final customSymptoms = await symptomRepo.getCustomSymptoms();
+      final symptomReports = await symptomRepo.getAllReports();
+
       final Map<String, dynamic> backupData = {
         'schemaVersion': schemaVersion,
         'app': 'Mind Forensics',
@@ -124,6 +132,7 @@ class UnifiedBackupService {
           'traceCount': traces.length,
           'sessionCount': cases.length,
           'memoryCount': memories.length,
+          'symptomReportCount': symptomReports.length,
           'hasProfile': profile.preferredName.isNotEmpty || profile.conditions.isNotEmpty,
           'hasJourney': journey.activities.isNotEmpty,
         },
@@ -132,6 +141,8 @@ class UnifiedBackupService {
         'profile': profile.toJson(),
         'memories': memories.map((m) => m.toJson()).toList(),
         'journey': journey.toJson(),
+        'customSymptoms': customSymptoms.map((s) => s.toJson()).toList(),
+        'symptomReports': symptomReports.map((r) => r.toJson()).toList(),
       };
 
       final jsonStr = const JsonEncoder.withIndent('  ').convert(backupData);
@@ -268,6 +279,33 @@ class UnifiedBackupService {
           await journeyRepo.saveJourneyState(journey);
           _ref.invalidate(journeyControllerProvider);
         } catch (_) {}
+      }
+
+      // 6. Restore Symptom reports & Custom symptoms if present
+      if (data['customSymptoms'] is List) {
+        final symptomRepo = _ref.read(symptomRepositoryProvider);
+        final rawCustom = (data['customSymptoms'] as List).whereType<Map<String, dynamic>>();
+        for (final item in rawCustom) {
+          try {
+            await symptomRepo.saveCustomSymptom(SymptomEntry.fromJson(item));
+          } catch (_) {}
+        }
+      }
+      if (data['symptomReports'] is List) {
+        final symptomRepo = _ref.read(symptomRepositoryProvider);
+        final existingReports = await symptomRepo.getAllReports();
+        final existingIds = existingReports.map((r) => r.id).toSet();
+        final rawReports = (data['symptomReports'] as List).whereType<Map<String, dynamic>>();
+        for (final item in rawReports) {
+          try {
+            final report = SymptomReport.fromJson(item);
+            if (!existingIds.contains(report.id)) {
+              await symptomRepo.saveReport(report);
+            }
+          } catch (_) {}
+        }
+        _ref.invalidate(symptomReportsControllerProvider);
+        _ref.invalidate(symptomListControllerProvider);
       }
 
       return BackupOperationResult(

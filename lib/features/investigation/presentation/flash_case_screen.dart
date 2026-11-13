@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_strings.dart';
+import '../../../app/router/app_router.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../core/safety/support_button.dart';
 import '../controllers/investigation_providers.dart';
@@ -144,7 +146,7 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
             tooltip: 'Settings',
             onPressed: () {
               HapticFeedback.lightImpact();
-              Navigator.of(context).pushNamed('/settings');
+              context.push(AppRouter.profile);
             },
           ),
           const SupportButton(),

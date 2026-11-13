@@ -383,6 +383,8 @@ class AuthService {
       await prefs.remove('mf_profile_$uid');
       await prefs.remove('mf_journal_memories_$uid');
       await prefs.remove('mf_journey_state_$uid');
+      await prefs.remove('mf_symptom_reports_$uid');
+      await prefs.remove('mf_custom_symptoms_$uid');
     }
 
     await prefs.remove(_keyCurrentUser);
