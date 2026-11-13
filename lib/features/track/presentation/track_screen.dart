@@ -13,7 +13,6 @@ import '../../../core/widgets/mind_badge.dart';
 import '../../../core/widgets/mind_button.dart';
 import '../../../core/widgets/mind_card.dart';
 import '../../../core/widgets/mind_pill.dart';
-import '../../../core/widgets/radial_mood_dial.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
@@ -51,6 +50,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
   final Set<String> _selectedHelped = {};
   bool _isSaving = false;
   bool _initializedFromTrace = false;
+  bool _showOptionalContext = false;
 
   final List<({String key, IconData icon})> _moodOptions = const [
     (key: 'calm', icon: Icons.sentiment_satisfied_outlined),
@@ -312,15 +312,6 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
 
   Widget _buildQuickCheckInView(MindTokens tokens, AppStrings strings) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final selectedMoodIndex = _moodOptions.indexWhere((m) => m.key == _selectedMood).clamp(0, 4);
-
-    final dialMoodItems = _moodOptions.map((opt) {
-      return MoodItem(
-        key: opt.key,
-        label: _getMoodLabel(opt.key, strings),
-        icon: opt.icon,
-      );
-    }).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -339,21 +330,9 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
               letterSpacing: -0.2,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
 
-          // 2. Radial Mood Dial with Concentric Ripples
-          RadialMoodDial(
-            moods: dialMoodItems,
-            selectedIndex: selectedMoodIndex,
-            showActiveLabel: false,
-            onChanged: (index) {
-              HapticFeedback.selectionClick();
-              setState(() => _selectedMood = _moodOptions[index].key);
-            },
-          ),
-          const SizedBox(height: 12),
-
-          // 3. Core State Selection
+          // 2. Core State Selection (Single non-duplicated 5-state selector)
           Center(
             child: Text(
               strings.todaysCoreState,
@@ -410,6 +389,23 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
 
           const SizedBox(height: 16),
 
+          // 3. Primary Intensity Slider
+          MindCard(
+            padding: const EdgeInsets.all(16),
+            child: _buildSliderRow(
+              label: strings.moodIntensityLabel,
+              value: _moodIntensity,
+              min: 1,
+              max: 10,
+              divisions: 9,
+              unit: '/10',
+              tokens: tokens,
+              onChanged: (v) => setState(() => _moodIntensity = v),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
           // 4. Optional Note Field
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -448,152 +444,205 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // 5. Influencing Factors / Triggers Section
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  strings.whatsInfluencingMood,
-                  style: TextStyle(
-                    color: tokens.textPrimary,
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                  ),
+          // 5. Progressive Disclosure for Optional Context (Triggers, What Helped, Sleep/Energy/Stress)
+          MindCard(
+            padding: EdgeInsets.zero,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(tokens.cardRadius),
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => _showOptionalContext = !_showOptionalContext);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.tune_outlined,
+                      size: 18,
+                      color: tokens.accent,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            strings.isArabic
+                                ? 'إضافة تفاصيل اختيارية'
+                                : (strings.isFrench
+                                    ? 'Ajouter du contexte (optionnel)'
+                                    : 'Add context (optional)'),
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            strings.isArabic
+                                ? 'المحفزات، النوم، والطاقة'
+                                : (strings.isFrench
+                                    ? 'Déclencheurs, sommeil et énergie'
+                                    : 'Triggers, sleep, and energy'),
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: tokens.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      _showOptionalContext
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                      color: tokens.textSecondary,
+                    ),
+                  ],
                 ),
               ),
-              Text(
-                strings.triggersContextHeader,
-                style: TextStyle(
-                  color: tokens.textSecondary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _triggerOptions.map((trig) {
-              final isSel = _selectedTriggers.contains(trig);
-              return MindPill(
-                label: trig,
-                isSelected: isSel,
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() {
-                    if (isSel) {
-                      _selectedTriggers.remove(trig);
-                    } else {
-                      _selectedTriggers.add(trig);
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
-
-          const SizedBox(height: 18),
-
-          // 5b. What Helped Today? (Optional positive/calming factor pill)
-          Text(
-            strings.isArabic
-                ? 'شنوّة اللي ساعدك اليوم؟ (اختياري)'
-                : (strings.isFrench
-                    ? 'Qu’est-ce qui vous a aidé ? (optionnel)'
-                    : 'What helped today? (optional)'),
-            style: TextStyle(
-              color: tokens.textPrimary,
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _helpedOptions.map((item) {
-              final isSel = _selectedHelped.contains(item);
-              return MindPill(
-                label: item,
-                isSelected: isSel,
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() {
-                    if (isSel) {
-                      _selectedHelped.remove(item);
-                    } else {
-                      _selectedHelped.add(item);
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
 
-          const SizedBox(height: 20),
+          if (_showOptionalContext) ...[
+            const SizedBox(height: 14),
 
-          // 6. Intensity & Telemetry Sliders
-          MindCard(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Triggers & Context
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildSliderRow(
-                  label: strings.moodIntensityLabel,
-                  value: _moodIntensity,
-                  min: 1,
-                  max: 10,
-                  divisions: 9,
-                  unit: '/10',
-                  tokens: tokens,
-                  onChanged: (v) => setState(() => _moodIntensity = v),
+                Expanded(
+                  child: Text(
+                    strings.whatsInfluencingMood,
+                    style: TextStyle(
+                      color: tokens.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-                const Divider(height: 20, thickness: 0.5),
-                _buildSliderRow(
-                  label: strings.sleepTrackingLabel,
-                  value: _sleepHours,
-                  min: 2,
-                  max: 14,
-                  divisions: 24,
-                  unit: 'h',
-                  tokens: tokens,
-                  onChanged: (v) => setState(() => _sleepHours = v),
-                ),
-                const Divider(height: 20, thickness: 0.5),
-                _buildSliderRow(
-                  label: strings.energyTrackingLabel,
-                  value: _energyLevel,
-                  min: 1,
-                  max: 10,
-                  divisions: 9,
-                  unit: '/10',
-                  tokens: tokens,
-                  onChanged: (v) => setState(() => _energyLevel = v),
-                ),
-                const Divider(height: 20, thickness: 0.5),
-                _buildSliderRow(
-                  label: strings.anxietyTrackingLabel,
-                  value: _anxietyLevel,
-                  min: 0,
-                  max: 10,
-                  divisions: 10,
-                  unit: '/10',
-                  tokens: tokens,
-                  onChanged: (v) => setState(() => _anxietyLevel = v),
+                Text(
+                  strings.triggersContextHeader,
+                  style: TextStyle(
+                    color: tokens.textSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.8,
+                  ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _triggerOptions.map((trig) {
+                final isSel = _selectedTriggers.contains(trig);
+                return MindPill(
+                  label: trig,
+                  isSelected: isSel,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      if (isSel) {
+                        _selectedTriggers.remove(trig);
+                      } else {
+                        _selectedTriggers.add(trig);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 16),
+
+            Text(
+              strings.isArabic
+                  ? 'شنوّة اللي ساعدك اليوم؟ (اختياري)'
+                  : (strings.isFrench
+                      ? 'Qu’est-ce qui vous a aidé ? (optionnel)'
+                      : 'What helped today? (optional)'),
+              style: TextStyle(
+                color: tokens.textPrimary,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _helpedOptions.map((item) {
+                final isSel = _selectedHelped.contains(item);
+                return MindPill(
+                  label: item,
+                  isSelected: isSel,
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() {
+                      if (isSel) {
+                        _selectedHelped.remove(item);
+                      } else {
+                        _selectedHelped.add(item);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 16),
+
+            MindCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSliderRow(
+                    label: strings.sleepTrackingLabel,
+                    value: _sleepHours,
+                    min: 2,
+                    max: 14,
+                    divisions: 24,
+                    unit: 'h',
+                    tokens: tokens,
+                    onChanged: (v) => setState(() => _sleepHours = v),
+                  ),
+                  const Divider(height: 20, thickness: 0.5),
+                  _buildSliderRow(
+                    label: strings.energyTrackingLabel,
+                    value: _energyLevel,
+                    min: 1,
+                    max: 10,
+                    divisions: 9,
+                    unit: '/10',
+                    tokens: tokens,
+                    onChanged: (v) => setState(() => _energyLevel = v),
+                  ),
+                  const Divider(height: 20, thickness: 0.5),
+                  _buildSliderRow(
+                    label: strings.anxietyTrackingLabel,
+                    value: _anxietyLevel,
+                    min: 0,
+                    max: 10,
+                    divisions: 10,
+                    unit: '/10',
+                    tokens: tokens,
+                    onChanged: (v) => setState(() => _anxietyLevel = v),
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           const SizedBox(height: 22),
 
-          // 7. Save Entry Button (single crisp label, no redundant subText yapping)
+          // 6. Save Entry Button
           MindButton(
             text: strings.saveCheckInButton,
             isFullWidth: true,

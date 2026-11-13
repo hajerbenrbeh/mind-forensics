@@ -20,8 +20,8 @@ void main() {
     GoogleFonts.config.allowRuntimeFetching = false;
   });
 
-  group('Home Screen Dribbble Redesign & Component Tests', () {
-    testWidgets('Renders all modern reference components with authentic empty states when no traces exist', (tester) async {
+  group('Home Screen Step 2 Clean & Calm Layout Tests', () {
+    testWidgets('Renders clean 4-block Home without chart/switcher clutter', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.reset);
@@ -39,25 +39,18 @@ void main() {
       expect(find.text('Mind Forensics'), findsOneWidget);
       expect(find.textContaining('Dear'), findsOneWidget);
 
-      // 2. Segmented time switcher: "Month | Week | Day"
-      expect(find.byType(HomeTimeSegmentedSwitcher), findsOneWidget);
-      expect(find.text('Month'), findsOneWidget);
-      expect(find.text('Week'), findsOneWidget);
-      expect(find.text('Day'), findsOneWidget);
+      // 2. Redundant Analytics/Switchers removed from Home
+      expect(find.byType(HomeTimeSegmentedSwitcher), findsNothing);
+      expect(find.byType(HomeWeekMoodTracker), findsNothing);
+      expect(find.byType(HomeMetricSparkline), findsNothing);
+      expect(find.byType(HomeStressBarChart), findsNothing);
 
-      // 3. 7-Day horizontal mood tracker
-      expect(find.byType(HomeWeekMoodTracker), findsOneWidget);
-      expect(find.text('M'), findsWidgets);
-      expect(find.text('W'), findsOneWidget);
-      expect(find.text('F'), findsOneWidget);
+      // 3. Step 6 Daily check-in card
+      expect(find.textContaining('NERVOUS ACTIVATION'), findsOneWidget);
+      expect(find.text('Log Daily Check-in'), findsOneWidget);
 
-      // 4. Two-column metric cards (Authentic calibrating / empty state, zero fabricated data)
-      expect(find.byType(HomeMetricSparkline), findsOneWidget);
-      expect(find.byType(HomeStressBarChart), findsOneWidget);
-      expect(find.text('Calibrating baseline'), findsOneWidget);
-      expect(find.text('Needs 2+ entries'), findsOneWidget);
-      expect(find.text('Average stress level'), findsOneWidget);
-      expect(find.text('No entries yet'), findsOneWidget);
+      // 4. Investigation CTA & Recent Investigations
+      expect(find.text('RECENT SESSIONS'), findsOneWidget);
 
       // 5. Exercises for you card with organic vector pebble art (ZERO emojis)
       expect(find.text('Exercises for you'), findsOneWidget);
@@ -65,13 +58,9 @@ void main() {
       expect(find.text('Relieve stress'), findsOneWidget);
       expect(find.text('Breathing practice'), findsOneWidget);
       expect(find.text('5 min'), findsOneWidget);
-
-      // 6. Step 6 Daily check-in card
-      expect(find.textContaining('NERVOUS ACTIVATION'), findsOneWidget);
-      expect(find.text('Log Daily Check-in'), findsOneWidget);
     });
 
-    testWidgets('Populates real mood stability and weekly stress when authentic traces exist', (tester) async {
+    testWidgets('Reflects today check-in summary calmly on Home when logged', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(tester.view.reset);
@@ -80,31 +69,16 @@ void main() {
       addTearDown(container.dispose);
 
       final now = DateTime.now();
-      final monday = now.subtract(Duration(days: now.weekday - 1));
-      final weekMonday = DateTime(monday.year, monday.month, monday.day, 10, 0);
-      final weekTuesday = weekMonday.add(const Duration(days: 1));
-
-      // Add 2 authentic traces on different days of the current calendar week
       final repo = container.read(mindTraceRepositoryProvider);
       await repo.saveTrace(MindTraceModel(
-        id: 'trace_test_1',
+        id: 'trace_today_home',
         userId: 'test_user',
-        date: weekMonday,
+        date: now,
         overallMood: 'calm',
-        moodIntensity: 6,
+        moodIntensity: 7,
         energyLevel: 7,
-        anxietyLevel: 4,
-        createdAt: now,
-        updatedAt: now,
-      ));
-      await repo.saveTrace(MindTraceModel(
-        id: 'trace_test_2',
-        userId: 'test_user',
-        date: weekTuesday,
-        overallMood: 'calm',
-        moodIntensity: 6,
-        energyLevel: 8,
         anxietyLevel: 3,
+        journalText: 'Steady breath after afternoon walk',
         createdAt: now,
         updatedAt: now,
       ));
@@ -119,11 +93,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Now with 2+ stable entries (variance 0), it derives real "Mood stable"
-      expect(find.text('Mood stable'), findsOneWidget);
-      expect(find.textContaining('2 entries'), findsOneWidget);
-      // And authentic average stress percentage
-      expect(find.textContaining('% in a week'), findsOneWidget);
+      expect(find.textContaining('Regulated (7/10)'), findsOneWidget);
     });
 
     testWidgets('Logging a check-in on Home saves to MindTraceController and updates todayTraceProvider', (tester) async {
@@ -226,29 +196,6 @@ void main() {
       Navigator.of(tester.element(find.byType(ContextualSupportSheet))).pop();
       await tester.pump(const Duration(milliseconds: 500));
       expect(find.byType(ContextualSupportSheet), findsNothing);
-    });
-
-    testWidgets('Tapping segmented time switcher toggles active selection', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(tester.view.reset);
-
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: HomeScreen(),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Tap "Month"
-      await tester.tap(find.text('Month'));
-      await tester.pumpAndSettle();
-
-      // Tap "Day"
-      await tester.tap(find.text('Day'));
-      await tester.pumpAndSettle();
     });
   });
 }

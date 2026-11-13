@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,12 +16,8 @@ import '../../../core/security/secure_key_manager.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/bouncing_widget.dart';
 import '../../../core/widgets/fingerprint_thread_signature.dart';
-import '../../../core/widgets/mind_badge.dart';
 import '../../../core/widgets/mind_pressable.dart';
-import '../../../core/widgets/organic_wave_art.dart';
 import '../../auth/controllers/auth_controller.dart';
-import '../../insights/data/pattern_awareness_service.dart';
-import '../../insights/domain/personal_baseline_model.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
 import '../../investigation/domain/case_stage.dart';
@@ -32,21 +27,10 @@ import '../../profile/controllers/profile_controller.dart';
 import '../../support/presentation/contextual_support_sheet.dart';
 import 'widgets/home_active_case_card.dart';
 import 'widgets/home_daily_check_in_card.dart';
-import 'widgets/home_metric_sparkline.dart';
 import 'widgets/home_organic_exercise_art.dart';
-import 'widgets/home_stress_bar_chart.dart';
-import 'widgets/home_time_segmented_switcher.dart';
-import 'widgets/home_week_mood_tracker.dart';
 
-/// The Home Dashboard screen: Calm, Human, Sophisticated Mental Health Companion.
-///
-/// Features:
-/// - Real Data Integrity: Mood stability and stress bar charts strictly derive from
-///   authentic user observations without fabricated values.
-/// - Unified Check-in: Connected directly to [MindTraceController] and [todayTraceProvider].
-/// - 7-day calendar mood tracker reflecting real daily check-in momentum.
-/// - Two-column metric cards (20px radius) with authentic empty/calibrating states.
-/// - Featured "Exercises for you" card with organic vector art and 4-4-4-4 Vagal Breathing.
+/// The calm, uncluttered Home screen for v1.0:
+/// Greeting, Daily Check-In, Active/Recent Investigations, and a single Breathing Reset shortcut.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -55,8 +39,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _selectedTimeIndex = 1; // 0: Month, 1: Week, 2: Day
-  DateTime _selectedDay = DateTime.now();
 
   int _selectedMoodIndex = 0;
   double _moodIntensity = 5.0;
@@ -260,33 +242,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       });
     }
 
-    // Build authentic map of dateKey -> moodColor from real user traces
-    final Map<String, Color> recordedMoodDays = {
-      for (final t in traces)
-        t.dateKey: _getMoodColor(t.overallMood),
-    };
-
-    final String phaseTitle;
-    final String phaseSubtitle;
-    if (todayTrace != null) {
-      phaseTitle = _getMoodLabel(todayTrace.overallMood, strings);
-      phaseSubtitle = strings.isArabic
-          ? 'شدة ${todayTrace.moodIntensity}/10 • مسجّل اليوم'
-          : (strings.isFrench
-              ? 'Intensité ${todayTrace.moodIntensity}/10 • Enregistré aujourd’hui'
-              : 'Intensity ${todayTrace.moodIntensity}/10 • Logged today');
-    } else if (traces.isNotEmpty) {
-      phaseTitle = strings.isArabic ? 'مسار نشط' : (strings.isFrench ? 'Suivi actif' : 'Active Rhythm');
-      phaseSubtitle = strings.isArabic
-          ? '${traces.length} ملاحظات مسجّلة'
-          : (strings.isFrench ? '${traces.length} observations enregistrées' : '${traces.length} observations recorded');
-    } else {
-      phaseTitle = strings.isArabic ? 'مستعد للرصد' : (strings.isFrench ? 'Prêt pour le bilan' : 'Ready to Check In');
-      phaseSubtitle = strings.isArabic
-          ? 'لحظة هادئة بلا أي ضغط'
-          : (strings.isFrench ? 'Un moment calme sans pression' : 'A calm moment with zero pressure');
-    }
-
     return Scaffold(
       backgroundColor: tokens.background,
       appBar: AppBar(
@@ -427,231 +382,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ],
                 ),
 
-                if (profile?.isMinor == true) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: tokens.accentSoft,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: tokens.accent.withValues(alpha: 0.25)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.shield_outlined, size: 13, color: tokens.accent),
-                        const SizedBox(width: 6),
-                        Text(
-                          strings.isArabic
-                              ? 'مساحة استبصار آمنة • خطوط الطوارئ متاحة'
-                              : (strings.isFrench
-                                  ? 'Espace de réflexion sûr • Lignes d’aide disponibles'
-                                  : 'Safe reflection space • Helplines available'),
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: tokens.accent),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                if (profile != null && (profile.selectedGoals.isNotEmpty || profile.personalGoals.isNotEmpty)) ...[
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: tokens.surface,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: tokens.border),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.flag_outlined, size: 13, color: tokens.accent),
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  profile.selectedGoals.isNotEmpty
-                                      ? profile.selectedGoals.first
-                                      : profile.personalGoals.split(', ').first,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: tokens.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-
                 const SizedBox(height: 18),
 
-                // 2. AUTHENTIC CURRENT STATE CARD + JOURNEY ENTRY
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: tokens.surface,
-                    borderRadius: BorderRadius.circular(tokens.cardRadius),
-                    border: Border.all(
-                      color: tokens.border,
-                      width: 1.0,
-                    ),
-                    boxShadow: isDark
-                        ? null
-                        : [
-                            BoxShadow(
-                              color: tokens.textPrimary.withValues(alpha: 0.035),
-                              blurRadius: 12,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                  ),
-                  child: Stack(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  strings.isArabic ? 'حالتك الحالية' : (strings.isFrench ? 'Votre état actuel' : 'Your current focus'),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: tokens.textSecondary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  phaseTitle,
-                                  style: TextStyle(
-                                    fontFamily: 'serif',
-                                    fontSize: 23,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -0.3,
-                                    color: tokens.textPrimary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  phaseSubtitle,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: tokens.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const OrganicWaveArt(height: 82),
-                        ],
-                      ),
-                      PositionedDirectional(
-                        bottom: 9,
-                        end: 9,
-                        child: MindPressable(
-                          semanticLabel: strings.viewDetailsTooltip,
-                          onPressed: () {
-                            HapticFeedback.lightImpact();
-                            context.push(AppRouter.journey);
-                          },
-                          borderRadius: BorderRadius.circular(24),
-                          child: SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: Center(
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                decoration: BoxDecoration(
-                                  color: tokens.accent,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 18,
-                                  color: isDark ? tokens.background : Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                // 3. DAILY CHECK-IN HERO + MOOD-AWARE NEXT STEP
+                // 2. DAILY CHECK-IN HERO
                 _buildDailyCheckInCard(tokens, strings, isDark, todayTrace, traces),
-                if (todayTrace != null) ...[
-                  const SizedBox(height: 12),
-                  _buildMoodAwareNextStepCard(todayTrace, tokens, strings, isDark),
-                ],
 
                 const SizedBox(height: 20),
 
-                // 4. SEGMENTED TIME SWITCHER & WEEKLY RHYTHM
-                HomeTimeSegmentedSwitcher(
-                  selectedIndex: _selectedTimeIndex,
-                  onChanged: (index) {
-                    setState(() => _selectedTimeIndex = index);
-                  },
-                  labels: [
-                    strings.timeSwitcherMonth,
-                    strings.timeSwitcherWeek,
-                    strings.timeSwitcherDay,
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                HomeWeekMoodTracker(
-                  selectedDay: _selectedDay,
-                  recordedMoodDays: recordedMoodDays,
-                  onDaySelected: (day) {
-                    setState(() => _selectedDay = day);
-                  },
-                ),
-
-                const SizedBox(height: 18),
-
-                // 5. TWO-COLUMN METRIC CARDS (Real Data & Calibrating States)
-                _buildTwoColumnMetricCards(tokens, strings, isDark, traces),
-
-                const SizedBox(height: 22),
-
-                // 6. GROUNDING & EXERCISES CARD (Single Clean Breathing Entry)
-                _buildExercisesForYouCard(tokens, strings, isDark),
-
-                const SizedBox(height: 22),
-
-                // 7. ACTIVE CASE OR START INVESTIGATION CARD
+                // 3. ACTIVE CASE OR START INVESTIGATION CARD
                 if (activeCase != null && !activeCase.isCompleted)
                   _buildActiveCaseCard(activeCase, tokens, strings, isDark)
                 else
                   _buildStartInvestigationCard(tokens, strings, isDark),
 
-                const SizedBox(height: 18),
+                const SizedBox(height: 20),
 
-                // 8. PATTERN AWARENESS DIVERGENCE BANNER
-                _buildPatternAwarenessCard(tokens, strings, isDark, traces),
+                // 4. GROUNDING & EXERCISES CARD (Single Clean Breathing Entry)
+                _buildExercisesForYouCard(tokens, strings, isDark),
 
                 const SizedBox(height: 22),
 
-                // 9. RECENT INVESTIGATIONS SECTION (Up to 2 items)
+                // 5. RECENT INVESTIGATIONS SECTION (Up to 2 items)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -672,8 +423,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     InkWell(
                       onTap: () => context.push('/investigation'),
                       borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Container(
+                        constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+                        alignment: Alignment.center,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Text(
                           strings.viewAll.toUpperCase(),
                           style: TextStyle(
@@ -712,180 +465,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   // ===========================================================================
   // SECTION BUILDERS
   // ===========================================================================
-
-  Widget _buildTwoColumnMetricCards(
-    MindTokens tokens,
-    AppStrings strings,
-    bool isDark,
-    List<MindTraceModel> traces,
-  ) {
-    // 1. Mood stability sparkline (Real data derivation)
-    final recentTraces = traces.take(7).toList();
-    final hasSufficientMoodData = recentTraces.length >= 2;
-    final List<double> sparklineValues = hasSufficientMoodData
-        ? recentTraces.map((t) => t.moodIntensity.toDouble()).toList().reversed.toList()
-        : const [];
-
-    String moodHeadline;
-    String moodSubtitle;
-
-    if (!hasSufficientMoodData) {
-      moodHeadline = strings.calibratingBaseline;
-      moodSubtitle = strings.needsTwoEntries;
-    } else {
-      final mean = sparklineValues.reduce((a, b) => a + b) / sparklineValues.length;
-      final variance = sparklineValues
-              .map((v) => (v - mean) * (v - mean))
-              .reduce((a, b) => a + b) /
-          sparklineValues.length;
-      final stdDev = math.sqrt(variance);
-      final isStable = stdDev <= 1.5;
-      moodHeadline = isStable ? strings.moodStable : strings.moodUnstable;
-      moodSubtitle = '${sparklineValues.length} ${strings.isArabic ? "تسجيلات" : "entries"} (${strings.lastWeekLabel})';
-    }
-
-    // 2. Weekly stress bar chart (Monday to Sunday authentic records)
-    final now = DateTime.now();
-    final monday = now.subtract(Duration(days: now.weekday - 1));
-    final weekStart = DateTime(monday.year, monday.month, monday.day);
-    final weekEnd = weekStart.add(const Duration(days: 7));
-
-    final weekTraces = traces.where((t) {
-      return !t.date.isBefore(weekStart) && t.date.isBefore(weekEnd);
-    }).toList();
-
-    final List<double?> stressBarValues = List<double?>.generate(7, (i) {
-      final targetDate = weekStart.add(Duration(days: i));
-      final dayTrace = weekTraces.where((t) =>
-          t.date.year == targetDate.year &&
-          t.date.month == targetDate.month &&
-          t.date.day == targetDate.day).firstOrNull;
-      if (dayTrace == null) return null;
-      return (dayTrace.anxietyLevel ?? (10 - (dayTrace.energyLevel ?? 5))).toDouble();
-    });
-
-    String stressHeadline;
-    String stressSubtitle;
-
-    final loggedStressValues = stressBarValues.whereType<double>().toList();
-    if (loggedStressValues.isEmpty) {
-      stressHeadline = strings.noEntriesThisWeek;
-      stressSubtitle = strings.avgStressLevel;
-    } else {
-      final avgStress = loggedStressValues.reduce((a, b) => a + b) / loggedStressValues.length;
-      final percent = (avgStress / 10.0 * 100).round();
-      stressHeadline = '$percent% ${strings.inAWeek}';
-      stressSubtitle = '${loggedStressValues.length}/7 ${strings.isArabic ? "أيام مسجلة" : "days tracked"}';
-    }
-
-    return Row(
-      children: [
-        // Left Card: Mood Stability
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: tokens.surface,
-              borderRadius: BorderRadius.circular(20.0),
-              border: Border.all(color: tokens.border, width: 1.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                HomeMetricSparkline(
-                  values: sparklineValues,
-                  lineColor: tokens.accent,
-                  height: 48,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  moodSubtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: tokens.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  moodHeadline,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: tokens.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(width: 14),
-
-        // Right Card: Average Stress Level
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: tokens.surface,
-              borderRadius: BorderRadius.circular(20.0),
-              border: Border.all(color: tokens.border, width: 1.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                HomeStressBarChart(
-                  values: stressBarValues,
-                  isDark: isDark,
-                  height: 48,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  stressSubtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: tokens.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  stressHeadline,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: tokens.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildExercisesForYouCard(
     MindTokens tokens,
@@ -986,62 +565,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildMoodAwareNextStepCard(
-    MindTraceModel todayTrace,
-    MindTokens tokens,
-    AppStrings strings,
-    bool isDark,
-  ) {
-    final mood = todayTrace.overallMood;
-    final bool isAnxiousOrRestless = mood == 'anxious' || mood == 'restless';
-    final bool isHeavyOrFrustrated = mood == 'heavy' || mood == 'frustrated';
-
-    final String prompt = isAnxiousOrRestless
-        ? strings.nextStepSettlePrompt
-        : (isHeavyOrFrustrated ? strings.nextStepThoughtPrompt : strings.nextStepAnchorPrompt);
-    final IconData icon = isAnxiousOrRestless
-        ? Icons.air_rounded
-        : (isHeavyOrFrustrated ? Icons.psychology_outlined : Icons.spa_outlined);
-
-    return BouncingWidget(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        if (isAnxiousOrRestless) {
-          ContextualSupportSheet.show(context, initialChoice: SupportChoice.settle);
-        } else if (isHeavyOrFrustrated) {
-          context.push(AppRouter.companion);
-        } else {
-          context.go(AppRouter.track);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: tokens.accentSoft,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: tokens.accent.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: tokens.accent),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                prompt,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: tokens.textPrimary,
-                ),
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 13, color: tokens.accent),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1223,91 +746,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 fontWeight: FontWeight.w600,
                 color: tokens.textPrimary,
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPatternAwarenessCard(
-    MindTokens tokens,
-    AppStrings strings,
-    bool isDark,
-    List<MindTraceModel> traces,
-  ) {
-    final baseline = PersonalBaseline.fromTraces(traces);
-    final divergences = PatternAwarenessService.detectDivergences(traces: traces, baseline: baseline);
-
-    if (divergences.isEmpty) {
-      if (!baseline.hasSufficientData) return const SizedBox.shrink();
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: tokens.surface,
-          borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(color: tokens.border),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.check_circle_outline_rounded, size: 18, color: tokens.accent),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                strings.isArabic
-                    ? 'خط الأساس الشخصي نشط • ${baseline.totalRecordedDays} أيام مسجلة'
-                    : (strings.isFrench
-                        ? 'Référence personnelle active • ${baseline.totalRecordedDays} jours enregistrés'
-                        : 'Personal Baseline active • ${baseline.totalRecordedDays} observation days calibrated'),
-                style: TextStyle(fontSize: 12, color: tokens.textSecondary),
-              ),
-            ),
-            InkWell(
-              onTap: () => context.push('/insights'),
-              child: Text(
-                (strings.isArabic
-                        ? 'عرض'
-                        : (strings.isFrench ? 'VOIR' : 'VIEW'))
-                    .toUpperCase(),
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: tokens.textPrimary),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final d = divergences.first;
-    return InkWell(
-      onTap: () => context.push('/insights'),
-      borderRadius: BorderRadius.circular(20.0),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: tokens.surface,
-          borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(color: tokens.accent.withValues(alpha: 0.6), width: 1.2),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.tune_outlined, size: 18, color: tokens.accent),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    d.title,
-                    style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: tokens.textPrimary),
-                  ),
-                ),
-                MindBadge(label: d.timeWindow),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              d.baselineComparison,
-              style: TextStyle(fontSize: 12, color: tokens.textSecondary, height: 1.35),
             ),
           ],
         ),
