@@ -250,7 +250,7 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
           Text(
             isAr ? 'مسارك' : (isFr ? 'Votre Parcours' : 'Your Journey'),
             style: TextStyle(
-              fontFamily: 'serif',
+              fontFamily: 'Inter',
               fontSize: 22,
               fontWeight: FontWeight.w700,
               color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
@@ -367,7 +367,7 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
                   child: Text(
                     'Your journey is unique, and every phase is part of it.',
                     style: TextStyle(
-                      fontFamily: 'serif',
+                      fontFamily: 'Inter',
                       fontStyle: FontStyle.italic,
                       fontSize: 12,
                       color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,

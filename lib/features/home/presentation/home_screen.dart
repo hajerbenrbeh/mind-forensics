@@ -14,7 +14,6 @@ import '../../../core/safety/safety_interceptor.dart';
 import '../../../core/security/encrypted_storage_helper.dart';
 import '../../../core/security/secure_key_manager.dart';
 import '../../../core/safety/support_button.dart';
-import '../../../core/widgets/bouncing_widget.dart';
 import '../../../core/widgets/fingerprint_thread_signature.dart';
 import '../../../core/widgets/mind_pressable.dart';
 import '../../auth/controllers/auth_controller.dart';
@@ -163,12 +162,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF202925)
-              : const Color(0xFF34443B),
+          backgroundColor: context.tokens.accent,
           content: Text(
             strings.checkInSavedSnackbar,
-            style: const TextStyle(color: Colors.white, fontSize: 13),
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? context.tokens.background
+                  : Colors.white,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           duration: const Duration(seconds: 2),
         ),
@@ -300,9 +303,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Text(
                             strings.dearUserGreeting(userName),
                             style: TextStyle(
-                              fontFamily: 'serif',
-                              fontSize: 23,
+                              fontFamily: 'Inter',
+                              fontSize: 22,
                               fontWeight: FontWeight.w700,
+                              height: 1.25,
                               color: tokens.textPrimary,
                               letterSpacing: -0.3,
                             ),
@@ -502,27 +506,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        BouncingWidget(
-          onTap: () {
+        MindPressable(
+          onPressed: () {
             HapticFeedback.mediumImpact();
             ContextualSupportSheet.show(
               context,
               initialChoice: SupportChoice.settle,
             );
           },
+          semanticLabel: strings.relieveStress,
+          borderRadius: BorderRadius.circular(tokens.cardRadius),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: tokens.surface,
-              borderRadius: BorderRadius.circular(20.0),
+              borderRadius: BorderRadius.circular(tokens.cardRadius),
               border: Border.all(color: tokens.border, width: 1.0),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
               children: [
@@ -649,7 +648,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF303E37) : const Color(0xFFE5ECE6),
+                  color: tokens.accentSoft,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(Icons.bolt_rounded, color: tokens.accent, size: 22),
@@ -690,39 +689,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               icon: const Icon(Icons.add_rounded, size: 18),
               label: Text(strings.newInvestigation),
               style: FilledButton.styleFrom(
-                backgroundColor: isDark ? tokens.accent : const Color(0xFF34443B),
-                foregroundColor: isDark ? const Color(0xFF151B19) : Colors.white,
+                backgroundColor: tokens.accent,
+                foregroundColor: isDark ? tokens.background : Colors.white,
+                minimumSize: const Size(48, 48),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(tokens.buttonRadius),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
             ),
           ),
           const SizedBox(height: 12),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildQuickCatalystPill(
-                  label: strings.catalystUnanswered,
-                  icon: Icons.mark_email_unread_outlined,
-                  tokens: tokens,
-                ),
-                const SizedBox(width: 8),
-                _buildQuickCatalystPill(
-                  label: strings.catalystCritique,
-                  icon: Icons.chat_bubble_outline_rounded,
-                  tokens: tokens,
-                ),
-                const SizedBox(width: 8),
-                _buildQuickCatalystPill(
-                  label: strings.catalystOverload,
-                  icon: Icons.timer_outlined,
-                  tokens: tokens,
-                ),
-              ],
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildQuickCatalystPill(
+                label: strings.catalystUnanswered,
+                icon: Icons.mark_email_unread_outlined,
+                tokens: tokens,
+              ),
+              _buildQuickCatalystPill(
+                label: strings.catalystCritique,
+                icon: Icons.chat_bubble_outline_rounded,
+                tokens: tokens,
+              ),
+              _buildQuickCatalystPill(
+                label: strings.catalystOverload,
+                icon: Icons.timer_outlined,
+                tokens: tokens,
+              ),
+            ],
           ),
         ],
       ),
@@ -734,8 +731,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     required IconData icon,
     required MindTokens tokens,
   }) {
-    return BouncingWidget(
-      onTap: () async {
+    return MindPressable(
+      onPressed: () async {
         HapticFeedback.mediumImpact();
         await ref.read(activeCaseControllerProvider.notifier).startNewCase(label);
         await ref.read(activeCaseControllerProvider.notifier).advanceStage(CaseStage.evidence);
@@ -743,27 +740,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           context.go(AppRouter.companion);
         }
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: tokens.surfaceSecondary,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: tokens.border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 13, color: tokens.textSecondary),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: tokens.textPrimary,
+      semanticLabel: label,
+      borderRadius: BorderRadius.circular(tokens.chipRadius),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: tokens.surfaceSecondary,
+            borderRadius: BorderRadius.circular(tokens.chipRadius),
+            border: Border.all(color: tokens.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 15, color: tokens.textSecondary),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: tokens.textPrimary,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

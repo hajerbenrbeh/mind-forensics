@@ -274,7 +274,8 @@ class _MicroActionCardState extends ConsumerState<MicroActionCard> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    fontFamily: 'monospace',
+                    fontFamily: 'Inter',
+                    fontFeatures: const [FontFeature.tabularFigures()],
                     color: LabColors.sageGreen,
                   ),
                 ),

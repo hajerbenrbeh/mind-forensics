@@ -113,7 +113,8 @@ class _NeuralWaveformVisualizerState extends State<NeuralWaveformVisualizer>
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: 'monospace',
+                    fontFamily: 'Inter',
+                    fontFeatures: const [FontFeature.tabularFigures()],
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.6,

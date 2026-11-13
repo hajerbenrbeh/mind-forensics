@@ -547,7 +547,8 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
                   '${activity.completedAt!.day}/${activity.completedAt!.month}',
                   style: TextStyle(
                     fontSize: 10,
-                    fontFamily: 'monospace',
+                    fontFamily: 'Inter',
+                    fontFeatures: const [FontFeature.tabularFigures()],
                     color: textSecondary,
                   ),
                 ),

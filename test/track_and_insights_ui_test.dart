@@ -52,7 +52,7 @@ void main() {
       expect(find.text('Restless'), findsOneWidget);
 
       // Verify primary intensity slider and progressive disclosure toggle
-      expect(find.text('Nervous Activation'), findsOneWidget);
+      expect(find.text('Intensity'), findsOneWidget);
       expect(find.text('Add context (optional)'), findsOneWidget);
       expect(find.text('Sleep Duration'), findsNothing);
 

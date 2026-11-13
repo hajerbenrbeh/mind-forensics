@@ -167,19 +167,23 @@ class AppStrings {
       ? 'استكشاف هادئ للأفكار التلقائية والتشنج الجسدي في دقائق معدودة' 
       : (isFrench ? 'Prenez du recul sur vos pensées automatiques et sensations corporelles' : 'Gently examine automatic thoughts and physical tension in a few calm minutes');
   String get resumeInvestigation => isArabic ? 'مواصلة الجلسة' : (isFrench ? 'Reprendre la session' : 'Resume Session');
-  String get noCasesOnFile => isArabic ? 'لا توجد جلسات مسجلة. اضغط + للبدء.' : (isFrench ? 'AUCUNE SESSION. APPUYEZ SUR + POUR COMMENCER.' : 'NO SESSIONS ON FILE. TAP + TO BEGIN.');
+  String get noCasesOnFile => isArabic
+      ? 'مازال ما فماش جلسات — اختار موضوع والا ابدأ جلسة جديدة الفوق.'
+      : (isFrench
+          ? 'Aucune session pour le moment — commencez une réflexion ci-dessus.'
+          : 'No sessions yet — pick a topic or start a reflection above.');
   String stageNumberLabel(int step) => isArabic ? 'المرحلة $step/6' : (isFrench ? 'PHASE $step/6' : 'PHASE $step/6');
   String get inProgressLabel => isArabic ? 'قيد المعالجة' : (isFrench ? 'EN COURS' : 'IN PROGRESS');
   String get quickTriageLabel => isArabic ? 'فرز سريع 60 ثانية' : (isFrench ? 'TRIAGE RAPIDE 60s' : '60s QUICK TRIAGE');
   String get groundedAnchorTag => isArabic ? 'مرسى التعافي' : (isFrench ? 'ANCRAGE RECADRÉ' : 'GROUNDED ANCHOR');
 
-  // Moods & Somatic States
-  String get moodCalm => isArabic ? 'متزن (Parasympathique)' : (isFrench ? 'Régulé' : 'Regulated');
-  String get moodAnxious => isArabic ? 'استثارة قلقة' : (isFrench ? 'Anxieux' : 'Hyperaroused');
-  String get moodFrustrated => isArabic ? 'احتقان / غضب' : (isFrench ? 'Réactif' : 'Reactive');
-  String get moodHeavy => isArabic ? 'هبوط طاقي / تثبيط' : (isFrench ? 'Inhibé' : 'Dorsal Vagal');
-  String get moodRestless => isArabic ? 'تشتت ذهني' : (isFrench ? 'Agité' : 'Restless');
-  String get moodIntensityLabel => isArabic ? 'شدة التوتر العصبي' : (isFrench ? 'Intensité d’activation' : 'Nervous Activation');
+  // Moods & States (Plain 1-Word Human Affect Labeling — Zero Clinical Jargon)
+  String get moodCalm => isArabic ? 'هادئ' : (isFrench ? 'Calme' : 'Calm');
+  String get moodAnxious => isArabic ? 'قلق' : (isFrench ? 'Anxieux' : 'Anxious');
+  String get moodFrustrated => isArabic ? 'متضايق' : (isFrench ? 'Frustré' : 'Frustrated');
+  String get moodHeavy => isArabic ? 'ثقيل' : (isFrench ? 'Lourd' : 'Heavy');
+  String get moodRestless => isArabic ? 'متشتّت' : (isFrench ? 'Agité' : 'Restless');
+  String get moodIntensityLabel => isArabic ? 'شدة الشعور' : (isFrench ? 'Intensité' : 'Intensity');
 
   // Daily Cognitive Insight
   String get dailyInsightTitle => isArabic ? 'ملاحظة علم الأعصاب الإدراكي' : (isFrench ? 'Éclairage Neuro-Cognitif' : 'Neuro-Cognitive Insight');
@@ -205,14 +209,14 @@ class AppStrings {
     }
   }
 
-  // Interactive Catalysts (1-Tap Triggers)
-  String get catalystUnanswered => isArabic ? 'رسالة بدون رد' : (isFrench ? 'Message sans réponse' : 'Unanswered Message');
-  String get catalystCritique => isArabic ? 'ملاحظة / تقييم مهني' : (isFrench ? 'Critique ou évaluation' : 'Work Evaluation / Critique');
+  // Interactive Catalysts (1-Tap Concise Triggers — Zero Clipping)
+  String get catalystUnanswered => isArabic ? 'رسالة بلا رد' : (isFrench ? 'Message sans réponse' : 'Unanswered text');
+  String get catalystCritique => isArabic ? 'ملاحظة في العمل' : (isFrench ? 'Remarque au travail' : 'Work feedback');
   String get catalystComparison => isArabic ? 'مقارنة اجتماعية' : (isFrench ? 'Comparaison sociale' : 'Social Comparison');
-  String get catalystImposter => isArabic ? 'شك في الكفاءة (Imposteur)' : (isFrench ? 'Syndrome de l’imposteur' : 'Imposter Doubt');
+  String get catalystImposter => isArabic ? 'شك في الكفاءة' : (isFrench ? 'Doute de soi' : 'Imposter Doubt');
   String get catalystConflict => isArabic ? 'توتر في العلاقة' : (isFrench ? 'Tension relationnelle' : 'Interpersonal Friction');
   String get catalystExclusion => isArabic ? 'إحساس بالإقصاء' : (isFrench ? 'Sentiment d’exclusion' : 'Excluded / Left Out');
-  String get catalystOverload => isArabic ? 'تراكم المسؤوليات' : (isFrench ? 'Surcharge mentale' : 'Cognitive Overload');
+  String get catalystOverload => isArabic ? 'ضغط وتشتّت ذهني' : (isFrench ? 'Trop en tête' : 'Mental overload');
   String get catalystUncertainty => isArabic ? 'مستقبل غامض' : (isFrench ? 'Incertitude future' : 'Ambiguous Future');
 
   // Somatic Sensations (Body State Radar)

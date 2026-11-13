@@ -289,7 +289,8 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
                     child: SelectableText(
                       _generatedBrief,
                       style: TextStyle(
-                        fontFamily: 'monospace',
+                        fontFamily: 'Inter',
+                        fontFeatures: const [FontFeature.tabularFigures()],
                         fontSize: 11,
                         height: 1.45,
                         color: textPrimary,

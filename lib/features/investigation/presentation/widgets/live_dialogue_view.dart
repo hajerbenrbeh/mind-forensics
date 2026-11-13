@@ -745,7 +745,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                       : "I'm here for you, $userName"),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'serif',
+                fontFamily: 'Inter',
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 color: textPrimary,

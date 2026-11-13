@@ -262,7 +262,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
         title: Text(
           strings.trackPageTitle,
           style: TextStyle(
-            fontFamily: 'serif',
+            fontFamily: 'Inter',
             color: tokens.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -323,11 +323,11 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
             strings.howFeelingRightNow,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontFamily: 'serif',
+              fontFamily: 'Inter',
               fontSize: 21,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               color: tokens.textPrimary,
-              letterSpacing: -0.2,
+              letterSpacing: -0.3,
             ),
           ),
           const SizedBox(height: 14),
@@ -966,7 +966,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
                     Text(
                       strings.calendarTitle,
                       style: TextStyle(
-                        fontFamily: 'serif',
+                        fontFamily: 'Inter',
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: tokens.textPrimary,

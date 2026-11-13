@@ -103,7 +103,7 @@ class HomeWeekMoodTracker extends StatelessWidget {
                           )
                         : (isToday
                             ? Border.all(
-                                color: isDark ? const Color(0xFFF0F2EC) : const Color(0xFF34443B),
+                                color: isDark ? tokens.textPrimary : tokens.accent,
                                 width: 1.8,
                               )
                             : (isRecorded

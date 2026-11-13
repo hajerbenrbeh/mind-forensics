@@ -1,10 +1,11 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-/// A soothing organic vector art illustration for the "Exercises for you" card.
+import '../../../../app/theme/lab_colors.dart';
+
+/// A serene botanical wave-ring emblem for the "Exercises for you" card.
 ///
-/// Directly inspired by the calm, friendly rounded pebble character in the
-/// reference design. Uses pure canvas vector math with ZERO emojis.
+/// Uses pure vector geometry harmonized with [LabColors] tokens (zero emojis,
+/// zero cartoonish facial features).
 class HomeOrganicExerciseArt extends StatelessWidget {
   const HomeOrganicExerciseArt({
     super.key,
@@ -21,106 +22,76 @@ class HomeOrganicExerciseArt extends StatelessWidget {
       width: size,
       height: size,
       child: CustomPaint(
-        painter: _PebbleArtPainter(isDark: isDark),
+        painter: _BotanicalRipplePainter(isDark: isDark),
       ),
     );
   }
 }
 
-class _PebbleArtPainter extends CustomPainter {
-  _PebbleArtPainter({required this.isDark});
+class _BotanicalRipplePainter extends CustomPainter {
+  _BotanicalRipplePainter({required this.isDark});
 
   final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width * 0.44;
+    final outerRadius = size.width * 0.44;
 
-    // Organic pebble body path (botanical sage & slate, zero neon pink)
+    // Grounded organic enclosure (Mineral Forest / Obsidian Slate)
     final bodyPaint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: isDark
             ? const [
-                Color(0xFF34453C), // Deep calm botanical slate
-                Color(0xFF5A7566), // Muted sage depth
+                LabColors.nightSurfaceElevated,
+                LabColors.nightAccentSoft,
               ]
             : const [
-                Color(0xFFD6E3D9), // Soft botanical linen/sage
-                Color(0xFF91AD9A), // Grounded calming sage
+                LabColors.daylightAccentSoft,
+                LabColors.daylightSurfaceSubtle,
               ],
-      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ).createShader(Rect.fromCircle(center: center, radius: outerRadius))
       ..style = PaintingStyle.fill;
 
     final bodyRect = RRect.fromRectAndRadius(
       Rect.fromCenter(
         center: center,
         width: size.width * 0.88,
-        height: size.height * 0.82,
+        height: size.height * 0.88,
       ),
-      Radius.circular(radius * 0.75),
+      Radius.circular(size.width * 0.28),
     );
     canvas.drawRRect(bodyRect, bodyPaint);
 
-    // Subtle inner shadow / depth
-    final highlightPaint = Paint()
-      ..color = Colors.white.withValues(alpha: isDark ? 0.12 : 0.28)
+    final borderPaint = Paint()
+      ..color = (isDark ? LabColors.nightBorder : LabColors.daylightBorder)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-    canvas.drawRRect(bodyRect.deflate(2.0), highlightPaint);
+      ..strokeWidth = 1.0;
+    canvas.drawRRect(bodyRect, borderPaint);
 
-    // Two calm spiral eyes / mindfulness concentric ripples
-    final strokeColor = isDark ? const Color(0xFFF0F2EC) : const Color(0xFF34443B);
-    final strokePaint = Paint()
-      ..color = strokeColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round;
+    // Layered concentric botanical breath rings
+    final ringAccent = isDark ? LabColors.nightAccent : LabColors.daylightAccent;
+    final radiiScales = [0.33, 0.23, 0.13];
+    final alphas = [0.28, 0.52, 0.85];
 
-    final leftEye = Offset(center.dx - radius * 0.38, center.dy - radius * 0.05);
-    final rightEye = Offset(center.dx + radius * 0.38, center.dy - radius * 0.05);
-
-    _drawCalmSpiral(canvas, leftEye, radius * 0.20, strokePaint);
-    _drawCalmSpiral(canvas, rightEye, radius * 0.20, strokePaint);
-
-    // Calm neutral mouth line
-    final mouthPaint = Paint()
-      ..color = strokeColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.6
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawLine(
-      Offset(center.dx - 6.0, center.dy + radius * 0.34),
-      Offset(center.dx + 6.0, center.dy + radius * 0.34),
-      mouthPaint,
-    );
-  }
-
-  void _drawCalmSpiral(Canvas canvas, Offset center, double maxR, Paint paint) {
-    final path = Path();
-    const loops = 1.6;
-    const steps = 30;
-    for (int i = 0; i <= steps; i++) {
-      final t = i / steps;
-      final angle = t * loops * 2 * math.pi;
-      final r = t * maxR;
-      final x = center.dx + r * math.cos(angle);
-      final y = center.dy + r * math.sin(angle);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
+    for (var i = 0; i < radiiScales.length; i++) {
+      final ringPaint = Paint()
+        ..color = ringAccent.withValues(alpha: alphas[i])
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = i == radiiScales.length - 1 ? 1.8 : 1.3;
+      canvas.drawCircle(center, size.width * radiiScales[i], ringPaint);
     }
-    canvas.drawPath(path, paint);
+
+    // Quiet central calm dot
+    final corePaint = Paint()
+      ..color = ringAccent
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, size.width * 0.055, corePaint);
   }
 
   @override
-  bool shouldRepaint(covariant _PebbleArtPainter oldDelegate) {
-    return oldDelegate.isDark != isDark;
-  }
+  bool shouldRepaint(covariant _BotanicalRipplePainter oldDelegate) =>
+      oldDelegate.isDark != isDark;
 }
-

@@ -82,7 +82,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                   Text(
                     strings.calendarTitle,
                     style: TextStyle(
-                      fontFamily: 'serif',
+                      fontFamily: 'Inter',
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: tokens.textPrimary,
@@ -138,7 +138,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         title: Text(
           strings.navInsights,
           style: TextStyle(
-            fontFamily: 'serif',
+            fontFamily: 'Inter',
             fontSize: 22,
             fontWeight: FontWeight.w700,
             color: tokens.textPrimary,

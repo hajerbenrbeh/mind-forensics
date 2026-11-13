@@ -21,10 +21,10 @@ class HomeStressBarChart extends StatelessWidget {
   final double height;
 
   static const List<Color> _barColors = [
-    LabColors.moodAnxious,    // Warm Sand / Dune (replaces bright pink)
+    LabColors.moodAnxious,    // Warm Sand / Dune
     LabColors.moodCalm,       // Soft Sage
     LabColors.moodHeavy,      // Soft Iris
-    Color(0xFF819D8B),        // Muted Sage Mist
+    LabColors.lightOlive,     // Muted Sage Mist
     LabColors.moodRestless,   // Soft Mineral Sky
     LabColors.moodCalm,       // Soft Sage
     LabColors.moodFrustrated, // Soft Amber
@@ -39,8 +39,8 @@ class HomeStressBarChart extends StatelessWidget {
     });
 
     final placeholderColor = isDark
-        ? const Color(0xFF303E37)
-        : const Color(0xFFD6DDD7);
+        ? LabColors.nightBorder
+        : LabColors.daylightBorder;
 
     return SizedBox(
       height: height,
