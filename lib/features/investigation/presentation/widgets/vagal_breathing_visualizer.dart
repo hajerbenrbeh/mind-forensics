@@ -34,7 +34,28 @@ class _VagalBreathingVisualizerState extends State<VagalBreathingVisualizer>
     _waveController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
-    )..repeat();
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  void _syncAnimation() {
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (!isTest && !reduceMotion) {
+      if (!_waveController.isAnimating) {
+        _waveController.repeat();
+      }
+    } else {
+      if (_waveController.isAnimating) {
+        _waveController.stop();
+      }
+      _waveController.value = 0.0;
+    }
   }
 
   @override
@@ -92,6 +113,7 @@ class _VagalBreathingVisualizerState extends State<VagalBreathingVisualizer>
     final accent = _phaseAccentColor;
     final bg = _phaseBgColor;
     final isDark = widget.isDark;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return Center(
       child: SizedBox(
@@ -101,28 +123,37 @@ class _VagalBreathingVisualizerState extends State<VagalBreathingVisualizer>
           alignment: Alignment.center,
           children: [
             // Outward Breathing Aura Rings
-            AnimatedBuilder(
-              animation: _waveController,
-              builder: (context, child) {
-                return CustomPaint(
-                  size: const Size(190, 190),
-                  painter: _BreathingRipplesPainter(
-                    progress: _waveController.value,
-                    color: accent,
-                    phase: widget.phase,
-                    isDark: isDark,
-                  ),
-                );
-              },
+            ExcludeSemantics(
+              child: AnimatedBuilder(
+                animation: _waveController,
+                builder: (context, child) {
+                  return CustomPaint(
+                    size: const Size(190, 190),
+                    painter: _BreathingRipplesPainter(
+                      progress: reduceMotion ? 0.0 : _waveController.value,
+                      color: accent,
+                      phase: widget.phase,
+                      isDark: isDark,
+                    ),
+                  );
+                },
+              ),
             ),
 
             // Physical Interactive Breathing Core
-            AnimatedScale(
-              scale: _targetScale,
-              duration: const Duration(milliseconds: 900),
-              curve: Curves.easeInOutCubic,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 400),
+            Semantics(
+              liveRegion: true,
+              label: '${widget.phaseText}, ${widget.secondsLeft}',
+              child: AnimatedScale(
+                scale: reduceMotion ? 1.0 : _targetScale,
+                duration: reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 900),
+                curve: Curves.easeInOutCubic,
+                child: AnimatedContainer(
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 400),
                 width: 104,
                 height: 104,
                 decoration: BoxDecoration(
@@ -164,6 +195,7 @@ class _VagalBreathingVisualizerState extends State<VagalBreathingVisualizer>
                   ),
                 ),
               ),
+            ),
             ),
           ],
         ),

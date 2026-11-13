@@ -29,9 +29,11 @@ class HomeTimeSegmentedSwitcher extends StatelessWidget {
     final activeTextColor = isDark ? const Color(0xFFF0F2EC) : Colors.white;
     final inactiveTextColor = tokens.textSecondary;
 
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
     return Container(
-      height: 44.0,
-      padding: const EdgeInsets.all(4.0),
+      height: 52.0,
+      padding: const EdgeInsets.all(2.0),
       decoration: BoxDecoration(
         color: trackBg,
         borderRadius: BorderRadius.circular(30.0),
@@ -40,16 +42,21 @@ class HomeTimeSegmentedSwitcher extends StatelessWidget {
         children: List.generate(labels.length, (index) {
           final isSelected = index == selectedIndex;
           return Expanded(
-            child: GestureDetector(
-              onTap: () {
-                if (!isSelected) {
-                  HapticFeedback.selectionClick();
-                  onChanged(index);
-                }
-              },
-              behavior: HitTestBehavior.opaque,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
+            child: Semantics(
+              button: true,
+              selected: isSelected,
+              child: GestureDetector(
+                onTap: () {
+                  if (!isSelected) {
+                    HapticFeedback.selectionClick();
+                    onChanged(index);
+                  }
+                },
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
@@ -75,6 +82,7 @@ class HomeTimeSegmentedSwitcher extends StatelessWidget {
                   ),
                 ),
               ),
+            ),
             ),
           );
         }),

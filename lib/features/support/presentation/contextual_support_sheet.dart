@@ -169,9 +169,9 @@ class _ContextualSupportSheetState
                       ),
                     ),
                   IconButton(
+                    tooltip: strings.closeBtn,
                     icon: Icon(Icons.close_rounded, size: 20, color: textSecondary),
                     onPressed: () => Navigator.of(context).pop(),
-                    visualDensity: VisualDensity.compact,
                   ),
                 ],
               ),

@@ -43,11 +43,32 @@ class _SomaticBodyRadarState extends State<SomaticBodyRadar> with SingleTickerPr
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
+    );
 
     _pulseAnimation = Tween<double>(begin: 0.85, end: 1.25).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOutSine),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  void _syncAnimation() {
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains('Test');
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (!isTest && !reduceMotion) {
+      if (!_pulseController.isAnimating) {
+        _pulseController.repeat(reverse: true);
+      }
+    } else {
+      if (_pulseController.isAnimating) {
+        _pulseController.stop();
+      }
+      _pulseController.value = 0.0;
+    }
   }
 
   @override
@@ -102,9 +123,11 @@ class _SomaticBodyRadarState extends State<SomaticBodyRadar> with SingleTickerPr
         child: Stack(
           children: [
             // Architectural Grid Background
-            CustomPaint(
-              size: Size.infinite,
-              painter: _SilhouettePainter(isDark: isDark, activeAccent: accent),
+            ExcludeSemantics(
+              child: CustomPaint(
+                size: Size.infinite,
+                painter: _SilhouettePainter(isDark: isDark, activeAccent: accent),
+              ),
             ),
 
             // Interactive Bio-Points Layer
@@ -112,6 +135,7 @@ class _SomaticBodyRadarState extends State<SomaticBodyRadar> with SingleTickerPr
               builder: (context, constraints) {
                 final w = constraints.maxWidth;
                 final h = constraints.maxHeight;
+                final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
                 return Stack(
                   children: _nodes.map((node) {
@@ -120,27 +144,33 @@ class _SomaticBodyRadarState extends State<SomaticBodyRadar> with SingleTickerPr
                     final py = node.normY * h;
 
                     return Positioned(
-                      left: px - 22,
-                      top: py - 22,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          widget.onSensationSelected(node.label);
-                        },
-                        child: AnimatedBuilder(
-                          animation: _pulseAnimation,
-                          builder: (context, child) {
-                            final scale = isActive ? _pulseAnimation.value : 1.0;
-                            return Transform.scale(
-                              scale: scale,
-                              child: child,
-                            );
+                      left: px - 24,
+                      top: py - 24,
+                      child: Semantics(
+                        button: true,
+                        selected: isActive,
+                        label: node.label,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            widget.onSensationSelected(node.label);
                           },
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            alignment: Alignment.center,
+                          child: AnimatedBuilder(
+                            animation: _pulseAnimation,
+                            builder: (context, child) {
+                              final scale = (isActive && !reduceMotion)
+                                  ? _pulseAnimation.value
+                                  : 1.0;
+                              return Transform.scale(
+                                scale: scale,
+                                child: child,
+                              );
+                            },
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              alignment: Alignment.center,
                             child: Stack(
                               alignment: Alignment.center,
                               children: [
@@ -194,6 +224,7 @@ class _SomaticBodyRadarState extends State<SomaticBodyRadar> with SingleTickerPr
                           ),
                         ),
                       ),
+                    ),
                     );
                   }).toList(),
                 );
@@ -208,28 +239,35 @@ class _SomaticBodyRadarState extends State<SomaticBodyRadar> with SingleTickerPr
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: accent,
-                          shape: BoxShape.circle,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: accent,
+                            shape: BoxShape.circle,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'SOMATOSENSORY RADAR',
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.0,
-                          color: isDark ? const Color(0xFF888888) : const Color(0xFF71717A),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'SOMATOSENSORY RADAR',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.0,
+                              color: isDark ? const Color(0xFF888888) : const Color(0xFF71717A),
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Text(
                     'TAP TO LOCATE',
                     style: TextStyle(

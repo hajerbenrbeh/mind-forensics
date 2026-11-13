@@ -410,14 +410,21 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                 letterSpacing: -0.2,
               ),
             ),
-            GestureDetector(
-              onTap: () => context.push('/progress'),
-              child: Text(
-                '${strings.viewAllArrowLabel} →',
-                style: TextStyle(
-                  color: tokens.accent,
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
+            Semantics(
+              button: true,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => context.push('/progress'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  child: Text(
+                    '${strings.viewAllArrowLabel} →',
+                    style: TextStyle(
+                      color: tokens.accent,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -369,21 +369,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             context.push(AppRouter.companion);
                           },
                           semanticLabel: strings.mindAssistantTitle,
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: tokens.surface,
-                              border: Border.all(
-                                color: tokens.border,
-                                width: 1.0,
+                          borderRadius: BorderRadius.circular(24),
+                          child: SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Center(
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: tokens.surface,
+                                  border: Border.all(
+                                    color: tokens.border,
+                                    width: 1.0,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.auto_awesome,
+                                  size: 18,
+                                  color: tokens.accent,
+                                ),
                               ),
-                            ),
-                            child: Icon(
-                              Icons.auto_awesome,
-                              size: 18,
-                              color: tokens.accent,
                             ),
                           ),
                         ),
@@ -547,25 +554,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ],
                       ),
                       Positioned(
-                        bottom: 14,
-                        right: 14,
+                        bottom: 9,
+                        right: 9,
                         child: MindPressable(
+                          semanticLabel: strings.viewDetailsTooltip,
                           onPressed: () {
                             HapticFeedback.lightImpact();
                             context.push(AppRouter.journey);
                           },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: tokens.accent,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.arrow_forward_rounded,
-                              size: 18,
-                              color: isDark ? tokens.background : Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          child: SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Center(
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: tokens.accent,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 18,
+                                  color: isDark ? tokens.background : Colors.white,
+                                ),
+                              ),
                             ),
                           ),
                         ),

@@ -159,6 +159,7 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
                     ),
                   ),
                   IconButton(
+                    tooltip: strings.closeBtn,
                     icon: Icon(Icons.close_rounded, size: 18, color: textSecondary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),

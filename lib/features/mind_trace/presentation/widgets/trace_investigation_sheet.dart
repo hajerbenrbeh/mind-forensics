@@ -172,6 +172,7 @@ class _TraceInvestigationSheetState
                   ),
                 ),
                 IconButton(
+                  tooltip: strings.closeBtn,
                   icon: Icon(Icons.close, color: tokens.textSecondary),
                   onPressed: () => Navigator.of(context).pop(),
                 ),

@@ -247,6 +247,7 @@ class _EditSymptomsSheetState extends ConsumerState<EditSymptomsSheet> {
                         ),
                         const SizedBox(width: 8),
                         IconButton(
+                          tooltip: strings.addItemTooltip,
                           icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
                           color: context.tokens.accent,
                           onPressed: _addCustomSymptom,

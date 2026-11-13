@@ -355,6 +355,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     borderColor,
                     textSecondary,
                     suffixIcon: IconButton(
+                      tooltip: strings.toggleVisibilityTooltip,
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_outlined

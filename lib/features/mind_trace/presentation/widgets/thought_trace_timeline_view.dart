@@ -175,6 +175,7 @@ class _ThoughtTraceTimelineViewState
           ),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
+                  tooltip: strings.clearSearchTooltip,
                   icon: Icon(Icons.clear, size: 16, color: tokens.textSecondary),
                   onPressed: () {
                     _searchController.clear();
@@ -286,9 +287,12 @@ class _ThoughtTraceTimelineViewState
   }) {
     final tokens = context.tokens;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? tokens.accent : tokens.surface,
@@ -307,6 +311,7 @@ class _ThoughtTraceTimelineViewState
                 ? (isDark ? tokens.background : Colors.white)
                 : tokens.textSecondary,
           ),
+        ),
         ),
       ),
     );

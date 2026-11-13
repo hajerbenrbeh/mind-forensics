@@ -37,8 +37,32 @@ class _FingerprintThreadSignatureState extends State<FingerprintThreadSignature>
       vsync: this,
       duration: const Duration(seconds: 8),
     );
-    if (widget.animated) {
-      _controller.repeat();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  @override
+  void didUpdateWidget(covariant FingerprintThreadSignature oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animated != widget.animated) {
+      _syncAnimation();
+    }
+  }
+
+  void _syncAnimation() {
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (widget.animated && !reduceMotion) {
+      if (!_controller.isAnimating) {
+        _controller.repeat();
+      }
+    } else {
+      if (_controller.isAnimating) {
+        _controller.stop();
+      }
     }
   }
 
@@ -50,18 +74,23 @@ class _FingerprintThreadSignatureState extends State<FingerprintThreadSignature>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          size: Size(widget.size, widget.size),
-          painter: _FingerprintPainter(
-            progress: widget.animated ? _controller.value : 0.0,
-            primaryColor: widget.primaryColor,
-            accentColor: widget.accentColor,
-          ),
-        );
-      },
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return ExcludeSemantics(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return CustomPaint(
+            size: Size(widget.size, widget.size),
+            painter: _FingerprintPainter(
+              progress: (widget.animated && !reduceMotion)
+                  ? _controller.value
+                  : 0.0,
+              primaryColor: widget.primaryColor,
+              accentColor: widget.accentColor,
+            ),
+          );
+        },
+      ),
     );
   }
 }

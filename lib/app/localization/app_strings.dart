@@ -1252,6 +1252,14 @@ class AppStrings {
   String get sharePacketTitle => isArabic ? 'تحضير ملخص للمشاركة (اختياري)' : (isFrench ? 'Préparer un dossier de partage' : 'Build Share Packet');
   String get sharePacketSub => isArabic ? 'اختر البيانات التي تشاركها بإرادتك' : (isFrench ? 'Choisissez exactement quoi inclure' : 'Choose what to include before exporting');
 
+  // Accessibility tooltips (EN / FR / AR)
+  String get clearSearchTooltip => isArabic ? 'مسح البحث' : (isFrench ? 'Effacer la recherche' : 'Clear search');
+  String get previousMonthTooltip => isArabic ? 'الشهر السابق' : (isFrench ? 'Mois précédent' : 'Previous month');
+  String get nextMonthTooltip => isArabic ? 'الشهر التالي' : (isFrench ? 'Mois suivant' : 'Next month');
+  String get toggleVisibilityTooltip => isArabic ? 'إظهار أو إخفاء' : (isFrench ? 'Afficher ou masquer' : 'Toggle visibility');
+  String get addItemTooltip => isArabic ? 'إضافة' : (isFrench ? 'Ajouter' : 'Add');
+  String get viewDetailsTooltip => isArabic ? 'عرض التفاصيل' : (isFrench ? 'Voir les détails' : 'View details');
+
   // Helper factory
   static AppStrings of(BuildContext context) {
     final locale = Localizations.localeOf(context);

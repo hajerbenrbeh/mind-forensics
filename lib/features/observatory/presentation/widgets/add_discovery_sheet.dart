@@ -181,9 +181,9 @@ class _AddDiscoverySheetState extends ConsumerState<AddDiscoverySheet> {
                   ),
                 ),
                 IconButton(
+                  tooltip: strings.closeBtn,
                   icon: const Icon(Icons.close_rounded, size: 20),
                   onPressed: () => Navigator.of(context).pop(),
-                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),

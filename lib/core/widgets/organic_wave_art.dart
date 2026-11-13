@@ -16,11 +16,13 @@ class OrganicWaveArt extends StatelessWidget {
     return SizedBox(
       height: height,
       width: double.infinity,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: CustomPaint(
-          size: Size(double.infinity, height),
-          painter: _OrganicWavePainter(),
+      child: ExcludeSemantics(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: CustomPaint(
+            size: Size(double.infinity, height),
+            painter: _OrganicWavePainter(),
+          ),
         ),
       ),
     );

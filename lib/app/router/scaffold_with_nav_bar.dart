@@ -41,6 +41,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     final borderColor = tokens.border;
     final activeColor = tokens.accent;
     final inactiveColor = tokens.textSecondary;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -80,6 +81,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     inactiveColor: inactiveColor,
                     tokens: tokens,
                     isDark: isDark,
+                    reduceMotion: reduceMotion,
                   ),
 
                   // 2. Track
@@ -93,6 +95,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     inactiveColor: inactiveColor,
                     tokens: tokens,
                     isDark: isDark,
+                    reduceMotion: reduceMotion,
                   ),
 
                   // 3. Inner Observatory (Center Elevated Button)
@@ -107,6 +110,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     tokens: tokens,
                     isCenterAction: true,
                     isDark: isDark,
+                    reduceMotion: reduceMotion,
                   ),
 
                   // 4. Insights
@@ -120,6 +124,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     inactiveColor: inactiveColor,
                     tokens: tokens,
                     isDark: isDark,
+                    reduceMotion: reduceMotion,
                   ),
 
                   // 5. Profile
@@ -133,6 +138,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     inactiveColor: inactiveColor,
                     tokens: tokens,
                     isDark: isDark,
+                    reduceMotion: reduceMotion,
                   ),
                 ],
               ),
@@ -154,24 +160,31 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     required MindTokens tokens,
     bool isCenterAction = false,
     bool isDark = true,
+    bool reduceMotion = false,
   }) {
     final isSelected = index == currentIndex;
 
     return Expanded(
-      child: InkWell(
-        onTap: () => _onTap(index),
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isCenterAction)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutCubic,
-                width: 38,
-                height: 38,
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        child: MergeSemantics(
+          child: InkWell(
+            onTap: () => _onTap(index),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isCenterAction)
+                  AnimatedContainer(
+                    duration: reduceMotion
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
+                    curve: Curves.easeOutCubic,
+                    width: 38,
+                    height: 38,
                 decoration: BoxDecoration(
                   color: activeColor,
                   shape: BoxShape.circle,
@@ -213,7 +226,9 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                 letterSpacing: -0.2,
               ),
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );

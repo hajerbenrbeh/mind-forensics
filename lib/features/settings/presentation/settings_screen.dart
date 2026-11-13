@@ -130,6 +130,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                 ),
                 IconButton(
+                  tooltip: strings.closeBtn,
                   icon: const Icon(Icons.close_rounded, size: 18),
                   onPressed: () => Navigator.of(ctx).pop(),
                 ),

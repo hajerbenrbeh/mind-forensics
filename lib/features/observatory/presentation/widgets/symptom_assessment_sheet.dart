@@ -191,9 +191,9 @@ class _SymptomAssessmentSheetState extends ConsumerState<SymptomAssessmentSheet>
                     ],
                   ),
                   IconButton(
+                    tooltip: strings.closeBtn,
                     icon: Icon(Icons.close_rounded, size: 18, color: textSecondary),
                     onPressed: () => Navigator.of(context).pop(),
-                    visualDensity: VisualDensity.compact,
                   ),
                 ],
               ),

@@ -267,6 +267,7 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: border)),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: isDark ? Colors.white : Colors.black, width: 1.5)),
                 suffixIcon: IconButton(
+                  tooltip: 'Toggle key visibility',
                   icon: Icon(_obscureKey ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
                   onPressed: () => setState(() => _obscureKey = !_obscureKey),
                 ),

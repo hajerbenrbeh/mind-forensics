@@ -254,6 +254,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
         scrolledUnderElevation: 0,
         leading: Navigator.of(context).canPop()
             ? IconButton(
+                tooltip: strings.backBtn,
                 icon: Icon(Icons.arrow_back, color: tokens.textPrimary, size: 20),
                 onPressed: () => Navigator.of(context).pop(),
               )

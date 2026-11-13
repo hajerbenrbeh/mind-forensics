@@ -95,6 +95,7 @@ class JournalMemorySheet extends ConsumerWidget {
                   ],
                 ),
                 IconButton(
+                  tooltip: strings.closeBtn,
                   icon: const Icon(Icons.close_rounded, size: 20),
                   color: textSecondary,
                   onPressed: () => Navigator.pop(context),
@@ -305,9 +306,10 @@ class JournalMemorySheet extends ConsumerWidget {
                   ),
                 ),
               IconButton(
+                tooltip: ref.read(appStringsProvider).deleteEntryBtn,
                 icon: const Icon(Icons.delete_outline_rounded, size: 16),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                visualDensity: VisualDensity.compact,
                 color: textSecondary,
                 onPressed: () {
                   HapticFeedback.lightImpact();

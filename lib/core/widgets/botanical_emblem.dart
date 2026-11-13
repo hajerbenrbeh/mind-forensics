@@ -20,9 +20,11 @@ class BotanicalEmblem extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final leafColor = color ?? (isDark ? LabColors.lightOlive : LabColors.secondaryOlive);
 
-    final emblem = CustomPaint(
-      size: Size(size, size),
-      painter: _BotanicalLeafPainter(color: leafColor),
+    final emblem = ExcludeSemantics(
+      child: CustomPaint(
+        size: Size(size, size),
+        painter: _BotanicalLeafPainter(color: leafColor),
+      ),
     );
 
     if (backgroundColor == null) {

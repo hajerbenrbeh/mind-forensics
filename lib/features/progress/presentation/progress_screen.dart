@@ -1282,10 +1282,11 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   Row(
                     children: [
                       IconButton(
+                        tooltip: strings.previousMonthTooltip,
                         icon: const Icon(Icons.chevron_left, size: 20),
                         color: textPrimary,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                         onPressed: () {
                           setState(() {
                             _calendarMonth = DateTime(_calendarMonth.year, _calendarMonth.month - 1);
@@ -1293,12 +1294,13 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                           });
                         },
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 4),
                       IconButton(
+                        tooltip: strings.nextMonthTooltip,
                         icon: const Icon(Icons.chevron_right, size: 20),
                         color: textPrimary,
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                         onPressed: () {
                           final nextMonth = DateTime(_calendarMonth.year, _calendarMonth.month + 1);
                           final now = DateTime.now();
@@ -1610,6 +1612,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                     ),
                   ),
                   IconButton(
+                    tooltip: strings.viewDetailsTooltip,
                     icon: const Icon(Icons.arrow_forward_ios, size: 12),
                     color: textSecondary,
                     onPressed: () {
@@ -1704,6 +1707,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                   prefixIcon: Icon(Icons.search, size: 16, color: context.tokens.accent),
                   suffixIcon: query.isNotEmpty
                       ? IconButton(
+                          tooltip: strings.clearSearchTooltip,
                           icon: const Icon(Icons.clear, size: 14),
                           onPressed: () {
                             _reflectionSearchController.clear();
