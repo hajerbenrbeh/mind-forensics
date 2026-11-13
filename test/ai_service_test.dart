@@ -224,7 +224,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify header and chat input field
-      expect(find.text('REFLECTION'), findsAtLeastNWidgets(1));
+      expect(find.text('AI GUIDE'), findsAtLeastNWidgets(1));
       expect(find.text('Talk with your companion...'), findsOneWidget);
 
       // Verify Socratic quick suggestion pills

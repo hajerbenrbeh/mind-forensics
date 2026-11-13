@@ -116,7 +116,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.byType(PerspectiveExplorationCard), findsOneWidget);
-      expect(find.text('PERSPECTIVE EXPLORATION'), findsOneWidget);
+      expect(find.text('REFRAME THOUGHT'), findsOneWidget);
       expect(find.text('OBSERVABLE FACT'), findsOneWidget);
       expect(find.text('AUTOMATIC INTERPRETATION'), findsOneWidget);
       expect(find.text('Alternative grounded possibilities:'), findsOneWidget);

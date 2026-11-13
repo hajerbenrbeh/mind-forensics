@@ -157,7 +157,7 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
             tooltip: 'Settings',
             onPressed: () {
               HapticFeedback.lightImpact();
-              context.push(AppRouter.profile);
+              context.go(AppRouter.profile);
             },
           ),
           const SupportButton(),

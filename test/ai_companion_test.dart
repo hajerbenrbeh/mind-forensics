@@ -296,7 +296,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Initially active conversation dialogue is open
-      expect(find.text('REFLECTION'), findsAtLeastNWidgets(1));
+      expect(find.text('AI GUIDE'), findsAtLeastNWidgets(1));
       expect(find.text('Talk with your companion...'), findsOneWidget);
 
       // Tap grid icon in AppBar to toggle Hub view

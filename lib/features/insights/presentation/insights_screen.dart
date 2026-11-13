@@ -170,71 +170,107 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Time Horizon Filter (Wired to trace filtering)
-            Row(
-              children: ['1W', '1M', '3M', '6M'].map((r) {
-                return Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 8),
-                  child: MindPill(
+            // 1. Time Horizon Filter + Quick Self-Care Tools Shortcut
+            Wrap(
+              spacing: 6,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                ...['1W', '1M', '3M', '6M'].map((r) {
+                  return MindPill(
                     label: r,
                     isSelected: _selectedRange == r,
                     onTap: () => setState(() => _selectedRange = r),
+                  );
+                }),
+                Semantics(
+                  button: true,
+                  child: InkWell(
+                    onTap: () => context.push('/observatory'),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: tokens.accentSoft,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.spa_outlined, size: 15, color: tokens.accent),
+                          const SizedBox(width: 5),
+                          Text(
+                            strings.navObservatory,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.accent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
-          const SizedBox(height: 18),
+            const SizedBox(height: 18),
 
-          // 2. Mood Trends Section
-          Text(
-            strings.moodTrendsHeader,
-            style: TextStyle(
-              color: tokens.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildMoodTrendsCard(context, tokens, traces, strings),
-          const SizedBox(height: 20),
-
-          // 3. Your Patterns Section
-          _buildYourPatternsSection(context, tokens, analytics, strings),
-          const SizedBox(height: 18),
-
-          // 4. Context & Mood Links (Trigger + Helper local heuristics)
-          _buildContextMoodLinksCard(context, traces, tokens, strings),
-          const SizedBox(height: 20),
-
-          // 5. Personal Baseline Card (Preserved Core)
-          _buildBaselineCard(context, baseline, tokens, strings),
-          const SizedBox(height: 20),
-
-          // 6. Pattern Awareness Divergences (if any detected)
-          if (divergences.isNotEmpty) ...[
+            // 2. Mood Trends Section
             Text(
-              strings.patternAwarenessTitle.toUpperCase(),
+              strings.moodTrendsHeader,
               style: TextStyle(
-                color: tokens.textSecondary,
-                fontSize: 11,
+                color: tokens.textPrimary,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
-                letterSpacing: 1.1,
+                letterSpacing: -0.2,
               ),
             ),
             const SizedBox(height: 10),
-            ...divergences.map((d) => _buildDivergenceCard(context, d, tokens, strings)),
-            const SizedBox(height: 20),
-          ],
+            _buildMoodTrendsCard(context, tokens, traces, strings),
+            const SizedBox(height: 18),
 
-          // 7. Weekly Therapist Summary Card (Preserved Core)
-          _buildWeeklyTherapistSummaryCard(context, weeklySummary, cases, tokens, strings),
-          const SizedBox(height: 20),
+            // 3. Your Patterns Section
+            _buildYourPatternsSection(context, tokens, analytics, strings),
+            const SizedBox(height: 18),
 
-          // 8. Detailed Analytics Deep-Dive Button (Preserved Core)
-          MindCard(
-            padding: const EdgeInsets.all(16),
-            onTap: () => context.go('/progress'),
+            // 4. Context & Mood Links (Shown only when triggers or helpers exist to keep UI calm)
+            if (traces.any((t) =>
+                (t.situation?.trim().isNotEmpty ?? false) ||
+                (t.behavioralResponse?.trim().isNotEmpty ?? false))) ...[
+              _buildContextMoodLinksCard(context, traces, tokens, strings),
+              const SizedBox(height: 18),
+            ],
+
+            // 5. Personal Baseline Card (Preserved Core)
+            _buildBaselineCard(context, baseline, tokens, strings),
+            const SizedBox(height: 18),
+
+            // 6. Pattern Awareness Divergences (if any detected)
+            if (divergences.isNotEmpty) ...[
+              Text(
+                strings.patternAwarenessTitle.toUpperCase(),
+                style: TextStyle(
+                  color: tokens.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const SizedBox(height: 10),
+              ...divergences.map((d) => _buildDivergenceCard(context, d, tokens, strings)),
+              const SizedBox(height: 18),
+            ],
+
+            // 7. Weekly Therapist Summary Card (Preserved Core)
+            _buildWeeklyTherapistSummaryCard(context, weeklySummary, cases, tokens, strings),
+            const SizedBox(height: 18),
+
+            // 8. Detailed Analytics Deep-Dive Button (Preserved Core)
+            MindCard(
+              padding: const EdgeInsets.all(16),
+              onTap: () => context.push('/progress'),
             child: Row(
               children: [
                 Container(

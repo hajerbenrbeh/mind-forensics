@@ -98,13 +98,13 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     reduceMotion: reduceMotion,
                   ),
 
-                  // 3. Inner Observatory (Center Elevated Button)
+                  // 3. AI Guide (Center Elevated Button)
                   _buildNavItem(
                     index: 2,
                     currentIndex: currentIndex,
-                    icon: Icons.hub_outlined,
-                    activeIcon: Icons.hub_rounded,
-                    label: strings.navObservatory,
+                    icon: Icons.psychology_alt_outlined,
+                    activeIcon: Icons.psychology_alt_rounded,
+                    label: strings.navAiGuide,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
                     tokens: tokens,

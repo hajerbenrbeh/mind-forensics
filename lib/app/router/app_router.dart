@@ -131,9 +131,9 @@ class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: companion,
-        name: 'companion',
-        builder: (context, state) => const FlashCaseScreen(),
+        path: observatory,
+        name: 'observatory',
+        builder: (context, state) => const InnerObservatoryScreen(),
       ),
 
       // Route aliases for backward compatibility
@@ -191,13 +191,13 @@ class AppRouter {
             ],
           ),
 
-          // Branch 2: Inner Observatory (Center prominent)
+          // Branch 2: AI Guide (Center prominent)
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: observatory,
-                name: 'observatory',
-                builder: (context, state) => const InnerObservatoryScreen(),
+                path: companion,
+                name: 'companion',
+                builder: (context, state) => const FlashCaseScreen(),
               ),
             ],
           ),

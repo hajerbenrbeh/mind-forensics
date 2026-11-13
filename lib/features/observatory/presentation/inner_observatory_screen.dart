@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_strings.dart';
-import '../../../app/router/app_router.dart';
 import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/mind_pressable.dart';
-import '../../../core/widgets/neural_brain_wireframe.dart';
 import '../../journey/controllers/journey_controller.dart';
 import '../../journey/domain/journey_activity.dart';
 import '../../support/presentation/contextual_support_sheet.dart';
@@ -85,55 +82,68 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
       body: SafeArea(
         child: NestedScrollView(
           headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            // Top Soft Observatory Hero Banner (MindTokens styled, non-redundant actions)
+            // Compact Quick Relief Strip (Calm, zero wireframe clutter)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-                child: _buildPhone5Hero(isDark, tokens, strings),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                child: _buildQuickReliefStrip(tokens, strings),
               ),
             ),
 
-            // Section Switcher Tabs (4 focused sections)
+            // Clean 2x2 Section Switcher (All 4 tools visible, zero horizontal scrolling)
             SliverToBoxAdapter(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 decoration: BoxDecoration(
                   color: surfaceColor,
                   border: Border(bottom: BorderSide(color: borderColor, width: 1)),
                 ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildSectionTab(
-                        index: 0,
-                        label: strings.sectionPerspectiveExploration,
-                        icon: Icons.psychology_outlined,
-                        tokens: tokens,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildSectionTab(
-                        index: 1,
-                        label: strings.sectionExperimentsStrategies,
-                        icon: Icons.lightbulb_outline_rounded,
-                        tokens: tokens,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildSectionTab(
-                        index: 2,
-                        label: strings.sectionPersonalDiscoveries,
-                        icon: Icons.auto_awesome_outlined,
-                        tokens: tokens,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildSectionTab(
-                        index: 3,
-                        label: strings.sectionSymptomExploration,
-                        icon: Icons.radar_outlined,
-                        tokens: tokens,
-                      ),
-                    ],
-                  ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSectionTab(
+                            index: 0,
+                            label: strings.sectionPerspectiveExploration,
+                            icon: Icons.psychology_outlined,
+                            tokens: tokens,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildSectionTab(
+                            index: 1,
+                            label: strings.sectionExperimentsStrategies,
+                            icon: Icons.lightbulb_outline_rounded,
+                            tokens: tokens,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSectionTab(
+                            index: 2,
+                            label: strings.sectionPersonalDiscoveries,
+                            icon: Icons.auto_awesome_outlined,
+                            tokens: tokens,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildSectionTab(
+                            index: 3,
+                            label: strings.sectionSymptomExploration,
+                            icon: Icons.radar_outlined,
+                            tokens: tokens,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -154,118 +164,56 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
     );
   }
 
-  Widget _buildPhone5Hero(bool isDark, MindTokens tokens, AppStrings strings) {
-    final heroBg = isDark ? tokens.surface : tokens.accent;
-    final heroFg = isDark ? tokens.textPrimary : Colors.white;
-    final heroSubFg = heroFg.withValues(alpha: 0.78);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: heroBg,
-        borderRadius: BorderRadius.circular(tokens.cardRadius),
-        border: isDark ? Border.all(color: tokens.border, width: 1.0) : null,
-      ),
-      child: Column(
-        children: [
-          Text(
-            strings.observatoryTitle,
-            style: TextStyle(
-              fontFamily: 'serif',
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: heroFg,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            strings.observatoryHeroSubtitle,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: heroSubFg,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const SizedBox(
-            height: 96,
-            child: NeuralBrainWireframe(size: 96),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildHeroActionPill(
-                  title: strings.mindAssistantTitle,
-                  icon: Icons.auto_awesome,
-                  isDark: isDark,
-                  heroFg: heroFg,
-                  tokens: tokens,
-                  onTap: () => context.push(AppRouter.companion),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildHeroActionPill(
-                  title: strings.quickGroundingTitle,
-                  icon: Icons.spa_outlined,
-                  isDark: isDark,
-                  heroFg: heroFg,
-                  tokens: tokens,
-                  onTap: () => ContextualSupportSheet.show(context),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeroActionPill({
-    required String title,
-    required IconData icon,
-    required bool isDark,
-    required Color heroFg,
-    required MindTokens tokens,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildQuickReliefStrip(MindTokens tokens, AppStrings strings) {
     return MindPressable(
       onPressed: () {
         HapticFeedback.lightImpact();
-        onTap();
+        ContextualSupportSheet.show(context);
       },
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        constraints: const BoxConstraints(minHeight: 52),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isDark ? tokens.surfaceSecondary : Colors.white.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isDark ? tokens.border : Colors.white.withValues(alpha: 0.22),
-            width: 1.0,
-          ),
+          color: tokens.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: tokens.border, width: 1.0),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 15, color: isDark ? tokens.accent : Colors.white),
-            const SizedBox(width: 7),
-            Flexible(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: heroFg,
-                ),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: tokens.accentSoft,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.spa_outlined, size: 18, color: tokens.accent),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.quickGroundingTitle,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    strings.observatorySubtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11.5, color: tokens.textSecondary),
+                  ),
+                ],
               ),
             ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 13, color: tokens.textTertiary),
           ],
         ),
       ),
@@ -286,33 +234,40 @@ class _InnerObservatoryScreenState extends ConsumerState<InnerObservatoryScreen>
           HapticFeedback.selectionClick();
           setState(() => _selectedSection = index);
         },
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          constraints: const BoxConstraints(minHeight: 48),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? tokens.accentSoft : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
+            color: isSelected ? tokens.accentSoft : tokens.background,
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? tokens.accent.withValues(alpha: 0.35) : Colors.transparent,
+              color: isSelected
+                  ? tokens.accent.withValues(alpha: 0.45)
+                  : tokens.border,
             ),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 icon,
-                size: 15,
+                size: 16,
                 color: isSelected ? tokens.accent : tokens.textSecondary,
               ),
               const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? tokens.accent : tokens.textSecondary,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? tokens.accent : tokens.textSecondary,
+                  ),
                 ),
               ),
             ],

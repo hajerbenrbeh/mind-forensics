@@ -318,7 +318,7 @@ class _ContextualSupportSheetState
           accentColor: textSecondary,
           onTap: () {
             Navigator.of(context).pop();
-            context.go(AppRouter.observatory);
+            context.push(AppRouter.observatory);
           },
           isDark: isDark,
           textPrimary: textPrimary,

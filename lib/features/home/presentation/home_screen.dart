@@ -325,9 +325,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         MindPressable(
                           onPressed: () {
                             HapticFeedback.lightImpact();
-                            context.push(AppRouter.companion);
+                            context.push(AppRouter.progress);
                           },
-                          semanticLabel: strings.mindAssistantTitle,
+                          semanticLabel: strings.quickCalendarTitle,
                           borderRadius: BorderRadius.circular(24),
                           child: SizedBox(
                             width: 48,
@@ -345,7 +345,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                 ),
                                 child: Icon(
-                                  Icons.auto_awesome,
+                                  Icons.calendar_month_outlined,
                                   size: 18,
                                   color: tokens.accent,
                                 ),
@@ -353,29 +353,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: tokens.accent,
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: (profile?.preferredName.isNotEmpty == true && profile!.preferredName != 'Friend')
-                              ? Text(
-                                  profile.preferredName[0].toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark ? tokens.background : Colors.white,
-                                  ),
-                                )
-                              : Icon(
-                                  Icons.person_outline_rounded,
-                                  size: 19,
-                                  color: isDark ? tokens.background : Colors.white,
+                        const SizedBox(width: 6),
+                        MindPressable(
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            context.go(AppRouter.profile);
+                          },
+                          semanticLabel: strings.navProfile,
+                          borderRadius: BorderRadius.circular(24),
+                          child: SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Center(
+                              child: Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: tokens.accent,
+                                  shape: BoxShape.circle,
                                 ),
+                                alignment: Alignment.center,
+                                child: (profile?.preferredName.isNotEmpty == true && profile!.preferredName != 'Friend')
+                                    ? Text(
+                                        profile.preferredName[0].toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: isDark ? tokens.background : Colors.white,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.person_outline_rounded,
+                                        size: 19,
+                                        color: isDark ? tokens.background : Colors.white,
+                                      ),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -387,9 +401,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // 2. DAILY CHECK-IN HERO
                 _buildDailyCheckInCard(tokens, strings, isDark, todayTrace, traces),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
-                // 3. ACTIVE CASE OR START INVESTIGATION CARD
+                // 3. FLO-STYLE ALL FEATURES QUICK GRID (1-Tap Reachability)
+                _buildQuickAccessGrid(tokens, strings),
+
+                const SizedBox(height: 18),
+
+                // 4. ACTIVE CASE OR START INVESTIGATION CARD
                 if (activeCase != null && !activeCase.isCompleted)
                   _buildActiveCaseCard(activeCase, tokens, strings, isDark)
                 else
@@ -421,7 +440,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     const SizedBox(width: 8),
                     InkWell(
-                      onTap: () => context.push('/investigation'),
+                      onTap: () => context.go(AppRouter.companion),
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
@@ -604,9 +623,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       tokens: tokens,
       strings: strings,
       isDark: isDark,
-      onResume: () async {
-        await context.push('/investigation');
-        _loadRecentCases();
+      onResume: () {
+        context.go(AppRouter.companion);
       },
     );
   }
@@ -665,10 +683,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () async {
+              onPressed: () {
                 HapticFeedback.mediumImpact();
-                await context.push('/investigation');
-                _loadRecentCases();
+                context.go(AppRouter.companion);
               },
               icon: const Icon(Icons.add_rounded, size: 18),
               label: Text(strings.newInvestigation),
@@ -723,8 +740,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         await ref.read(activeCaseControllerProvider.notifier).startNewCase(label);
         await ref.read(activeCaseControllerProvider.notifier).advanceStage(CaseStage.evidence);
         if (mounted) {
-          await context.push('/investigation');
-          _loadRecentCases();
+          context.go(AppRouter.companion);
         }
       },
       child: Container(
@@ -817,10 +833,151 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             await context.push('/case/${c.id}');
           } else {
             ref.read(activeCaseControllerProvider.notifier).resumeCase(c);
-            await context.push('/investigation');
+            context.go(AppRouter.companion);
           }
           _loadRecentCases();
         },
+      ),
+    );
+  }
+
+  Widget _buildQuickAccessGrid(MindTokens tokens, AppStrings strings) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          strings.quickAccessHeader,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+            color: tokens.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _buildQuickAccessTile(
+                title: strings.navAiGuide,
+                subtitle: strings.quickAiSubtitle,
+                icon: Icons.psychology_alt_outlined,
+                tokens: tokens,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.go(AppRouter.companion);
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildQuickAccessTile(
+                title: strings.quickToolsTitle,
+                subtitle: strings.quickToolsSubtitle,
+                icon: Icons.spa_outlined,
+                tokens: tokens,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.push(AppRouter.observatory);
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _buildQuickAccessTile(
+                title: strings.quickCalendarTitle,
+                subtitle: strings.quickCalendarSubtitle,
+                icon: Icons.calendar_month_outlined,
+                tokens: tokens,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.push(AppRouter.progress);
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildQuickAccessTile(
+                title: strings.quickInsightsTitle,
+                subtitle: strings.quickInsightsSubtitle,
+                icon: Icons.insights_outlined,
+                tokens: tokens,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.go(AppRouter.insights);
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickAccessTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required MindTokens tokens,
+    required VoidCallback onTap,
+  }) {
+    return MindPressable(
+      onPressed: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 72),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: tokens.surface,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: tokens.border, width: 1.0),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: tokens.accentSoft,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Icon(icon, size: 18, color: tokens.accent),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: tokens.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

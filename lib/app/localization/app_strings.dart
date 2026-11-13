@@ -18,12 +18,13 @@ class AppStrings {
   bool get isArabic => languageCode == 'ar';
   bool get isFrench => languageCode == 'fr';
 
-  // Navigation (4 Primary Destinations: Home, Reflection, Inner Observatory, Profile)
+  // Navigation (5 Standard Destinations: Home, Track, AI Guide, Insights, Profile)
   String get navHome => isArabic ? 'الرئيسية' : (isFrench ? 'Accueil' : 'Home');
-  String get navObservatory => isArabic ? 'المرصد' : (isFrench ? 'Observatoire' : 'Observatory');
-  String get navInnerObservatory => isArabic ? 'المرصد الداخلي' : (isFrench ? 'Observatoire intérieur' : 'Inner Observatory');
-  String get navInvestigator => isArabic ? 'تأمل فكري' : (isFrench ? 'Réflexion' : 'Reflection');
-  String get navProfile => isArabic ? 'الملف الشخصي' : (isFrench ? 'Profil' : 'Profile');
+  String get navObservatory => isArabic ? 'الأدوات' : (isFrench ? 'Outils' : 'Tools');
+  String get navInnerObservatory => isArabic ? 'أدوات العناية' : (isFrench ? 'Outils Bien-être' : 'Self-Care Tools');
+  String get navAiGuide => isArabic ? 'المساعد' : (isFrench ? 'Assistant' : 'AI Guide');
+  String get navInvestigator => isArabic ? 'المساعد النفسي' : (isFrench ? 'Assistant IA' : 'AI Guide');
+  String get navProfile => isArabic ? 'ملفي' : (isFrench ? 'Profil' : 'Profile');
 
   // Contextual Support
   String get contextualSupportTitle => isArabic ? 'دعم فوري' : (isFrench ? 'Soutien contextuel' : 'Contextual Support');
@@ -54,13 +55,23 @@ class AppStrings {
   String get groundingSmell => isArabic ? '2 روائح تشم فيهم أو تتفكرهم' : (isFrench ? '2 odeurs que vous percevez ou imaginez' : '2 scents you notice or recall');
   String get groundingTaste => isArabic ? 'إحساس واحد ملموس في فمك أو نفس نقي' : (isFrench ? '1 sensation physique ou goût de l’air' : '1 physical sensation or taste of fresh air');
 
-  // Inner Observatory
-  String get observatoryTitle => isArabic ? 'المرصد الداخلي' : (isFrench ? 'Observatoire intérieur' : 'Inner Observatory');
-  String get observatorySubtitle => isArabic ? 'مساحة هادية لاستكشاف الأعراض، الأنماط، والتجارب' : (isFrench ? 'Espace serein d’exploration des symptômes, schémas et stratégies' : 'A calm space for symptom exploration, perspective shifts, and strategies');
-  String get sectionSymptomExploration => isArabic ? 'استكشاف الأعراض والتناغم الذاتي' : (isFrench ? 'Exploration des symptômes & ressenti' : 'Symptom Exploration & Attunement');
-  String get sectionPerspectiveExploration => isArabic ? 'استكشاف زوايا النظر' : (isFrench ? 'Exploration des perspectives' : 'Perspective Exploration');
-  String get sectionExperimentsStrategies => isArabic ? 'تجارب واستراتيجيات عملية' : (isFrench ? 'Expériences & Stratégies' : 'Experiments & Strategies');
-  String get sectionPersonalDiscoveries => isArabic ? 'اكتشافاتي وخلاصاتي' : (isFrench ? 'Découvertes personnelles' : 'Personal Discoveries');
+  // Self-Care Tools Hub (formerly Inner Observatory)
+  String get observatoryTitle => isArabic ? 'أدوات العناية' : (isFrench ? 'Outils Bien-être' : 'Self-Care Tools');
+  String get observatorySubtitle => isArabic ? 'أدوات بسيطة وهادئة لتهدئة البال وفهم الأفكار' : (isFrench ? 'Outils simples pour apaiser le mental et prendre du recul' : 'Simple, practical tools to calm your mind and gain clarity');
+  String get sectionSymptomExploration => isArabic ? 'الجسم والأعراض' : (isFrench ? 'Corps & Ressenti' : 'Body & Mind');
+  String get sectionPerspectiveExploration => isArabic ? 'تغيير زاوية النظر' : (isFrench ? 'Recadrer' : 'Reframe Thought');
+  String get sectionExperimentsStrategies => isArabic ? 'خطوات عملية' : (isFrench ? 'Actions Simples' : 'Coping Steps');
+  String get sectionPersonalDiscoveries => isArabic ? 'خلاصاتي' : (isFrench ? 'Notes Sauvées' : 'Saved Notes');
+
+  // Quick Feature Hub on Home (1-Tap Reachability)
+  String get quickAccessHeader => isArabic ? 'الوصول السريع' : (isFrench ? 'ACCÈS RAPIDE' : 'ALL FEATURES');
+  String get quickAiSubtitle => isArabic ? 'حوار واعي وهادئ' : (isFrench ? 'Échange apaisé' : 'Guided reflection');
+  String get quickToolsTitle => isArabic ? 'أدوات التهدئة' : (isFrench ? 'Outils calmes' : 'Self-Care Tools');
+  String get quickToolsSubtitle => isArabic ? 'تنفس، أفكار وخطوات' : (isFrench ? 'Respiration & recul' : 'Breathing & coping');
+  String get quickCalendarTitle => isArabic ? 'التقويم والسجل' : (isFrench ? 'Calendrier' : 'Calendar & Log');
+  String get quickCalendarSubtitle => isArabic ? 'تتبع الأيام والأشهر' : (isFrench ? 'Vue mensuelle' : 'History & streaks');
+  String get quickInsightsTitle => isArabic ? 'التحليلات والتقرير' : (isFrench ? 'Tendances' : 'Insights & Export');
+  String get quickInsightsSubtitle => isArabic ? 'أنماطك وملخصك' : (isFrench ? 'Bilan & courbes' : 'Mood trends');
 
   // Common Actions & Navigation
   String get backBtn => isArabic ? 'رجوع' : (isFrench ? 'Retour' : 'Back');

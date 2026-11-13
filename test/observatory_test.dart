@@ -30,29 +30,29 @@ void main() {
       await tester.pumpAndSettle();
 
       // Header
-      expect(find.text('INNER OBSERVATORY'), findsOneWidget);
+      expect(find.text('SELF-CARE TOOLS'), findsOneWidget);
 
-      // Section tabs
-      expect(find.text('Perspective Exploration'), findsAtLeastNWidgets(1));
-      expect(find.text('Experiments & Strategies'), findsAtLeastNWidgets(1));
-      expect(find.text('Personal Discoveries'), findsAtLeastNWidgets(1));
-      expect(find.textContaining('Symptom Exploration'), findsAtLeastNWidgets(1));
+      // Section tabs (2x2 wrapped grid)
+      expect(find.text('Reframe Thought'), findsAtLeastNWidgets(1));
+      expect(find.text('Coping Steps'), findsAtLeastNWidgets(1));
+      expect(find.text('Saved Notes'), findsAtLeastNWidgets(1));
+      expect(find.textContaining('Body & Mind'), findsAtLeastNWidgets(1));
 
-      // Section 1 (default active): Perspective Exploration
-      expect(find.text('Perspective Exploration'), findsAtLeastNWidgets(1));
+      // Section 1 (default active): Reframe Thought
+      expect(find.text('Reframe Thought'), findsAtLeastNWidgets(2));
 
-      // Switch to Section 2: Experiments & Strategies
-      await tester.tap(find.text('Experiments & Strategies').first);
+      // Switch to Section 2: Coping Steps
+      await tester.tap(find.text('Coping Steps').first);
       await tester.pumpAndSettle();
-      expect(find.text('Experiments & Strategies'), findsAtLeastNWidgets(2));
+      expect(find.text('Coping Steps'), findsAtLeastNWidgets(2));
 
-      // Switch to Section 3: Personal Discoveries
-      await tester.tap(find.text('Personal Discoveries').first);
+      // Switch to Section 3: Saved Notes
+      await tester.tap(find.text('Saved Notes').first);
       await tester.pumpAndSettle();
-      expect(find.text('Personal Discoveries'), findsAtLeastNWidgets(2));
+      expect(find.text('Saved Notes'), findsAtLeastNWidgets(2));
 
-      // Switch to Section 4: Symptom Exploration
-      await tester.tap(find.textContaining('Symptom Exploration').first);
+      // Switch to Section 4: Body & Mind
+      await tester.tap(find.textContaining('Body & Mind').first);
       await tester.pumpAndSettle();
       expect(find.text('Self-Attunement Check'), findsOneWidget);
     });
