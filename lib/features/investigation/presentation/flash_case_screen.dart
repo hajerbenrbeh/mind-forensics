@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_strings.dart';
+import '../../../app/router/app_router.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../controllers/investigation_providers.dart';
 import '../domain/case_model.dart';
@@ -87,11 +90,11 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
                 onPressed: () => setState(() => _showHubView = true),
               ),
         title: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.auto_awesome, size: 16, color: LabColors.secondaryOlive),
             const SizedBox(width: 6),
             Flexible(
+              flex: 2,
               child: Text(
                 strings.navInvestigator.toUpperCase(),
                 overflow: TextOverflow.ellipsis,
@@ -104,23 +107,33 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: borderColor),
-              ),
-              child: Text(
-                _showHubView
-                    ? 'AI HUB'
-                    : (caseModel?.caseNumber ?? 'SESSION 01'),
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.4,
-                  color: _showHubView ? LabColors.champagneGold : textSecondary,
+            const SizedBox(width: 6),
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _showHubView
+                      ? context.tokens.accentSoft
+                      : context.tokens.surfaceSecondary,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _showHubView
+                        ? context.tokens.accent.withValues(alpha: 0.35)
+                        : borderColor,
+                  ),
+                ),
+                child: Text(
+                  _showHubView
+                      ? 'AI HUB'
+                      : (caseModel?.caseNumber ?? 'SESSION 01'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                    color: _showHubView ? context.tokens.accent : textSecondary,
+                  ),
                 ),
               ),
             ),
@@ -144,7 +157,7 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
             tooltip: 'Settings',
             onPressed: () {
               HapticFeedback.lightImpact();
-              Navigator.of(context).pushNamed('/settings');
+              context.go(AppRouter.profile);
             },
           ),
           const SupportButton(),
@@ -163,7 +176,7 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          isDark ? LabColors.champagneGold : LabColors.deepBurgundy,
+                          context.tokens.accent,
                         ),
                       ),
                     ),

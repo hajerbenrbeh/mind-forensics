@@ -7,6 +7,7 @@ import '../../../app/localization/app_strings.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/lab_theme.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/security/app_lock_provider.dart';
 import '../../../core/widgets/bouncing_widget.dart';
@@ -354,6 +355,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     borderColor,
                     textSecondary,
                     suffixIcon: IconButton(
+                      tooltip: strings.toggleVisibilityTooltip,
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_outlined
@@ -653,16 +655,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       fillColor: surfaceColor,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: borderColor, width: 1),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide(color: borderColor, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: LabColors.champagneGold, width: 1),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: BorderSide(color: context.tokens.accent, width: 1.2),
       ),
     );
   }

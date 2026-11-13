@@ -47,15 +47,19 @@ class RadialMoodDial extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               // Concentric soft ripples
-              CustomPaint(
-                size: const Size(260, 180),
-                painter: _RadialRipplesPainter(isDark: isDark),
+              ExcludeSemantics(
+                child: CustomPaint(
+                  size: const Size(260, 180),
+                  painter: _RadialRipplesPainter(isDark: isDark),
+                ),
               ),
 
               // Horizontal row of mood selections
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(moods.length, (index) {
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(moods.length, (index) {
                   final isSelected = index == selectedIndex;
                   final item = moods[index];
 
@@ -63,25 +67,32 @@ class RadialMoodDial extends StatelessWidget {
                     // Center active large circular dial
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        width: 76,
-                        height: 76,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isDark ? LabColors.forestGreen : const Color(0xFF4A583E),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (isDark ? LabColors.forestGreen : const Color(0xFF4A583E))
-                                  .withValues(alpha: 0.35),
-                              blurRadius: 18,
-                              spreadRadius: 2,
+                      child: Semantics(
+                        button: true,
+                        selected: true,
+                        label: activeMood.label,
+                        child: Container(
+                          width: 76,
+                          height: 76,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isDark ? LabColors.forestGreen : const Color(0xFF4A583E),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (isDark ? LabColors.forestGreen : const Color(0xFF4A583E))
+                                    .withValues(alpha: 0.35),
+                                blurRadius: 18,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: ExcludeSemantics(
+                            child: Icon(
+                              item.icon,
+                              size: 38,
+                              color: const Color(0xFFF5EEE3),
                             ),
-                          ],
-                        ),
-                        child: Icon(
-                          item.icon,
-                          size: 38,
-                          color: const Color(0xFFF5EEE3),
+                          ),
                         ),
                       ),
                     );
@@ -89,15 +100,17 @@ class RadialMoodDial extends StatelessWidget {
 
                   // Surrounding subtle secondary faces
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: MindPressable(
+                      semanticLabel: item.label,
+                      borderRadius: BorderRadius.circular(24),
                       onPressed: () {
                         HapticFeedback.lightImpact();
                         onChanged(index);
                       },
                       child: Container(
-                        width: 44,
-                        height: 44,
+                        width: 48,
+                        height: 48,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
@@ -106,15 +119,18 @@ class RadialMoodDial extends StatelessWidget {
                             width: 1.0,
                           ),
                         ),
-                        child: Icon(
-                          item.icon,
-                          size: 22,
-                          color: isDark ? LabColors.darkTextSecondary : LabColors.secondaryText,
+                        child: ExcludeSemantics(
+                          child: Icon(
+                            item.icon,
+                            size: 22,
+                            color: isDark ? LabColors.darkTextSecondary : LabColors.secondaryText,
+                          ),
                         ),
                       ),
                     ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
             ],
           ),

@@ -29,6 +29,7 @@ class MindCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardRadius = BorderRadius.circular(radius ?? tokens.cardRadius);
 
     Widget content = Container(
@@ -40,13 +41,15 @@ class MindCard extends StatelessWidget {
           color: borderColor ?? tokens.border,
           width: 1.0,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        boxShadow: isDark
+            ? null
+            : [
+                BoxShadow(
+                  color: tokens.textPrimary.withValues(alpha: 0.035),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ],
       ),
       child: child,
     );

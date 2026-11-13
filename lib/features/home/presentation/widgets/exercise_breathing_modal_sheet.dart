@@ -149,6 +149,7 @@ class _ExerciseBreathingModalSheetState extends State<ExerciseBreathingModalShee
                 ],
               ),
               IconButton(
+                tooltip: widget.strings.closeBtn,
                 onPressed: () => Navigator.of(context).pop(),
                 icon: Icon(Icons.close_rounded, color: tokens.textSecondary),
               ),

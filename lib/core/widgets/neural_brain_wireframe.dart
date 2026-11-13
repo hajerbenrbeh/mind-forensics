@@ -28,10 +28,34 @@ class _NeuralBrainWireframeState extends State<NeuralBrainWireframe>
       vsync: this,
       duration: const Duration(seconds: 14),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  @override
+  void didUpdateWidget(covariant NeuralBrainWireframe oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.animate != widget.animate) {
+      _syncAnimation();
+    }
+  }
+
+  void _syncAnimation() {
     final isTest = const bool.fromEnvironment('FLUTTER_TEST') ||
         WidgetsBinding.instance.runtimeType.toString().contains('Test');
-    if (widget.animate && !isTest) {
-      _controller.repeat();
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (widget.animate && !isTest && !reduceMotion) {
+      if (!_controller.isAnimating) {
+        _controller.repeat();
+      }
+    } else {
+      if (_controller.isAnimating) {
+        _controller.stop();
+      }
     }
   }
 
@@ -43,14 +67,19 @@ class _NeuralBrainWireframeState extends State<NeuralBrainWireframe>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          size: Size(widget.size, widget.size),
-          painter: _BrainWireframePainter(rotation: _controller.value),
-        );
-      },
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return ExcludeSemantics(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return CustomPaint(
+            size: Size(widget.size, widget.size),
+            painter: _BrainWireframePainter(
+              rotation: reduceMotion ? 0.0 : _controller.value,
+            ),
+          );
+        },
+      ),
     );
   }
 }

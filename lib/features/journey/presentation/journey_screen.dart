@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/botanical_emblem.dart';
 import '../../../core/widgets/mind_card.dart';
@@ -175,14 +176,14 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
           padding: const EdgeInsets.symmetric(vertical: 7),
           decoration: BoxDecoration(
             color: isSelected
-                ? (isDark ? const Color(0xFF222222) : const Color(0xFFE4E4E7))
+                ? context.tokens.accentSoft
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(context.tokens.chipRadius),
             border: Border.all(
               color: isSelected
-                  ? (isDark ? Colors.white : Colors.black)
+                  ? context.tokens.accent
                   : Colors.transparent,
-              width: 0.8,
+              width: 1,
             ),
           ),
           alignment: Alignment.center,
@@ -202,25 +203,39 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
   }
 
   Widget _buildPhone6Timeline(bool isDark, Color textPrimary, Color textSecondary) {
+    final strings = ref.watch(appStringsProvider);
+    final isAr = strings.isArabic;
+    final isFr = strings.isFrench;
+
     final timelinePhases = [
       (
-        title: 'Balanced',
-        desc: 'Calm, focused, and in control',
+        title: isAr ? 'متوازن' : (isFr ? 'Équilibré' : 'Balanced'),
+        desc: isAr
+            ? 'هادئ، مركّز، ومسيطر على إيقاعك'
+            : (isFr ? 'Calme, concentré et posé' : 'Calm, focused, and in control'),
         isActive: true,
       ),
       (
-        title: 'Elevated',
-        desc: 'More energy and optimism',
+        title: isAr ? 'مرتفع' : (isFr ? 'Élevé' : 'Elevated'),
+        desc: isAr
+            ? 'طاقة وتفاؤل أكثر من المعتاد'
+            : (isFr ? 'Plus d’énergie et d’optimisme' : 'More energy and optimism'),
         isActive: false,
       ),
       (
-        title: 'Low',
-        desc: 'Feeling down, withdrawn',
+        title: isAr ? 'منخفض' : (isFr ? 'Bas' : 'Low'),
+        desc: isAr
+            ? 'حزن أو رغبة في الانسحاب'
+            : (isFr ? 'Baisse de moral, retrait' : 'Feeling down, withdrawn'),
         isActive: false,
       ),
       (
-        title: 'Manic',
-        desc: 'High energy, less need for sleep',
+        title: isAr ? 'اندفاع عالٍ' : (isFr ? 'Maniaque' : 'Manic'),
+        desc: isAr
+            ? 'طاقة عالية وحاجة أقل للنوم'
+            : (isFr
+                ? 'Haute énergie, moins besoin de sommeil'
+                : 'High energy, less need for sleep'),
         isActive: false,
       ),
     ];
@@ -233,7 +248,7 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your Journey',
+            isAr ? 'مسارك' : (isFr ? 'Votre Parcours' : 'Your Journey'),
             style: TextStyle(
               fontFamily: 'serif',
               fontSize: 22,
@@ -244,7 +259,11 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
           ),
           const SizedBox(height: 2),
           Text(
-            'Explore the different phases of your mental journey.',
+            isAr
+                ? 'استكشف مختلف مراحل مسارك النفسي.'
+                : (isFr
+                    ? 'Explorez les différentes phases de votre parcours mental.'
+                    : 'Explore the different phases of your mental journey.'),
             style: TextStyle(
               fontSize: 12.5,
               color: textSecondary,
@@ -407,16 +426,12 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? (isDark
-                            ? const Color(0xFF202020)
-                            : const Color(0xFFE4E4E7))
-                        : (isDark
-                            ? const Color(0xFF0F0F0F)
-                            : const Color(0xFFFAFAFA)),
-                    borderRadius: BorderRadius.circular(6),
+                        ? context.tokens.accentSoft
+                        : context.tokens.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                     border: Border.all(
                       color: isSelected
-                          ? (isDark ? Colors.white : Colors.black)
+                          ? context.tokens.accent
                           : borderColor,
                       width: 1,
                     ),
@@ -478,7 +493,7 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
                     ),
                   ),
                   Text(
-                    '$completedCount/${activePhaseActivities.length} ${strings.isArabic ? 'مكتمل' : 'completed'}',
+                    '$completedCount/${activePhaseActivities.length} ${strings.isArabic ? 'مكتمل' : (strings.isFrench ? 'complétés' : 'completed')}',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -612,14 +627,12 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: activity.isCompleted
-                          ? LabColors.sageBackground(isDark: isDark)
-                          : (isDark
-                              ? const Color(0xFF141414)
-                              : const Color(0xFFF4F4F5)),
-                      borderRadius: BorderRadius.circular(4),
+                          ? context.tokens.accentSoft
+                          : context.tokens.surfaceSecondary,
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: activity.isCompleted
-                            ? LabColors.sageGreenGlow
+                            ? context.tokens.accent
                             : borderColor,
                         width: 0.8,
                       ),
@@ -746,7 +759,9 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
               child: _buildMetricTile(
                 title: strings.totalCompletedActivities,
                 value: '${completed.length}',
-                subtitle: strings.isArabic ? 'نشاط مستكشف' : 'activities',
+                subtitle: strings.isArabic
+                    ? 'نشاط مستكشف'
+                    : (strings.isFrench ? 'activités' : 'activities'),
                 isDark: isDark,
                 surfaceColor: surfaceColor,
                 borderColor: borderColor,
@@ -759,7 +774,9 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen> {
               child: _buildMetricTile(
                 title: strings.totalReflectionsLogged,
                 value: '$reflectionsCount',
-                subtitle: strings.isArabic ? 'تأمل مسجل' : 'reflections',
+                subtitle: strings.isArabic
+                    ? 'تأمل مسجل'
+                    : (strings.isFrench ? 'réflexions' : 'reflections'),
                 isDark: isDark,
                 surfaceColor: surfaceColor,
                 borderColor: borderColor,

@@ -64,26 +64,35 @@ class HomeWeekMoodTracker extends StatelessWidget {
             : (isSelected || isToday ? tokens.textPrimary : tokens.textSecondary);
 
         return Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                _dayLetters[index],
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: isToday || isSelected ? FontWeight.w800 : FontWeight.w500,
-                  color: isToday || isSelected ? tokens.textPrimary : tokens.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 7),
-              GestureDetector(
+          child: Semantics(
+            button: true,
+            selected: isSelected,
+            label: '${_dayLetters[index]} ${date.day}',
+            child: MergeSemantics(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   HapticFeedback.selectionClick();
                   onDaySelected(date);
                 },
-                child: Container(
-                  width: 36.0,
-                  height: 36.0,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _dayLetters[index],
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: isToday || isSelected ? FontWeight.w800 : FontWeight.w500,
+                          color: isToday || isSelected ? tokens.textPrimary : tokens.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Container(
+                        width: 36.0,
+                        height: 36.0,
                   decoration: BoxDecoration(
                     color: circleBg,
                     shape: BoxShape.circle,
@@ -123,8 +132,11 @@ class HomeWeekMoodTracker extends StatelessWidget {
                     ),
                   ),
                 ),
+                    ],
+                  ),
+                ),
               ),
-            ],
+            ),
           ),
         );
       }),

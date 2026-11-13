@@ -423,17 +423,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tab 0 is Perspective Exploration
-      expect(find.text('Perspective Exploration'), findsWidgets);
+      // Tab 0 is Reframe Thought
+      expect(find.text('Reframe Thought'), findsWidgets);
 
-      // Switch to Tab 1: Experiments & Strategies
-      await tester.tap(find.text('Experiments & Strategies'));
+      // Switch to Tab 1: Coping Steps
+      await tester.tap(find.text('Coping Steps').first);
       await tester.pumpAndSettle();
       expect(find.byType(MicroActionCard), findsOneWidget);
       expect(find.byType(RoutineAnchorCard), findsOneWidget);
 
-      // Switch to Tab 2: Personal Discoveries
-      await tester.tap(find.text('Personal Discoveries'));
+      // Switch to Tab 2: Saved Notes
+      await tester.tap(find.text('Saved Notes').first);
       await tester.pumpAndSettle();
       expect(find.text('Observatory Insight'), findsOneWidget);
       expect(find.text('Testing insight delete action'), findsOneWidget);

@@ -26,8 +26,9 @@ class SupportButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final strings = ref.watch(appStringsProvider);
+    final isCompact = compact || MediaQuery.sizeOf(context).width < 390;
 
-    if (compact) {
+    if (isCompact) {
       return IconButton(
         icon: const Icon(Icons.shield_outlined, size: 18),
         tooltip: strings.needSupportBtn,

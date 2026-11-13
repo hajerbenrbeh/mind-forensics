@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../../../app/theme/lab_theme.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
 import '../../controllers/profile_controller.dart';
 import '../../domain/psychological_profile_model.dart';
@@ -49,12 +50,16 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF141414) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        backgroundColor: context.tokens.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(context.tokens.cardRadius)),
         title: Text(
-          strings.isArabic ? 'مسح الملاحظات الحرة؟' : 'Clear Free-Text Notes?',
+          strings.isArabic
+              ? 'مسح الملاحظات الحرة؟'
+              : (strings.isFrench
+                  ? 'Effacer les notes libres ?'
+                  : 'Clear Free-Text Notes?'),
           style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
+            color: context.tokens.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -62,25 +67,33 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
         content: Text(
           strings.isArabic
               ? 'سيتم مسح النصوص والملاحظات الشخصية، مع الإبقاء على الحالات والأهداف وتفضيلات التواصل.'
-              : 'This clears your free-text notes while preserving selected conditions, goals, and preferences.',
-          style: TextStyle(fontSize: 12, color: isDark ? Colors.grey : Colors.grey.shade700),
+              : (strings.isFrench
+                  ? 'Ceci efface vos notes personnelles tout en conservant vos expériences, objectifs et préférences.'
+                  : 'This clears your free-text notes while preserving selected conditions, goals, and preferences.'),
+          style: TextStyle(fontSize: 12, color: context.tokens.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(strings.isArabic ? 'إلغاء' : 'Cancel'),
+            child: Text(
+              strings.isArabic ? 'إلغاء' : (strings.isFrench ? 'Annuler' : 'Cancel'),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? Colors.white : Colors.black,
-              foregroundColor: isDark ? Colors.black : Colors.white,
+              backgroundColor: context.tokens.accent,
+              foregroundColor: isDark ? context.tokens.background : Colors.white,
             ),
             onPressed: () async {
               Navigator.pop(ctx);
               await ref.read(profileControllerProvider.notifier).clearProfileNotes();
               if (mounted) Navigator.pop(context);
             },
-            child: Text(strings.isArabic ? 'مسح الملاحظات' : 'Clear Notes'),
+            child: Text(
+              strings.isArabic
+                  ? 'مسح الملاحظات'
+                  : (strings.isFrench ? 'Effacer les notes' : 'Clear Notes'),
+            ),
           ),
         ],
       ),
@@ -98,7 +111,11 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
           side: BorderSide(color: isDark ? LabColors.safetyBorderDark : LabColors.safetyBorderLight, width: 1),
         ),
         title: Text(
-          strings.isArabic ? 'حذف الملف النفسي بالكامل؟' : 'Delete Psychological Profile?',
+          strings.isArabic
+              ? 'حذف الملف النفسي بالكامل؟'
+              : (strings.isFrench
+                  ? 'Supprimer le profil psychologique ?'
+                  : 'Delete Psychological Profile?'),
           style: TextStyle(
             color: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth,
             fontSize: 14,
@@ -108,13 +125,17 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
         content: Text(
           strings.isArabic
               ? 'تنبيه: حذف ملفك النفسي يمسح جميع الحالات والتفضيلات المسجلة. حسابك وسجل جلساتك ستبقى محفوظة دون حذف.'
-              : 'Important: Deleting your psychological profile resets all conditions and profile preferences. Your application account and journal entries remain safe.',
+              : (strings.isFrench
+                  ? 'Attention : supprimer votre profil réinitialise vos préférences et expériences. Votre compte et votre journal restent protégés.'
+                  : 'Important: Deleting your psychological profile resets all conditions and profile preferences. Your application account and journal entries remain safe.'),
           style: TextStyle(fontSize: 12, color: isDark ? Colors.grey.shade300 : Colors.black87),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(strings.isArabic ? 'إلغاء' : 'Cancel'),
+            child: Text(
+              strings.isArabic ? 'إلغاء' : (strings.isFrench ? 'Annuler' : 'Cancel'),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -126,7 +147,11 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
               await ref.read(profileControllerProvider.notifier).clearProfile();
               if (mounted) Navigator.pop(context);
             },
-            child: Text(strings.isArabic ? 'تأكيد الحذف' : 'Delete Profile'),
+            child: Text(
+              strings.isArabic
+                  ? 'تأكيد الحذف'
+                  : (strings.isFrench ? 'Supprimer le profil' : 'Delete Profile'),
+            ),
           ),
         ],
       ),
@@ -193,11 +218,11 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: _allowAi
-                        ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
-                        : (isDark ? const Color(0xFF101010) : const Color(0xFFFAFAFA)),
-                    borderRadius: BorderRadius.circular(8),
+                        ? context.tokens.accentSoft
+                        : context.tokens.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: _allowAi ? LabColors.champagneGold : border,
+                      color: _allowAi ? context.tokens.accent : border,
                     ),
                   ),
                   child: Column(
@@ -220,7 +245,7 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                           ),
                           Switch.adaptive(
                             value: _allowAi,
-                            activeTrackColor: LabColors.champagneGold,
+                            activeTrackColor: context.tokens.accent,
                             onChanged: _toggleAi,
                           ),
                         ],
@@ -246,13 +271,13 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF4F4F5),
-                    borderRadius: BorderRadius.circular(8),
+                    color: context.tokens.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: border),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.lock_outline_rounded, size: 16, color: LabColors.champagneGold),
+                      Icon(Icons.lock_outline_rounded, size: 16, color: context.tokens.accent),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -275,17 +300,17 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                     Navigator.pop(context);
                     JournalMemorySheet.show(context);
                   },
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF141414) : const Color(0xFFF7F7F9),
-                      borderRadius: BorderRadius.circular(8),
+                      color: context.tokens.surfaceSecondary,
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: border),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.psychology_outlined, size: 20, color: LabColors.champagneGold),
+                        Icon(Icons.psychology_outlined, size: 20, color: context.tokens.accent),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
@@ -319,7 +344,12 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
 
                 // Management & Reset Actions
                 Text(
-                  (strings.isArabic ? 'إدارة البيانات وحذفها' : 'DATA MANAGEMENT').toUpperCase(),
+                  (strings.isArabic
+                          ? 'إدارة البيانات وحذفها'
+                          : (strings.isFrench
+                              ? 'GESTION DES DONNÉES'
+                              : 'DATA MANAGEMENT'))
+                      .toUpperCase(),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -342,7 +372,11 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      strings.isArabic ? 'مسح الملاحظات الحرة فقط' : 'Clear Free-Text Notes Only',
+                      strings.isArabic
+                          ? 'مسح الملاحظات الحرة فقط'
+                          : (strings.isFrench
+                              ? 'Effacer uniquement les notes libres'
+                              : 'Clear Free-Text Notes Only'),
                       style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: textPrimary),
                     ),
                   ),
@@ -363,7 +397,11 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      strings.isArabic ? 'حذف الملف النفسي بالكامل' : 'Delete Psychological Profile',
+                      strings.isArabic
+                          ? 'حذف الملف النفسي بالكامل'
+                          : (strings.isFrench
+                              ? 'Supprimer le profil psychologique'
+                              : 'Delete Psychological Profile'),
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,

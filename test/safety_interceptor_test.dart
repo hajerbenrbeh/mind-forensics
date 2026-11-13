@@ -33,6 +33,21 @@ void main() {
       expect(CrisisKeywords.evaluateText(crisisArabizi), equals(2));
     });
 
+    test('Layer 1 (Offline): Normalizes Arabic diacritics, Alef variants, tatweel, and smart quotes', () {
+      // With Arabic tashkeel (diacritics)
+      expect(CrisisKeywords.evaluateText('أريدُ الاِنْتِحَارَ'), equals(2));
+      // With hamza under alef (إنتحار)
+      expect(CrisisKeywords.evaluateText('أفكر في الإنتحار اليوم'), equals(2));
+      // With tatweel (kashida)
+      expect(CrisisKeywords.evaluateText('انـــتـحــار'), equals(2));
+      // With uppercase Arabizi
+      expect(CrisisKeywords.evaluateText('N7EB NMOUT BARCHA'), equals(2));
+      // With smart quotes and contractions
+      expect(CrisisKeywords.evaluateText("can’t go on anymore"), equals(2));
+      // With tashkeel in Tunisian dialect
+      expect(CrisisKeywords.evaluateText('فَدِّيتْ مِنْ حَيَاتِي'), equals(2));
+    });
+
     test('Safety Resolution: The HIGHEST safety level always wins', () {
       // Scenario A: Offline check is Level 2, AI says Level 0 -> Level 2 wins
       expect(

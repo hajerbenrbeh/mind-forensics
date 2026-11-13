@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/localization/app_strings.dart';
-import '../../../../app/theme/lab_colors.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
 import '../../controllers/mind_trace_controller.dart';
 import '../../domain/mind_trace_model.dart';
@@ -49,18 +49,19 @@ class _ThoughtTraceTimelineViewState
   Widget build(BuildContext context) {
     final strings = ref.watch(appStringsProvider);
     final tracesState = ref.watch(mindTraceControllerProvider);
+    final tokens = context.tokens;
 
     return tracesState.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator(
           strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(LabColors.burgundyRose),
+          valueColor: AlwaysStoppedAnimation<Color>(tokens.accent),
         ),
       ),
       error: (err, _) => Center(
         child: Text(
           'Unable to load thought traces.',
-          style: const TextStyle(color: LabColors.textSecondary, fontSize: 13),
+          style: TextStyle(color: tokens.textSecondary, fontSize: 13),
         ),
       ),
       data: (traces) {
@@ -91,13 +92,14 @@ class _ThoughtTraceTimelineViewState
   }
 
   Widget _buildEditorialHeader(AppStrings strings) {
+    final tokens = context.tokens;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: LabColors.surface1,
-        borderRadius: BorderRadius.circular(8),
+        color: tokens.surface,
+        borderRadius: BorderRadius.circular(tokens.cardRadius),
         border: Border.all(
-          color: LabColors.burgundyMaroon.withValues(alpha: 0.4),
+          color: tokens.accent.withValues(alpha: 0.35),
           width: 1,
         ),
       ),
@@ -109,19 +111,19 @@ class _ThoughtTraceTimelineViewState
               Container(
                 width: 6,
                 height: 6,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: LabColors.burgundyRose,
+                  color: tokens.accent,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
                 strings.thoughtTraceTitle.toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.4,
-                  color: LabColors.burgundyRose,
+                  color: tokens.accent,
                 ),
               ),
             ],
@@ -129,11 +131,11 @@ class _ThoughtTraceTimelineViewState
           const SizedBox(height: 8),
           Text(
             strings.thoughtTraceQuote,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'serif',
               fontSize: 13,
               fontStyle: FontStyle.italic,
-              color: LabColors.textPrimary,
+              color: tokens.textPrimary,
               height: 1.45,
             ),
           ),
@@ -143,17 +145,18 @@ class _ThoughtTraceTimelineViewState
   }
 
   Widget _buildSearchBar(AppStrings strings) {
+    final tokens = context.tokens;
     return Container(
-      height: 42,
+      height: 44,
       decoration: BoxDecoration(
-        color: LabColors.surface1,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: LabColors.borderSubtle, width: 1),
+        color: tokens.surface,
+        borderRadius: BorderRadius.circular(tokens.buttonRadius),
+        border: Border.all(color: tokens.border, width: 1),
       ),
       child: TextField(
         controller: _searchController,
         onChanged: (_) => setState(() {}),
-        style: const TextStyle(fontSize: 13, color: LabColors.textPrimary),
+        style: TextStyle(fontSize: 13, color: tokens.textPrimary),
         decoration: InputDecoration(
           isDense: true,
           hintText: strings.isArabic
@@ -161,18 +164,19 @@ class _ThoughtTraceTimelineViewState
               : (strings.isFrench
                   ? 'Rechercher dans vos pensées et émotions...'
                   : 'Search thoughts, situations, emotions...'),
-          hintStyle: const TextStyle(
+          hintStyle: TextStyle(
             fontSize: 12,
-            color: LabColors.textTertiary,
+            color: tokens.textTertiary,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search_rounded,
             size: 18,
-            color: LabColors.textSecondary,
+            color: tokens.textSecondary,
           ),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.clear, size: 16, color: LabColors.textSecondary),
+                  tooltip: strings.clearSearchTooltip,
+                  icon: Icon(Icons.clear, size: 16, color: tokens.textSecondary),
                   onPressed: () {
                     _searchController.clear();
                     setState(() {});
@@ -198,7 +202,9 @@ class _ThoughtTraceTimelineViewState
       child: Row(
         children: [
           _buildFilterChip(
-            label: strings.isArabic ? 'الكل' : 'All',
+            label: strings.isArabic
+                ? 'الكل'
+                : (strings.isFrench ? 'Tout' : 'All'),
             isSelected: _selectedFilter == 'all' && _selectedEmotionFilter == null,
             onTap: () {
               setState(() {
@@ -209,7 +215,9 @@ class _ThoughtTraceTimelineViewState
           ),
           const SizedBox(width: 6),
           _buildFilterChip(
-            label: strings.isArabic ? 'تم فحصها' : 'Investigated',
+            label: strings.isArabic
+                ? 'تم فحصها'
+                : (strings.isFrench ? 'Explorées' : 'Investigated'),
             isSelected: _selectedFilter == 'investigated',
             onTap: () {
               setState(() {
@@ -220,7 +228,9 @@ class _ThoughtTraceTimelineViewState
           ),
           const SizedBox(width: 6),
           _buildFilterChip(
-            label: strings.isArabic ? 'آخر 7 أيام' : 'Past 7 Days',
+            label: strings.isArabic
+                ? 'آخر 7 أيام'
+                : (strings.isFrench ? '7 derniers jours' : 'Past 7 Days'),
             isSelected: _selectedFilter == 'week',
             onTap: () {
               setState(() {
@@ -231,7 +241,9 @@ class _ThoughtTraceTimelineViewState
           ),
           const SizedBox(width: 6),
           _buildFilterChip(
-            label: strings.isArabic ? 'هذا الشهر' : 'Past 30 Days',
+            label: strings.isArabic
+                ? 'هذا الشهر'
+                : (strings.isFrench ? '30 derniers jours' : 'Past 30 Days'),
             isSelected: _selectedFilter == 'month',
             onTap: () {
               setState(() {
@@ -245,7 +257,7 @@ class _ThoughtTraceTimelineViewState
             ...distinctEmotions.take(4).map((emotion) {
               final isSelected = _selectedEmotionFilter == emotion;
               return Padding(
-                padding: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsetsDirectional.only(end: 6),
                 child: _buildFilterChip(
                   label: emotion,
                   isSelected: isSelected,
@@ -273,15 +285,20 @@ class _ThoughtTraceTimelineViewState
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    final tokens = context.tokens;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? LabColors.burgundyRose : LabColors.surface1,
-          borderRadius: BorderRadius.circular(4),
+          color: isSelected ? tokens.accent : tokens.surface,
+          borderRadius: BorderRadius.circular(tokens.chipRadius),
           border: Border.all(
-            color: isSelected ? LabColors.burgundyRose : LabColors.borderSubtle,
+            color: isSelected ? tokens.accent : tokens.border,
             width: 1,
           ),
         ),
@@ -290,8 +307,11 @@ class _ThoughtTraceTimelineViewState
           style: TextStyle(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? LabColors.surface0 : LabColors.textSecondary,
+            color: isSelected
+                ? (isDark ? tokens.background : Colors.white)
+                : tokens.textSecondary,
           ),
+        ),
         ),
       ),
     );
@@ -382,18 +402,18 @@ class _ThoughtTraceTimelineViewState
             children: [
               Text(
                 localizedLabel.toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.2,
-                  color: LabColors.burgundyRose,
+                  color: context.tokens.accent,
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Container(
                   height: 1,
-                  color: LabColors.borderSubtle,
+                  color: context.tokens.border,
                 ),
               ),
             ],
@@ -415,6 +435,7 @@ class _ThoughtTraceTimelineViewState
     required bool isLast,
     required AppStrings strings,
   }) {
+    final tokens = context.tokens;
     final hour = trace.createdAt.hour.toString().padLeft(2, '0');
     final minute = trace.createdAt.minute.toString().padLeft(2, '0');
     final timeStr = '$hour:$minute';
@@ -435,10 +456,10 @@ class _ThoughtTraceTimelineViewState
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: trace.isInvestigated
-                        ? LabColors.burgundyRose
-                        : LabColors.surfaceElevated,
+                        ? tokens.accent
+                        : tokens.surfaceSecondary,
                     border: Border.all(
-                      color: LabColors.burgundyRose,
+                      color: tokens.accent,
                       width: 1.5,
                     ),
                   ),
@@ -447,7 +468,7 @@ class _ThoughtTraceTimelineViewState
                   Expanded(
                     child: Container(
                       width: 1,
-                      color: LabColors.borderSubtle,
+                      color: tokens.border,
                     ),
                   ),
               ],
@@ -466,10 +487,10 @@ class _ThoughtTraceTimelineViewState
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: LabColors.surface1,
-                    borderRadius: BorderRadius.circular(8),
+                    color: tokens.surface,
+                    borderRadius: BorderRadius.circular(tokens.cardRadius),
                     border: Border.all(
-                      color: LabColors.borderSubtle,
+                      color: tokens.border,
                       width: 1,
                     ),
                   ),
@@ -482,37 +503,37 @@ class _ThoughtTraceTimelineViewState
                         children: [
                           Text(
                             '${trace.dateKey} • $timeStr',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: LabColors.textSecondary,
+                              color: tokens.textSecondary,
                             ),
                           ),
                           Row(
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                    horizontal: 7, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: LabColors.surfaceElevated,
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: LabColors.borderSubtle),
+                                  color: tokens.accentSoft,
+                                  borderRadius: BorderRadius.circular(tokens.chipRadius),
+                                  border: Border.all(color: tokens.border),
                                 ),
                                 child: Text(
                                   '${trace.moodIntensity}/10',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
-                                    color: LabColors.burgundyRose,
+                                    color: tokens.accent,
                                   ),
                                 ),
                               ),
                               if (trace.isInvestigated) ...[
                                 const SizedBox(width: 6),
-                                const Icon(
+                                Icon(
                                   Icons.psychology_outlined,
                                   size: 13,
-                                  color: LabColors.burgundyRose,
+                                  color: tokens.accent,
                                 ),
                               ],
                             ],
@@ -527,11 +548,11 @@ class _ThoughtTraceTimelineViewState
                         '“${trace.thoughtPreview}”',
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'serif',
                           fontSize: 13.5,
                           fontStyle: FontStyle.italic,
-                          color: LabColors.textPrimary,
+                          color: tokens.textPrimary,
                           height: 1.4,
                         ),
                       ),
@@ -546,18 +567,18 @@ class _ThoughtTraceTimelineViewState
                           children: trace.selectedEmotions.take(4).map((e) {
                             return Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                  horizontal: 7, vertical: 3),
                               decoration: BoxDecoration(
-                                color: LabColors.surfaceElevated,
-                                borderRadius: BorderRadius.circular(3),
+                                color: tokens.surfaceSecondary,
+                                borderRadius: BorderRadius.circular(tokens.chipRadius),
                                 border: Border.all(
-                                    color: LabColors.borderSubtle, width: 0.8),
+                                    color: tokens.border, width: 0.8),
                               ),
                               child: Text(
                                 e,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 10,
-                                  color: LabColors.textPrimary,
+                                  color: tokens.textPrimary,
                                 ),
                               ),
                             );
@@ -572,11 +593,15 @@ class _ThoughtTraceTimelineViewState
                         Row(
                           children: [
                             Text(
-                              strings.isArabic ? 'الموقف: ' : 'CONTEXT: ',
-                              style: const TextStyle(
+                              strings.isArabic
+                                  ? 'الموقف: '
+                                  : (strings.isFrench
+                                      ? 'CONTEXTE : '
+                                      : 'CONTEXT: '),
+                              style: TextStyle(
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.bold,
-                                color: LabColors.textSecondary,
+                                color: tokens.textSecondary,
                               ),
                             ),
                             Expanded(
@@ -586,7 +611,7 @@ class _ThoughtTraceTimelineViewState
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 10.5,
-                                  color: LabColors.textSecondary.withValues(alpha: 0.9),
+                                  color: tokens.textSecondary.withValues(alpha: 0.9),
                                 ),
                               ),
                             ),
@@ -605,6 +630,8 @@ class _ThoughtTraceTimelineViewState
   }
 
   Widget _buildEmptyState(BuildContext context, AppStrings strings) {
+    final tokens = context.tokens;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -616,51 +643,51 @@ class _ThoughtTraceTimelineViewState
               height: 56,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: LabColors.surface1,
+                color: tokens.accentSoft,
                 border: Border.all(
-                  color: LabColors.burgundyRose.withValues(alpha: 0.5),
+                  color: tokens.accent.withValues(alpha: 0.45),
                   width: 1.5,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.fingerprint_rounded,
                 size: 28,
-                color: LabColors.burgundyRose,
+                color: tokens.accent,
               ),
             ),
             const SizedBox(height: 18),
             Text(
               strings.thoughtTraceWaitingTitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
-                color: LabColors.textPrimary,
+                color: tokens.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               strings.thoughtTraceWaitingSub,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: LabColors.textSecondary,
+                color: tokens.textSecondary,
                 height: 1.45,
               ),
             ),
             const SizedBox(height: 22),
             if (widget.onRecordCheckIn != null)
               SizedBox(
-                height: 42,
+                height: 44,
                 child: ElevatedButton(
                   onPressed: widget.onRecordCheckIn,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: LabColors.textPrimary,
-                    foregroundColor: LabColors.surface0,
+                    backgroundColor: tokens.accent,
+                    foregroundColor: isDark ? tokens.background : Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(tokens.buttonRadius),
                     ),
                   ),
                   child: Text(
@@ -690,9 +717,9 @@ class _ThoughtTraceTimelineViewState
                   ? 'Aucune pensée ne correspond à votre recherche.'
                   : 'No thoughts match the current search or filters.'),
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: LabColors.textSecondary,
+            color: context.tokens.textSecondary,
           ),
         ),
       ),

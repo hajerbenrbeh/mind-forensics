@@ -18,9 +18,8 @@ import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/journey/presentation/journey_screen.dart';
 import 'scaffold_with_nav_bar.dart';
 
-/// App router configuration using GoRouter with 4 persistent bottom tabs:
-/// Home, Investigator, Toolkit, Profile.
-/// Insights lives inside Home until v2.
+/// App router configuration using GoRouter with 5 persistent bottom tabs:
+/// Home, Track, Inner Observatory (Explore & Investigator), Insights, Profile.
 class AppRouter {
   static const String onboarding = '/onboarding';
   static const String auth = '/auth';
@@ -132,9 +131,9 @@ class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: companion,
-        name: 'companion',
-        builder: (context, state) => const FlashCaseScreen(),
+        path: observatory,
+        name: 'observatory',
+        builder: (context, state) => const InnerObservatoryScreen(),
       ),
 
       // Route aliases for backward compatibility
@@ -192,13 +191,13 @@ class AppRouter {
             ],
           ),
 
-          // Branch 2: Inner Observatory (Center prominent)
+          // Branch 2: AI Guide (Center prominent)
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: observatory,
-                name: 'observatory',
-                builder: (context, state) => const InnerObservatoryScreen(),
+                path: companion,
+                name: 'companion',
+                builder: (context, state) => const FlashCaseScreen(),
               ),
             ],
           ),

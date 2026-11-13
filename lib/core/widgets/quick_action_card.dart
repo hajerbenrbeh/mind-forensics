@@ -49,9 +49,10 @@ class QuickActionCard extends StatelessWidget {
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          child: MergeSemantics(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
               Container(
                 width: 44,
                 height: 44,
@@ -83,6 +84,7 @@ class QuickActionCard extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ],
+            ),
           ),
         ),
       ),

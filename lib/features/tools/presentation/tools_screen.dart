@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/localization/app_strings.dart';
 import '../../../app/localization/locale_controller.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/safety_model.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/bouncing_widget.dart';
@@ -247,10 +248,10 @@ class _ToolsScreenState extends ConsumerState<ToolsScreen> {
                 padding: const EdgeInsets.all(14),
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF0F0F0F) : const Color(0xFFF4F4F5),
-                  borderRadius: BorderRadius.circular(10),
+                  color: context.tokens.surfaceSecondary,
+                  borderRadius: BorderRadius.circular(context.tokens.cardRadius),
                   border: Border.all(
-                    color: isDark ? const Color(0xFF262626) : const Color(0xFFE4E4E7),
+                    color: context.tokens.border,
                     width: 1,
                   ),
                 ),
@@ -390,13 +391,13 @@ class _ToolsScreenState extends ConsumerState<ToolsScreen> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: (_selectedAnswer == currentDrill['correct'])
-                              ? (isDark ? const Color(0xFF0F1F17) : const Color(0xFFF0FDF4))
-                              : (isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight),
-                          borderRadius: BorderRadius.circular(8),
+                              ? context.tokens.accentSoft
+                              : context.tokens.safetyWarmthSoft,
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: (_selectedAnswer == currentDrill['correct'])
-                                ? (isDark ? const Color(0xFF166534) : const Color(0xFF86EFAC))
-                                : (isDark ? LabColors.safetyBorderDark : LabColors.safetyBorderLight),
+                                ? context.tokens.accent.withValues(alpha: 0.45)
+                                : context.tokens.safetyWarmth.withValues(alpha: 0.45),
                             width: 1,
                           ),
                         ),
@@ -482,14 +483,16 @@ class _ToolsScreenState extends ConsumerState<ToolsScreen> {
                         child: FilledButton.icon(
                           style: FilledButton.styleFrom(
                             backgroundColor: _isBreathingActive
-                                ? (isDark ? const Color(0xFF181818) : const Color(0xFFF4F4F5))
-                                : (isDark ? Colors.white : Colors.black),
+                                ? context.tokens.surfaceSecondary
+                                : context.tokens.accent,
                             foregroundColor: _isBreathingActive
                                 ? textPrimary
-                                : (isDark ? Colors.black : Colors.white),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                : (isDark ? context.tokens.background : Colors.white),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: BorderSide(color: isDark ? const Color(0xFF333333) : borderColor),
+                            side: BorderSide(color: context.tokens.border),
                           ),
                           onPressed: _toggleBreathing,
                           icon: Icon(_isBreathingActive ? Icons.stop_rounded : Icons.play_arrow_rounded, size: 18),
@@ -611,26 +614,27 @@ class _ToolsScreenState extends ConsumerState<ToolsScreen> {
     Color textSecondary,
     AppStrings strings,
   ) {
+    final tokens = context.tokens;
     final isSelected = _selectedAnswer == label;
     final isCorrect = label == correctAnswer;
 
-    Color bg = isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5);
-    Color border = isDark ? const Color(0xFF262626) : const Color(0xFFE4E4E7);
+    Color bg = tokens.surfaceSecondary;
+    Color border = tokens.border;
     Color fg = textSecondary;
 
     if (_answered) {
       if (isCorrect) {
-        bg = isDark ? const Color(0xFF0F1F17) : const Color(0xFFF0FDF4);
-        border = isDark ? const Color(0xFF166534) : const Color(0xFF86EFAC);
-        fg = LabColors.factBlue;
+        bg = tokens.accentSoft;
+        border = tokens.accent;
+        fg = tokens.accent;
       } else if (isSelected) {
-        bg = isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight;
-        border = isDark ? LabColors.safetyBorderDark : LabColors.safetyBorderLight;
-        fg = isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth;
+        bg = tokens.safetyWarmthSoft;
+        border = tokens.safetyWarmth;
+        fg = tokens.safetyWarmth;
       }
     } else if (isSelected) {
-      bg = isDark ? const Color(0xFF222222) : const Color(0xFFE4E4E7);
-      border = textPrimary;
+      bg = tokens.accentSoft;
+      border = tokens.accent;
       fg = textPrimary;
     }
 

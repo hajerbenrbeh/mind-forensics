@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../investigation/domain/case_model.dart';
 import '../data/clinical_export_log_service.dart';
 import '../data/clinical_export_service.dart';
@@ -95,8 +96,6 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
     final isDark = theme.brightness == Brightness.dark;
     final strings = ref.watch(appStringsProvider);
 
-    final bg = isDark ? LabColors.nightBackground : LabColors.daylightBackground;
-    final surface = isDark ? LabColors.nightSurface : LabColors.daylightSurface;
     final border = isDark ? LabColors.nightBorder : LabColors.daylightBorder;
     final textPrimary = isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary;
     final textSecondary = isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
@@ -108,8 +107,8 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
         maxHeight: MediaQuery.of(context).size.height * 0.90,
       ),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+        color: context.tokens.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(context.tokens.cardRadius)),
         border: Border(top: BorderSide(color: border, width: 1)),
       ),
       child: SafeArea(
@@ -123,7 +122,7 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF262626) : const Color(0xFFE4E4E7),
+                  color: context.tokens.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -160,6 +159,7 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
                     ),
                   ),
                   IconButton(
+                    tooltip: strings.closeBtn,
                     icon: Icon(Icons.close_rounded, size: 18, color: textSecondary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -177,8 +177,8 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5),
-                      borderRadius: BorderRadius.circular(8),
+                      color: context.tokens.surfaceSecondary,
+                      borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                       border: Border.all(color: border, width: 1),
                     ),
                     child: Row(
@@ -187,7 +187,7 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
                         Icon(
                           Icons.info_outline,
                           size: 16,
-                          color: isDark ? LabColors.warmBeige : const Color(0xFFD97706),
+                          color: context.tokens.safetyWarmth,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -250,22 +250,22 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
                       hintText: strings.recipientOrNoteHint,
                       hintStyle: TextStyle(
                         fontSize: 11.5,
-                        color: isDark ? const Color(0xFF444444) : const Color(0xFFA1A1AA),
+                        color: context.tokens.textTertiary,
                       ),
                       filled: true,
-                      fillColor: surface,
+                      fillColor: context.tokens.surfaceSecondary,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                         borderSide: BorderSide(color: border, width: 1),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                         borderSide: BorderSide(color: border, width: 1),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: isDark ? Colors.white : Colors.black, width: 1),
+                        borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
+                        borderSide: BorderSide(color: context.tokens.accent, width: 1.2),
                       ),
                     ),
                   ),
@@ -282,8 +282,8 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
                     width: double.infinity,
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: surface,
-                      borderRadius: BorderRadius.circular(8),
+                      color: context.tokens.surfaceSecondary,
+                      borderRadius: BorderRadius.circular(context.tokens.cardRadius),
                       border: Border.all(color: border, width: 1),
                     ),
                     child: SelectableText(
@@ -307,11 +307,13 @@ class _ClinicalExportPreviewSheetState extends ConsumerState<ClinicalExportPrevi
                 width: double.infinity,
                 child: FilledButton.icon(
                   style: FilledButton.styleFrom(
-                    backgroundColor: isDark ? Colors.white : Colors.black,
-                    foregroundColor: isDark ? Colors.black : Colors.white,
-                    disabledBackgroundColor: isDark ? const Color(0xFF222222) : const Color(0xFFE4E4E7),
+                    backgroundColor: context.tokens.accent,
+                    foregroundColor: isDark ? context.tokens.background : Colors.white,
+                    disabledBackgroundColor: context.tokens.border,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
+                    ),
                   ),
                   icon: const Icon(Icons.content_copy_rounded, size: 16),
                   label: Text(

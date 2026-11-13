@@ -147,21 +147,28 @@ class _PerspectiveExplorationCardState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                strings.sectionPerspectiveExploration.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.8,
-                  color: textSecondary,
+              Expanded(
+                child: Text(
+                  strings.sectionPerspectiveExploration.toUpperCase(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                    color: textSecondary,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               InkWell(
                 onTap: _nextScenario,
                 child: Row(
                   children: [
                     Text(
-                      isAr ? 'مثال آخر' : 'Next Example',
+                      isAr
+                          ? 'مثال آخر'
+                          : (isFr ? 'Autre exemple' : 'Next Example'),
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -196,7 +203,9 @@ class _PerspectiveExplorationCardState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isAr ? 'الواقعة الملموسة (FACT)' : 'OBSERVABLE FACT',
+                  isAr
+                      ? 'الواقعة الملموسة (FACT)'
+                      : (isFr ? 'FAIT OBSERVABLE' : 'OBSERVABLE FACT'),
                   style: const TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
@@ -233,7 +242,11 @@ class _PerspectiveExplorationCardState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isAr ? 'ما قفز إليه العقل (THOUGHT)' : 'AUTOMATIC INTERPRETATION',
+                  isAr
+                      ? 'ما قفز إليه العقل (THOUGHT)'
+                      : (isFr
+                          ? 'INTERPRÉTATION AUTOMATIQUE'
+                          : 'AUTOMATIC INTERPRETATION'),
                   style: const TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
@@ -258,7 +271,11 @@ class _PerspectiveExplorationCardState
 
           // 3. Grounded Alternative Interpretations
           Text(
-            isAr ? 'احتمالات أخرى واقعية:' : 'Alternative grounded possibilities:',
+            isAr
+                ? 'احتمالات أخرى واقعية:'
+                : (isFr
+                    ? 'Autres possibilités fondées sur les faits :'
+                    : 'Alternative grounded possibilities:'),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
@@ -312,7 +329,11 @@ class _PerspectiveExplorationCardState
               onPressed: () => CustomPerspectiveSheet.show(context),
               icon: const Icon(Icons.tune_rounded, size: 14),
               label: Text(
-                isAr ? 'تفكيك فكرة أو موقف خاص بك' : 'Deconstruct a thought of your own',
+                isAr
+                    ? 'تفكيك فكرة أو موقف خاص بك'
+                    : (isFr
+                        ? 'Explorer une de vos propres pensées'
+                        : 'Deconstruct a thought of your own'),
                 style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
               ),
               style: OutlinedButton.styleFrom(

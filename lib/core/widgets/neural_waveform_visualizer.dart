@@ -36,12 +36,25 @@ class _NeuralWaveformVisualizerState extends State<NeuralWaveformVisualizer>
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     );
+  }
 
-    // Only start infinite loop when not running in automated widget test harness
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimation();
+  }
+
+  void _syncAnimation() {
     final isTesting = WidgetsBinding.instance.runtimeType.toString().contains('Test');
-    if (!isTesting) {
-      _controller.repeat();
+    final reduceMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+    if (!isTesting && !reduceMotion) {
+      if (!_controller.isAnimating) {
+        _controller.repeat();
+      }
     } else {
+      if (_controller.isAnimating) {
+        _controller.stop();
+      }
       _controller.value = 0.5;
     }
   }
@@ -132,19 +145,21 @@ class _NeuralWaveformVisualizerState extends State<NeuralWaveformVisualizer>
           ),
           const SizedBox(height: 4),
           Expanded(
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                return CustomPaint(
-                  painter: _WaveformPainter(
-                    phase: _controller.value * 2 * math.pi,
-                    intensity: widget.intensity,
-                    color: widget.moodColor,
-                    isDark: isDark,
-                  ),
-                  size: Size.infinite,
-                );
-              },
+            child: ExcludeSemantics(
+              child: AnimatedBuilder(
+                animation: _controller,
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter: _WaveformPainter(
+                      phase: _controller.value * 2 * math.pi,
+                      intensity: widget.intensity,
+                      color: widget.moodColor,
+                      isDark: isDark,
+                    ),
+                    size: Size.infinite,
+                  );
+                },
+              ),
             ),
           ),
         ],

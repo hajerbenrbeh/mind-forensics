@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/lab_theme.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/widgets/bouncing_widget.dart';
 import '../../../core/widgets/fingerprint_thread_signature.dart';
 import '../controllers/profile_controller.dart';
@@ -64,12 +65,13 @@ class PsychologicalProfileView extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Poetic Intro Banner
-              _buildIntroBanner(isDark, strings, surfaceColor, borderColor, textPrimary, textSecondary),
+              _buildIntroBanner(context, isDark, strings, surfaceColor, borderColor, textPrimary, textSecondary),
 
               const SizedBox(height: 18),
 
               // Section 1: About Me
               _buildSectionCard(
+                context: context,
                 title: strings.sectionAboutMe,
                 subtitle: strings.sectionAboutMeDesc,
                 icon: Icons.person_outline_rounded,
@@ -81,13 +83,14 @@ class PsychologicalProfileView extends ConsumerWidget {
                 textPrimary: textPrimary,
                 textSecondary: textSecondary,
                 onEdit: () => EditAboutMeSheet.show(context, profile),
-                content: _buildAboutMeSummary(profile, isDark, textPrimary, textSecondary),
+                content: _buildAboutMeSummary(context, profile, isDark, textPrimary, textSecondary),
               ),
 
               const SizedBox(height: 14),
 
               // Section 2: Psychological Experiences (Conditions & Experiences)
               _buildSectionCard(
+                context: context,
                 title: strings.conditionsSectionTitle.toUpperCase(),
                 subtitle: strings.conditionsSectionSubtitle,
                 icon: Icons.psychology_outlined,
@@ -106,6 +109,7 @@ class PsychologicalProfileView extends ConsumerWidget {
 
               // Section 3: Symptoms and Difficulties
               _buildSectionCard(
+                context: context,
                 title: strings.sectionSymptoms,
                 subtitle: strings.sectionSymptomsDesc,
                 icon: Icons.grain_outlined,
@@ -117,13 +121,14 @@ class PsychologicalProfileView extends ConsumerWidget {
                 textPrimary: textPrimary,
                 textSecondary: textSecondary,
                 onEdit: () => EditSymptomsSheet.show(context, profile),
-                content: _buildSymptomsSummary(profile, isDark, borderColor, textPrimary, textSecondary),
+                content: _buildSymptomsSummary(context, profile, isDark, borderColor, textPrimary, textSecondary),
               ),
 
               const SizedBox(height: 14),
 
               // Section 4: Personal Goals
               _buildSectionCard(
+                context: context,
                 title: strings.sectionGoals,
                 subtitle: strings.sectionGoalsDesc,
                 icon: Icons.track_changes_outlined,
@@ -135,13 +140,14 @@ class PsychologicalProfileView extends ConsumerWidget {
                 textPrimary: textPrimary,
                 textSecondary: textSecondary,
                 onEdit: () => EditGoalsSheet.show(context, profile),
-                content: _buildGoalsSummary(profile, isDark, borderColor, textPrimary, textSecondary),
+                content: _buildGoalsSummary(context, profile, isDark, borderColor, textPrimary, textSecondary),
               ),
 
               const SizedBox(height: 14),
 
               // Section 5: Personal Context (Optional Context & Details)
               _buildSectionCard(
+                context: context,
                 title: strings.optionalDetailsTitle.toUpperCase(),
                 subtitle: strings.sectionContextDesc,
                 icon: Icons.edit_note_rounded,
@@ -160,6 +166,7 @@ class PsychologicalProfileView extends ConsumerWidget {
 
               // Section 6: Communication Preferences
               _buildSectionCard(
+                context: context,
                 title: strings.sectionCommunication,
                 subtitle: strings.sectionCommunicationDesc,
                 icon: Icons.tune_rounded,
@@ -171,7 +178,7 @@ class PsychologicalProfileView extends ConsumerWidget {
                 textPrimary: textPrimary,
                 textSecondary: textSecondary,
                 onEdit: () => EditCommunicationSheet.show(context, profile),
-                content: _buildCommunicationSummary(profile, isDark, borderColor, textPrimary, textSecondary),
+                content: _buildCommunicationSummary(context, profile, isDark, borderColor, textPrimary, textSecondary),
               ),
 
               const SizedBox(height: 14),
@@ -201,8 +208,8 @@ class PsychologicalProfileView extends ConsumerWidget {
                   width: double.infinity,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white : Colors.black,
-                    borderRadius: BorderRadius.circular(8),
+                    color: context.tokens.accent,
+                    borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                   ),
                   alignment: Alignment.center,
                   child: Text(
@@ -211,7 +218,7 @@ class PsychologicalProfileView extends ConsumerWidget {
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.6,
-                      color: isDark ? Colors.black : Colors.white,
+                      color: isDark ? context.tokens.background : Colors.white,
                     ),
                   ),
                 ),
@@ -229,6 +236,7 @@ class PsychologicalProfileView extends ConsumerWidget {
   // INTRO BANNER
   // ===========================================================================
   Widget _buildIntroBanner(
+    BuildContext context,
     bool isDark,
     AppStrings strings,
     Color surfaceColor,
@@ -239,9 +247,9 @@ class PsychologicalProfileView extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? LabColors.nightSurface : LabColors.daylightSurface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? LabColors.nightBorder : LabColors.daylightBorder, width: 1),
+        color: context.tokens.surface,
+        borderRadius: BorderRadius.circular(context.tokens.cardRadius),
+        border: Border.all(color: context.tokens.border, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,21 +259,25 @@ class PsychologicalProfileView extends ConsumerWidget {
               const FingerprintThreadSignature(size: 20, animated: false),
               const SizedBox(width: 8),
               Text(
-                strings.isArabic ? 'نظرة عامة على الملف' : 'PROFILE OVERVIEW',
-                style: const TextStyle(
+                strings.isArabic
+                    ? 'نظرة عامة على الملف'
+                    : (strings.isFrench
+                        ? 'APERÇU DU PROFIL'
+                        : 'PROFILE OVERVIEW'),
+                style: TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.8,
-                  color: LabColors.champagneGold,
+                  color: context.tokens.accent,
                 ),
               ),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                 decoration: BoxDecoration(
-                  color: isDark ? LabColors.nightSurfaceSubtle : const Color(0xFFE5ECE6),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isDark ? LabColors.nightBorder : LabColors.daylightBorder),
+                  color: context.tokens.accentSoft,
+                  borderRadius: BorderRadius.circular(context.tokens.chipRadius),
+                  border: Border.all(color: context.tokens.border),
                 ),
                 child: Text(
                   strings.isArabic
@@ -275,7 +287,7 @@ class PsychologicalProfileView extends ConsumerWidget {
                     fontSize: 8.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
-                    color: isDark ? LabColors.mutedOliveLight : LabColors.mutedOlive,
+                    color: context.tokens.accent,
                   ),
                 ),
               ),
@@ -309,6 +321,7 @@ class PsychologicalProfileView extends ConsumerWidget {
   // SECTION CARD WRAPPER
   // ===========================================================================
   Widget _buildSectionCard({
+    required BuildContext context,
     required String title,
     required String subtitle,
     required IconData icon,
@@ -341,7 +354,7 @@ class PsychologicalProfileView extends ConsumerWidget {
                 // Top Header Row
                 Row(
                   children: [
-                    Icon(icon, size: 16, color: LabColors.champagneGold),
+                    Icon(icon, size: 16, color: context.tokens.accent),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -358,11 +371,11 @@ class PsychologicalProfileView extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
                         color: isCompleted
-                            ? (isDark ? LabColors.nightSurfaceSubtle : const Color(0xFFE5ECE6))
-                            : (isDark ? const Color(0xFF151B19) : const Color(0xFFF7F8F5)),
-                        borderRadius: BorderRadius.circular(8),
+                            ? context.tokens.accentSoft
+                            : context.tokens.surfaceSecondary,
+                        borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                         border: Border.all(
-                          color: isCompleted ? (isDark ? LabColors.nightBorder : LabColors.daylightBorder) : borderColor,
+                          color: isCompleted ? context.tokens.accent.withValues(alpha: 0.35) : borderColor,
                           width: 0.8,
                         ),
                       ),
@@ -370,7 +383,7 @@ class PsychologicalProfileView extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (isCompleted) ...[
-                            const Icon(Icons.check, size: 10, color: LabColors.champagneGold),
+                            Icon(Icons.check, size: 10, color: context.tokens.accent),
                             const SizedBox(width: 4),
                           ],
                           Text(
@@ -378,14 +391,14 @@ class PsychologicalProfileView extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w700,
-                              color: isCompleted ? LabColors.champagneGold : textSecondary,
+                              color: isCompleted ? context.tokens.accent : textSecondary,
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.edit_outlined, size: 14, color: LabColors.champagneGold),
+                    Icon(Icons.edit_outlined, size: 14, color: context.tokens.accent),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -411,6 +424,7 @@ class PsychologicalProfileView extends ConsumerWidget {
   // SECTION 1 SUMMARY: ABOUT ME
   // ===========================================================================
   Widget _buildAboutMeSummary(
+    BuildContext context,
     PsychologicalProfileModel profile,
     bool isDark,
     Color textPrimary,
@@ -439,8 +453,8 @@ class PsychologicalProfileView extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF181818) : const Color(0xFFF4F4F5),
-                  borderRadius: BorderRadius.circular(4),
+                  color: context.tokens.surfaceSecondary,
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   profile.ageRange,
@@ -491,8 +505,8 @@ class PsychologicalProfileView extends ConsumerWidget {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F5),
-                  borderRadius: BorderRadius.circular(6),
+                  color: context.tokens.surfaceSecondary,
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: borderColor),
                 ),
                 child: Text(
@@ -504,7 +518,11 @@ class PsychologicalProfileView extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            strings.isArabic ? 'انقر لإضافة وتخصيص تجاربك وحالاتك...' : 'Tap to select and customize your experiences...',
+            strings.isArabic
+                ? 'انقر لإضافة وتخصيص تجاربك وحالاتك...'
+                : (strings.isFrench
+                    ? 'Touchez pour sélectionner et personnaliser vos expériences...'
+                    : 'Tap to select and customize your experiences...'),
             style: TextStyle(fontSize: 11, color: textSecondary, fontStyle: FontStyle.italic),
           ),
         ],
@@ -555,6 +573,7 @@ class PsychologicalProfileView extends ConsumerWidget {
   // SECTION 3 SUMMARY: SYMPTOMS & DIFFICULTIES
   // ===========================================================================
   Widget _buildSymptomsSummary(
+    BuildContext context,
     PsychologicalProfileModel profile,
     bool isDark,
     Color borderColor,
@@ -585,8 +604,8 @@ class PsychologicalProfileView extends ConsumerWidget {
               return Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F6),
-                  borderRadius: BorderRadius.circular(5),
+                  color: context.tokens.surfaceSecondary,
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: borderColor),
                 ),
                 child: Text(
@@ -613,6 +632,7 @@ class PsychologicalProfileView extends ConsumerWidget {
   // SECTION 4 SUMMARY: GOALS
   // ===========================================================================
   Widget _buildGoalsSummary(
+    BuildContext context,
     PsychologicalProfileModel profile,
     bool isDark,
     Color borderColor,
@@ -639,8 +659,8 @@ class PsychologicalProfileView extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF141414) : const Color(0xFFF4F4F6),
-            borderRadius: BorderRadius.circular(5),
+            color: context.tokens.surfaceSecondary,
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(color: borderColor),
           ),
           child: Text(
@@ -685,6 +705,7 @@ class PsychologicalProfileView extends ConsumerWidget {
   // SECTION 6 SUMMARY: COMMUNICATION PREFERENCES
   // ===========================================================================
   Widget _buildCommunicationSummary(
+    BuildContext context,
     PsychologicalProfileModel profile,
     bool isDark,
     Color borderColor,
@@ -696,8 +717,8 @@ class PsychologicalProfileView extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF161616) : const Color(0xFFF4F4F5),
-            borderRadius: BorderRadius.circular(4),
+            color: context.tokens.surfaceSecondary,
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(color: borderColor),
           ),
           child: Text(
@@ -709,8 +730,8 @@ class PsychologicalProfileView extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF161616) : const Color(0xFFF4F4F5),
-            borderRadius: BorderRadius.circular(4),
+            color: context.tokens.surfaceSecondary,
+            borderRadius: BorderRadius.circular(6),
             border: Border.all(color: borderColor),
           ),
           child: Text(
@@ -740,7 +761,7 @@ class PsychologicalProfileView extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(context.tokens.cardRadius),
         border: Border.all(color: borderColor),
       ),
       child: Column(
@@ -748,7 +769,7 @@ class PsychologicalProfileView extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.shield_outlined, size: 16, color: LabColors.champagneGold),
+              Icon(Icons.shield_outlined, size: 16, color: context.tokens.accent),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -762,7 +783,7 @@ class PsychologicalProfileView extends ConsumerWidget {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.tune_rounded, size: 16, color: LabColors.champagneGold),
+                icon: Icon(Icons.tune_rounded, size: 16, color: context.tokens.accent),
                 tooltip: 'Privacy settings',
                 onPressed: () => PrivacyManagementSheet.show(context, profile),
               ),
@@ -788,7 +809,7 @@ class PsychologicalProfileView extends ConsumerWidget {
               ),
               Switch.adaptive(
                 value: profile.shareWithAiCompanion,
-                activeTrackColor: LabColors.champagneGold,
+                activeTrackColor: context.tokens.accent,
                 onChanged: (val) {
                   HapticFeedback.lightImpact();
                   ref.read(profileControllerProvider.notifier).setAiPersonalization(val);

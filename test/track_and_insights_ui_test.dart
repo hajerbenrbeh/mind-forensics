@@ -51,8 +51,16 @@ void main() {
       expect(find.text('Heavy'), findsOneWidget);
       expect(find.text('Restless'), findsOneWidget);
 
-      // Verify telemetry labels
+      // Verify primary intensity slider and progressive disclosure toggle
       expect(find.text('Nervous Activation'), findsOneWidget);
+      expect(find.text('Add context (optional)'), findsOneWidget);
+      expect(find.text('Sleep Duration'), findsNothing);
+
+      // Expand optional context block cleanly on demand
+      await tester.ensureVisible(find.text('Add context (optional)'));
+      await tester.tap(find.text('Add context (optional)'));
+      await tester.pumpAndSettle();
+
       expect(find.text('Sleep Duration'), findsOneWidget);
       expect(find.text('Energy Level'), findsOneWidget);
       expect(find.text('Stress & Anxiety'), findsOneWidget);
@@ -74,7 +82,12 @@ void main() {
       await tester.tap(find.text('Anxious'));
       await tester.pumpAndSettle();
 
-      // Scroll and Tap Trigger chip
+      // Expand optional context and tap Trigger chip
+      final contextToggle = find.text('Add context (optional)');
+      await tester.ensureVisible(contextToggle);
+      await tester.tap(contextToggle);
+      await tester.pumpAndSettle();
+
       final triggerFinder = find.text('Work / Demands');
       await tester.ensureVisible(triggerFinder);
       await tester.pumpAndSettle();

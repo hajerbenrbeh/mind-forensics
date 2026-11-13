@@ -4,10 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_strings.dart';
-import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
-import '../../../core/widgets/botanical_emblem.dart';
 import '../../../core/widgets/mind_badge.dart';
 import '../../../core/widgets/mind_button.dart';
 import '../../../core/widgets/mind_card.dart';
@@ -16,6 +14,10 @@ import '../../../core/widgets/smooth_spline_chart.dart';
 import '../../case_file/presentation/clinical_export_preview_sheet.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
+import '../../mind_trace/controllers/mind_trace_controller.dart';
+import '../../mind_trace/domain/mind_trace_model.dart';
+import '../../progress/data/progress_analytics_service.dart';
+import '../../progress/domain/progress_analytics_model.dart';
 import '../data/pattern_awareness_service.dart';
 import '../domain/pattern_divergence_model.dart';
 import '../domain/personal_baseline_model.dart';
@@ -33,15 +35,99 @@ class InsightsScreen extends ConsumerStatefulWidget {
 class _InsightsScreenState extends ConsumerState<InsightsScreen> {
   String _selectedRange = '1M';
 
+  List<MindTraceModel> _filterTracesByRange(List<MindTraceModel> traces) {
+    final now = DateTime.now();
+    final Duration window;
+    switch (_selectedRange) {
+      case '1W':
+        window = const Duration(days: 7);
+        break;
+      case '3M':
+        window = const Duration(days: 90);
+        break;
+      case '6M':
+        window = const Duration(days: 180);
+        break;
+      case '1M':
+      default:
+        window = const Duration(days: 30);
+        break;
+    }
+    final cutoff = now.subtract(window);
+    return traces.where((t) => !t.date.isBefore(cutoff)).toList();
+  }
+
+  void _showRangeOverviewSheet(
+    BuildContext context,
+    List<MindTraceModel> filteredTraces,
+    MindTokens tokens,
+    AppStrings strings,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: tokens.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    strings.calendarTitle,
+                    style: TextStyle(
+                      fontFamily: 'serif',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                  MindBadge(label: _selectedRange),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                strings.isArabic
+                    ? '${filteredTraces.length} ملاحظات في هذه الفترة المحددة.'
+                    : (strings.isFrench
+                        ? '${filteredTraces.length} observations sur la période sélectionnée.'
+                        : '${filteredTraces.length} observations recorded in this $_selectedRange window.'),
+                style: TextStyle(fontSize: 13, color: tokens.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              MindButton(
+                text: strings.progressTabCalendar,
+                isFullWidth: true,
+                leadingIcon: Icons.calendar_month_outlined,
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  context.push('/progress');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final strings = ref.watch(appStringsProvider);
     final baseline = ref.watch(personalBaselineProvider);
     final divergences = ref.watch(patternDivergencesProvider);
     final weeklySummary = ref.watch(weeklySummaryProvider);
     final cases = ref.watch(savedCasesProvider).value ?? [];
+    final allTraces = ref.watch(mindTraceControllerProvider).value ?? [];
+    final traces = _filterTracesByRange(allTraces);
+    final analytics = ref.watch(progressAnalyticsProvider);
 
     return Scaffold(
       backgroundColor: tokens.background,
@@ -50,19 +136,22 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
-          'Insights',
+          strings.navInsights,
           style: TextStyle(
             fontFamily: 'serif',
             fontSize: 22,
             fontWeight: FontWeight.w700,
-            color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
+            color: tokens.textPrimary,
           ),
         ),
         actions: [
           IconButton(
             icon: Icon(Icons.calendar_today_outlined, size: 20, color: tokens.textPrimary),
-            tooltip: 'Calendar',
-            onPressed: () {},
+            tooltip: strings.calendarTitle,
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _showRangeOverviewSheet(context, traces, tokens, strings);
+            },
           ),
           IconButton(
             icon: Icon(Icons.share_outlined, size: 20, color: tokens.textPrimary),
@@ -81,71 +170,107 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Time Horizon Filter (Phone 4)
-            Row(
-              children: ['1W', '1M', '3M', '6M'].map((r) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: MindPill(
+            // 1. Time Horizon Filter + Quick Self-Care Tools Shortcut
+            Wrap(
+              spacing: 6,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                ...['1W', '1M', '3M', '6M'].map((r) {
+                  return MindPill(
                     label: r,
                     isSelected: _selectedRange == r,
                     onTap: () => setState(() => _selectedRange = r),
+                  );
+                }),
+                Semantics(
+                  button: true,
+                  child: InkWell(
+                    onTap: () => context.push('/observatory'),
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: tokens.accentSoft,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.spa_outlined, size: 15, color: tokens.accent),
+                          const SizedBox(width: 5),
+                          Text(
+                            strings.navObservatory,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.accent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
-          const SizedBox(height: 18),
+            const SizedBox(height: 18),
 
-          // 2. Mood Trends Section (Phone 4)
-          Text(
-            'Mood Trends',
-            style: TextStyle(
-              color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildMoodTrendsCard(context, tokens, isDark),
-          const SizedBox(height: 20),
-
-          // 3. Your Patterns Section (Phone 4)
-          _buildYourPatternsSection(context, tokens, isDark),
-          const SizedBox(height: 16),
-
-          // 4. Botanical Encouragement Banner (Phone 4)
-          _buildEncouragementCard(context, tokens, isDark),
-          const SizedBox(height: 24),
-
-          // 5. Personal Baseline Card (Preserved Core)
-          _buildBaselineCard(context, baseline, tokens, strings),
-          const SizedBox(height: 20),
-
-          // 6. Pattern Awareness Divergences (if any detected)
-          if (divergences.isNotEmpty) ...[
+            // 2. Mood Trends Section
             Text(
-              strings.patternAwarenessTitle.toUpperCase(),
+              strings.moodTrendsHeader,
               style: TextStyle(
-                color: tokens.textSecondary,
-                fontSize: 11,
+                color: tokens.textPrimary,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
-                letterSpacing: 1.1,
+                letterSpacing: -0.2,
               ),
             ),
             const SizedBox(height: 10),
-            ...divergences.map((d) => _buildDivergenceCard(context, d, tokens, strings)),
-            const SizedBox(height: 20),
-          ],
+            _buildMoodTrendsCard(context, tokens, traces, strings),
+            const SizedBox(height: 18),
 
-          // 7. Weekly Therapist Summary Card (Preserved Core)
-          _buildWeeklyTherapistSummaryCard(context, weeklySummary, cases, tokens, strings),
-          const SizedBox(height: 20),
+            // 3. Your Patterns Section
+            _buildYourPatternsSection(context, tokens, analytics, strings),
+            const SizedBox(height: 18),
 
-          // 8. Detailed Analytics Deep-Dive Button (Preserved Core)
-          MindCard(
-            padding: const EdgeInsets.all(16),
-            onTap: () => context.go('/progress'),
+            // 4. Context & Mood Links (Shown only when triggers or helpers exist to keep UI calm)
+            if (traces.any((t) =>
+                (t.situation?.trim().isNotEmpty ?? false) ||
+                (t.behavioralResponse?.trim().isNotEmpty ?? false))) ...[
+              _buildContextMoodLinksCard(context, traces, tokens, strings),
+              const SizedBox(height: 18),
+            ],
+
+            // 5. Personal Baseline Card (Preserved Core)
+            _buildBaselineCard(context, baseline, tokens, strings),
+            const SizedBox(height: 18),
+
+            // 6. Pattern Awareness Divergences (if any detected)
+            if (divergences.isNotEmpty) ...[
+              Text(
+                strings.patternAwarenessTitle.toUpperCase(),
+                style: TextStyle(
+                  color: tokens.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const SizedBox(height: 10),
+              ...divergences.map((d) => _buildDivergenceCard(context, d, tokens, strings)),
+              const SizedBox(height: 18),
+            ],
+
+            // 7. Weekly Therapist Summary Card (Preserved Core)
+            _buildWeeklyTherapistSummaryCard(context, weeklySummary, cases, tokens, strings),
+            const SizedBox(height: 18),
+
+            // 8. Detailed Analytics Deep-Dive Button (Preserved Core)
+            MindCard(
+              padding: const EdgeInsets.all(16),
+              onTap: () => context.push('/progress'),
             child: Row(
               children: [
                 Container(
@@ -188,17 +313,78 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
   );
 }
 
-  Widget _buildMoodTrendsCard(BuildContext context, MindTokens tokens, bool isDark) {
-    // 7 data points reflecting the smooth curve in Phone 4
-    final chartValues = [0.45, 0.65, 0.50, 0.75, 0.60, 0.85, 0.70];
+  Widget _buildMoodTrendsCard(
+    BuildContext context,
+    MindTokens tokens,
+    List<MindTraceModel> traces,
+    AppStrings strings,
+  ) {
+    if (traces.length < 2) {
+      return MindCard(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: tokens.surfaceSecondary,
+              ),
+              child: Icon(Icons.show_chart_rounded, size: 20, color: tokens.textSecondary),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    strings.isArabic
+                        ? 'منحنى المزاج قيد المعايرة'
+                        : (strings.isFrench
+                            ? 'Courbe d’humeur en calibration'
+                            : 'Mood curve calibrating'),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    strings.isArabic
+                        ? 'سجل يومين على الأقل من الملاحظات لرسم منحنى المزاج الخاص بك.'
+                        : (strings.isFrench
+                            ? 'Au moins 2 jours d’observations sont requis pour tracer votre courbe personnelle.'
+                            : 'At least 2 days of observations needed to render your personal mood curve.'),
+                    style: TextStyle(fontSize: 11.5, color: tokens.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final sortedTraces = [...traces]..sort((a, b) => a.date.compareTo(b.date));
+    final recentTraces = sortedTraces.length > 14
+        ? sortedTraces.sublist(sortedTraces.length - 14)
+        : sortedTraces;
+    final chartValues = recentTraces
+        .map((t) => (t.moodIntensity / 10.0).clamp(0.05, 0.95))
+        .toList();
+    final lastTrace = recentTraces.last;
+    final monthNames = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final activeLabel =
+        '${monthNames[lastTrace.date.month - 1]} ${lastTrace.date.day}\n${lastTrace.overallMood.toUpperCase()}';
 
     return MindCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
-      borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
       child: Row(
         children: [
-          // Y-axis faces (Happy, Neutral, Sad)
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -222,14 +408,13 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
             ],
           ),
           const SizedBox(width: 10),
-          // Spline chart with callout tooltip matching Phone 4
           Expanded(
             child: SmoothSplineChart(
               values: chartValues,
               height: 120,
-              activePointIndex: 5,
-              activePointLabel: 'Nov 8\nCalm',
-              lineColor: isDark ? LabColors.lightOlive : LabColors.forestGreen,
+              activePointIndex: chartValues.length - 1,
+              activePointLabel: activeLabel,
+              lineColor: tokens.accent,
               showDots: true,
             ),
           ),
@@ -238,24 +423,13 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
     );
   }
 
-  Widget _buildYourPatternsSection(BuildContext context, MindTokens tokens, bool isDark) {
-    final patterns = [
-      (
-        icon: Icons.nightlight_outlined,
-        title: 'Mood dips',
-        subtitle: 'Often linked to poor sleep',
-      ),
-      (
-        icon: Icons.menu_book_outlined,
-        title: 'Higher anxiety',
-        subtitle: 'During study periods',
-      ),
-      (
-        icon: Icons.eco_outlined,
-        title: 'More balance',
-        subtitle: 'On days with self-care',
-      ),
-    ];
+  Widget _buildYourPatternsSection(
+    BuildContext context,
+    MindTokens tokens,
+    ProgressAnalyticsModel analytics,
+    AppStrings strings,
+  ) {
+    final insights = analytics.insights;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,127 +437,206 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Your Patterns',
-              style: TextStyle(
-                color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.2,
+            Expanded(
+              child: Text(
+                strings.yourPatternsHeader,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: tokens.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                ),
               ),
             ),
-            GestureDetector(
-              onTap: () => context.go('/progress'),
-              child: Text(
-                'View all →',
-                style: TextStyle(
-                  color: isDark ? LabColors.lightOlive : LabColors.secondaryOlive,
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
+            const SizedBox(width: 8),
+            Semantics(
+              button: true,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => context.push('/progress'),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  child: Text(
+                    '${strings.viewAllArrowLabel} →',
+                    style: TextStyle(
+                      color: tokens.accent,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 10),
-        ...patterns.map((p) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: MindCard(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
-              borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
-              onTap: () => context.go('/progress'),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.05),
-                    ),
-                    child: Icon(
-                      p.icon,
-                      size: 19,
-                      color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          p.title,
-                          style: TextStyle(
-                            color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          p.subtitle,
-                          style: TextStyle(
-                            color: tokens.textSecondary,
-                            fontSize: 11.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 18,
-                    color: tokens.textTertiary,
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildEncouragementCard(BuildContext context, MindTokens tokens, bool isDark) {
-    return MindCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      backgroundColor: isDark ? LabColors.darkForestCard : LabColors.cardIvory,
-      borderColor: isDark ? LabColors.darkForestBorder : LabColors.borderIvory,
-      child: Row(
-        children: [
-          BotanicalEmblem(
-            size: 34,
-            color: isDark ? LabColors.lightOlive : LabColors.forestGreen,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        if (insights.isEmpty)
+          MindCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
               children: [
-                Text(
-                  "You're doing well.",
-                  style: TextStyle(
-                    color: isDark ? LabColors.darkTextPrimary : LabColors.primaryText,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Keep taking care of your mind.',
-                  style: TextStyle(
-                    fontFamily: 'serif',
-                    fontStyle: FontStyle.italic,
-                    color: tokens.textSecondary,
-                    fontSize: 12.5,
+                Icon(Icons.auto_awesome_outlined, size: 20, color: tokens.accent),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    strings.isArabic
+                        ? 'الأنماط قيد المعايرة: مع استمرارك في تسجيل الملاحظات اليومية، ستظهر هنا روابط دقيقة بين النوم والمزاج.'
+                        : 'Patterns calibrating: As you log observations over time, correlations between sleep, mood, and stress will appear here.',
+                    style: TextStyle(fontSize: 12, color: tokens.textSecondary, height: 1.4),
                   ),
                 ),
               ],
             ),
+          )
+        else
+          ...insights.take(3).map((item) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: MindCard(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                onTap: () => context.push('/progress'),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: tokens.accentSoft,
+                      ),
+                      child: Icon(
+                        item.icon,
+                        size: 19,
+                        color: tokens.accent,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.title,
+                            style: TextStyle(
+                              color: tokens.textPrimary,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.description,
+                            style: TextStyle(
+                              color: tokens.textSecondary,
+                              fontSize: 11.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: tokens.textTertiary,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildContextMoodLinksCard(
+    BuildContext context,
+    List<MindTraceModel> traces,
+    MindTokens tokens,
+    AppStrings strings,
+  ) {
+    final triggerStats = <String, List<int>>{};
+    final helpedStats = <String, int>{};
+
+    for (final t in traces) {
+      if (t.situation != null && t.situation!.isNotEmpty) {
+        for (final raw in t.situation!.split(',')) {
+          final tag = raw.trim();
+          if (tag.isEmpty) continue;
+          triggerStats.putIfAbsent(tag, () => []).add(t.moodIntensity);
+        }
+      }
+      if (t.behavioralResponse != null && t.behavioralResponse!.isNotEmpty) {
+        for (final raw in t.behavioralResponse!.split(',')) {
+          final tag = raw.trim();
+          if (tag.isEmpty) continue;
+          helpedStats[tag] = (helpedStats[tag] ?? 0) + 1;
+        }
+      }
+    }
+
+    final topTriggers = triggerStats.entries.toList()
+      ..sort((a, b) => b.value.length.compareTo(a.value.length));
+    final topHelpers = helpedStats.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return MindCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.hub_outlined, size: 17, color: tokens.accent),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  strings.triggerMoodCorrelationsTitle,
+                  style: TextStyle(
+                    color: tokens.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              MindBadge(label: _selectedRange),
+            ],
           ),
+          const SizedBox(height: 6),
+          Text(
+            strings.triggerMoodCorrelationsSub,
+            style: TextStyle(fontSize: 11.5, color: tokens.textSecondary, height: 1.35),
+          ),
+          if (topTriggers.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: topTriggers.take(4).map((e) {
+                final avg = (e.value.reduce((a, b) => a + b) / e.value.length).toStringAsFixed(1);
+                return MindBadge(
+                  label: '${e.key} • $avg/10 (${e.value.length}x)',
+                  backgroundColor: tokens.surfaceSecondary,
+                );
+              }).toList(),
+            ),
+          ],
+          if (topHelpers.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: topHelpers.take(3).map((e) {
+                return MindBadge(
+                  icon: Icons.spa_outlined,
+                  label: '${e.key} (${e.value}x)',
+                  backgroundColor: tokens.accentSoft,
+                  textColor: tokens.accent,
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
@@ -423,14 +676,16 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              MindBadge(
-                label: baseline.statusLabel,
-                backgroundColor: baseline.hasEstablishedBaseline
-                    ? tokens.accentSoft
-                    : tokens.surfaceSecondary,
-                textColor: baseline.hasEstablishedBaseline
-                    ? tokens.accent
-                    : (baseline.hasSufficientData ? tokens.textPrimary : tokens.textSecondary),
+              Flexible(
+                child: MindBadge(
+                  label: baseline.statusLabel,
+                  backgroundColor: baseline.hasEstablishedBaseline
+                      ? tokens.accentSoft
+                      : tokens.surfaceSecondary,
+                  textColor: baseline.hasEstablishedBaseline
+                      ? tokens.accent
+                      : (baseline.hasSufficientData ? tokens.textPrimary : tokens.textSecondary),
+                ),
               ),
             ],
           ),
@@ -449,17 +704,17 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
             Row(
               children: [
                 _buildStatColumn(
-                  'TYPICAL SLEEP',
+                  strings.typicalSleepLabel,
                   baseline.averageSleepHours != null ? '${baseline.averageSleepHours}h' : '—',
                   tokens,
                 ),
                 _buildStatColumn(
-                  'TYPICAL ENERGY',
+                  strings.typicalEnergyLabel,
                   baseline.averageEnergyLevel != null ? '${baseline.averageEnergyLevel}/10' : '—',
                   tokens,
                 ),
                 _buildStatColumn(
-                  'MOOD INTENSITY',
+                  strings.moodIntensityShortLabel,
                   baseline.averageMoodIntensity != null ? '${baseline.averageMoodIntensity}/10' : '—',
                   tokens,
                 ),
@@ -468,7 +723,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
             if (baseline.commonEmotions.isNotEmpty) ...[
               const Divider(height: 24, thickness: 0.5),
               Text(
-                'FREQUENT EMOTIONS: ${baseline.commonEmotions.join(', ')}',
+                '${strings.frequentEmotionsLabel}: ${baseline.commonEmotions.join(', ')}',
                 style: TextStyle(color: tokens.textTertiary, fontSize: 11, fontWeight: FontWeight.w600),
               ),
             ],
@@ -635,7 +890,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           ],
           const SizedBox(height: 14),
           Text(
-            'SUGGESTED FOR THERAPY DISCUSSION:',
+            strings.suggestedTherapyLabel,
             style: TextStyle(
               color: tokens.accent,
               fontSize: 10.5,

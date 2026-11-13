@@ -57,7 +57,9 @@ class _GroundingExerciseCardState extends ConsumerState<GroundingExerciseCard> {
         title: strings.groundingSee,
         cue: strings.isArabic
             ? 'انظر حولك ولاحظ خمسة تفاصيل مرئية: إضاءة، لون، شكل هندسي، ظل، أو جسم قريب.'
-            : 'Look around and notice five distinct visual objects, shadows, or textures in your space.',
+            : (strings.isFrench
+                ? 'Regardez autour de vous et observez cinq détails visuels, ombres ou textures.'
+                : 'Look around and notice five distinct visual objects, shadows, or textures in your space.'),
         icon: Icons.visibility_outlined,
       ),
       (
@@ -65,7 +67,9 @@ class _GroundingExerciseCardState extends ConsumerState<GroundingExerciseCard> {
         title: strings.groundingTouch,
         cue: strings.isArabic
             ? 'المس أربعة أسطح ملموسة: ملمس ثيابك، برودة سطح الطاولة، قدميك على الأرض، أو هاتفك.'
-            : 'Feel four physical textures: your clothing fabric, the desk surface, feet on the floor, or your phone.',
+            : (strings.isFrench
+                ? 'Touchez quatre textures concrètes : votre vêtement, le bureau, vos pieds au sol ou votre téléphone.'
+                : 'Feel four physical textures: your clothing fabric, the desk surface, feet on the floor, or your phone.'),
         icon: Icons.touch_app_outlined,
       ),
       (
@@ -73,7 +77,9 @@ class _GroundingExerciseCardState extends ConsumerState<GroundingExerciseCard> {
         title: strings.groundingHear,
         cue: strings.isArabic
             ? 'أنصت لثلاثة أصوات في محيطك: صوت تكييف، صوت في الشارع، أو صوت تنفسك.'
-            : 'Listen for three real sounds: ambient room tone, traffic in the distance, or your own breath.',
+            : (strings.isFrench
+                ? 'Écoutez trois sons réels autour de vous : le bruit ambiant, la rue au loin ou votre respiration.'
+                : 'Listen for three real sounds: ambient room tone, traffic in the distance, or your own breath.'),
         icon: Icons.hearing_outlined,
       ),
       (
@@ -81,7 +87,9 @@ class _GroundingExerciseCardState extends ConsumerState<GroundingExerciseCard> {
         title: strings.groundingSmell,
         cue: strings.isArabic
             ? 'لاحظ رائحتين في الهواء أو استرجع رائحة مهدئة تألفها.'
-            : 'Notice two scents in the air, or recall a familiar grounding scent like coffee or fresh rain.',
+            : (strings.isFrench
+                ? 'Remarquez deux odeurs dans l’air ou évoquez un parfum familier et apaisant.'
+                : 'Notice two scents in the air, or recall a familiar grounding scent like coffee or fresh rain.'),
         icon: Icons.filter_vintage_outlined,
       ),
       (
@@ -89,7 +97,9 @@ class _GroundingExerciseCardState extends ConsumerState<GroundingExerciseCard> {
         title: strings.groundingTaste,
         cue: strings.isArabic
             ? 'لاحظ طعماً في فمك أو خذ رشفة ماء وابقَ حاضراً في هذه اللحظة.'
-            : 'Take a gentle sip of water or focus on the physical sensation of cool air entering your mouth.',
+            : (strings.isFrench
+                ? 'Prenez une petite gorgée d’eau ou portez attention à l’air frais dans votre bouche.'
+                : 'Take a gentle sip of water or focus on the physical sensation of cool air entering your mouth.'),
         icon: Icons.eco_outlined,
       ),
     ];
@@ -159,7 +169,11 @@ class _GroundingExerciseCardState extends ConsumerState<GroundingExerciseCard> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      strings.isArabic ? 'أنت حاضر في مكانك الآن' : 'You are grounded and present',
+                      strings.isArabic
+                          ? 'أنت حاضر في مكانك الآن'
+                          : (strings.isFrench
+                              ? 'Vous êtes ancré et présent'
+                              : 'You are grounded and present'),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -170,7 +184,9 @@ class _GroundingExerciseCardState extends ConsumerState<GroundingExerciseCard> {
                     Text(
                       strings.isArabic
                           ? 'أخذت لحظة لتذكير جهازك العصبي بأنك في أمان واقعي.'
-                          : 'You gave your nervous system a calm point of physical orientation.',
+                          : (strings.isFrench
+                              ? 'Vous avez offert à votre système nerveux un point d’ancrage concret.'
+                              : 'You gave your nervous system a calm point of physical orientation.'),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,
@@ -189,7 +205,7 @@ class _GroundingExerciseCardState extends ConsumerState<GroundingExerciseCard> {
                 return Expanded(
                   child: Container(
                     height: 3,
-                    margin: EdgeInsets.only(right: index == 4 ? 0 : 4),
+                    margin: EdgeInsetsDirectional.only(end: index == 4 ? 0 : 4),
                     decoration: BoxDecoration(
                       color: isPassed
                           ? LabColors.sageGreen
@@ -261,8 +277,16 @@ class _GroundingExerciseCardState extends ConsumerState<GroundingExerciseCard> {
               ),
               child: Text(
                 isFinished
-                    ? (strings.isArabic ? 'إعادة التمرين' : 'Restart Grounding')
-                    : (strings.isArabic ? 'لاحظت هذا • التالي' : 'Noticed • Next Step'),
+                    ? (strings.isArabic
+                        ? 'إعادة التمرين'
+                        : (strings.isFrench
+                            ? 'Recommencer l’ancrage'
+                            : 'Restart Grounding'))
+                    : (strings.isArabic
+                        ? 'لاحظت هذا • التالي'
+                        : (strings.isFrench
+                            ? 'Observé • Étape suivante'
+                            : 'Noticed • Next Step')),
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
             ),

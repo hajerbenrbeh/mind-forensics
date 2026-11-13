@@ -105,7 +105,7 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
       HttpClient? client;
       try {
         final url = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/$currentModel:generateContent?key=$cleanKey',
+          'https://generativelanguage.googleapis.com/v1beta/models/$currentModel:generateContent',
         );
         final payload = {
           'contents': [
@@ -128,6 +128,7 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
             : (HttpClient()..connectionTimeout = const Duration(seconds: 4));
         final request = await client.postUrl(url);
         request.headers.contentType = ContentType.json;
+        request.headers.set('x-goog-api-key', cleanKey);
         request.write(jsonEncode(payload));
 
         final response = await request.close();
@@ -194,7 +195,7 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
 
     for (final currentModel in modelsToTry) {
       final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/$currentModel:generateContent?key=$cleanKey',
+        'https://generativelanguage.googleapis.com/v1beta/models/$currentModel:generateContent',
       );
 
       final payload = {
@@ -220,6 +221,7 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
             : (HttpClient()..connectionTimeout = const Duration(seconds: 4));
         final request = await client.postUrl(url);
         request.headers.contentType = ContentType.json;
+        request.headers.set('x-goog-api-key', cleanKey);
         request.write(jsonEncode(payload));
 
         final response = await request.close();

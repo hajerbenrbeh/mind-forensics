@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/localization/app_strings.dart';
 import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/lab_theme.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
 import '../../../core/widgets/fingerprint_thread_signature.dart';
 import '../controllers/mind_trace_controller.dart';
@@ -77,7 +78,11 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
             const FingerprintThreadSignature(size: 18, animated: false),
             const SizedBox(width: 8),
             Text(
-              strings.isArabic ? 'أثر اليوم (MIND TRACE)' : 'DAILY MIND TRACE',
+              strings.isArabic
+                  ? 'أثر اليوم (MIND TRACE)'
+                  : (strings.isFrench
+                      ? 'EMPREINTE DU JOUR'
+                      : 'DAILY MIND TRACE'),
               style: LabTheme.serifStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w700,
@@ -177,20 +182,20 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
             }
           });
         },
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 140),
-          padding: const EdgeInsets.symmetric(vertical: 7),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: isSelected
-                ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
+                ? context.tokens.accentSoft
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
-                  ? LabColors.champagneGold
+                  ? context.tokens.accent
                   : Colors.transparent,
-              width: 0.8,
+              width: 1,
             ),
           ),
           alignment: Alignment.center,
@@ -202,7 +207,7 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
               fontSize: 10.5,
               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
               letterSpacing: 0.4,
-              color: isSelected ? (isDark ? LabColors.warmIvory : LabColors.deepBurgundy) : textSecondary,
+              color: isSelected ? context.tokens.accent : textSecondary,
             ),
           ),
         ),
@@ -306,14 +311,14 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
             height: 64,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isDark ? const Color(0xFF1F090E) : const Color(0xFFFBE8E9),
-              border: Border.all(color: LabColors.champagneGold, width: 1.5),
+              color: context.tokens.accentSoft,
+              border: Border.all(color: context.tokens.accent, width: 1.5),
             ),
-            child: const Center(
+            child: Center(
               child: Icon(
                 Icons.auto_awesome_rounded,
                 size: 28,
-                color: LabColors.champagneGold,
+                color: context.tokens.accent,
               ),
             ),
           ),
@@ -345,10 +350,10 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
           // Summary Card
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: surfaceColor,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(context.tokens.cardRadius),
               border: Border.all(color: borderColor),
             ),
             child: Column(
@@ -358,13 +363,17 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      (strings.isArabic ? 'الحالة والمشاعر' : 'RECORDED STATE')
+                      (strings.isArabic
+                              ? 'الحالة والمشاعر'
+                              : (strings.isFrench
+                                  ? 'ÉTAT ENREGISTRÉ'
+                                  : 'RECORDED STATE'))
                           .toUpperCase(),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.8,
-                        color: LabColors.champagneGold,
+                        color: context.tokens.accent,
                       ),
                     ),
                     Text(
@@ -390,16 +399,14 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? const Color(0xFF141414)
-                              : const Color(0xFFF4F4F6),
-                          borderRadius: BorderRadius.circular(6),
+                          color: context.tokens.surfaceSecondary,
+                          borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: borderColor),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(icon, size: 12, color: LabColors.champagneGold),
+                            Icon(icon, size: 12, color: context.tokens.accent),
                             const SizedBox(width: 5),
                             Text(
                               e,
@@ -438,10 +445,12 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
           // Review Entry Button
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? Colors.white : Colors.black,
-              foregroundColor: isDark ? Colors.black : Colors.white,
-              minimumSize: const Size(double.infinity, 46),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              backgroundColor: context.tokens.accent,
+              foregroundColor: isDark ? context.tokens.background : Colors.white,
+              minimumSize: const Size(double.infinity, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
+              ),
             ),
             onPressed: () {
               ThoughtTraceDetailSheet.show(
@@ -458,7 +467,9 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
                 const Icon(Icons.visibility_outlined, size: 16),
                 const SizedBox(width: 8),
                 Text(
-                  (strings.isArabic ? 'مراجعة تفاصيل الأثر' : 'REVIEW ENTRY')
+                  (strings.isArabic
+                          ? 'مراجعة تفاصيل الأثر'
+                          : (strings.isFrench ? 'REVOIR L’ENTRÉE' : 'REVIEW ENTRY'))
                       .toUpperCase(),
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5),
                 ),
@@ -473,8 +484,10 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
             style: OutlinedButton.styleFrom(
               foregroundColor: textPrimary,
               side: BorderSide(color: borderColor),
-              minimumSize: const Size(double.infinity, 44),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              minimumSize: const Size(double.infinity, 46),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
+              ),
             ),
             onPressed: () {
               HapticFeedback.lightImpact();
@@ -486,7 +499,11 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
                 const Icon(Icons.edit_note_rounded, size: 16),
                 const SizedBox(width: 8),
                 Text(
-                  (strings.isArabic ? 'تعديل تقييم اليوم' : 'EDIT TODAY\'S CHECK-IN')
+                  (strings.isArabic
+                          ? 'تعديل تقييم اليوم'
+                          : (strings.isFrench
+                              ? 'MODIFIER LE BILAN DU JOUR'
+                              : 'EDIT TODAY\'S CHECK-IN'))
                       .toUpperCase(),
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.4),
                 ),
@@ -504,14 +521,14 @@ class _MindTraceScreenState extends ConsumerState<MindTraceScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.fingerprint_rounded, size: 14, color: LabColors.burgundyRose),
+                Icon(Icons.fingerprint_rounded, size: 14, color: context.tokens.accent),
                 const SizedBox(width: 6),
                 Text(
                   strings.thoughtTraceTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: LabColors.burgundyRose,
+                    color: context.tokens.accent,
                   ),
                 ),
               ],

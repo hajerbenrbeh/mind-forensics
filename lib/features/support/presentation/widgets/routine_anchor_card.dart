@@ -122,7 +122,9 @@ class _RoutineAnchorCardState extends ConsumerState<RoutineAnchorCard> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  isAr ? 'نقطة توازن واحدة' : 'ONE GENTLE ANCHOR',
+                  isAr
+                      ? 'نقطة توازن واحدة'
+                      : (isFr ? 'UN POINT D’ANCRAGE DOUX' : 'ONE GENTLE ANCHOR'),
                   style: const TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
@@ -136,7 +138,9 @@ class _RoutineAnchorCardState extends ConsumerState<RoutineAnchorCard> {
           Text(
             isAr
                 ? 'لا داعي لإصلاح روتينك بالكامل. اختر نقطة ارتكاز صغيرة تثبتك اليوم بدون أي التزام أو ضغط.'
-                : 'No need to overhaul your life. Choose one small physical anchor to steady your day without streak pressure.',
+                : (isFr
+                    ? 'Inutile de tout bouleverser. Choisissez un petit point d’ancrage physique pour stabiliser votre journée sans pression.'
+                    : 'No need to overhaul your life. Choose one small physical anchor to steady your day without streak pressure.'),
             style: TextStyle(fontSize: 12, color: textSecondary, height: 1.35),
           ),
           const SizedBox(height: 16),
@@ -255,8 +259,14 @@ class _RoutineAnchorCardState extends ConsumerState<RoutineAnchorCard> {
               ),
               child: Text(
                 _isAdopted
-                    ? (isAr ? 'تم اعتماد نقطة التوازن لليوم' : 'Adopted for Today')
-                    : (isAr ? 'اعتماد هذه النقطة لليوم' : 'Adopt as My Anchor Today'),
+                    ? (isAr
+                        ? 'تم اعتماد نقطة التوازن لليوم'
+                        : (isFr ? 'Adopté pour aujourd’hui' : 'Adopted for Today'))
+                    : (isAr
+                        ? 'اعتماد هذه النقطة لليوم'
+                        : (isFr
+                            ? 'Adopter comme repère du jour'
+                            : 'Adopt as My Anchor Today')),
                 style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
               ),
             ),
@@ -275,7 +285,11 @@ class _RoutineAnchorCardState extends ConsumerState<RoutineAnchorCard> {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          isAr ? 'تم حفظ نقطة التوازن في اكتشافاتك' : 'Routine anchor saved to Discoveries',
+                          isAr
+                              ? 'تم حفظ نقطة التوازن في اكتشافاتك'
+                              : (isFr
+                                  ? 'Repère enregistré dans vos découvertes'
+                                  : 'Routine anchor saved to Discoveries'),
                           style: const TextStyle(fontSize: 12),
                         ),
                         duration: const Duration(seconds: 2),
@@ -285,7 +299,11 @@ class _RoutineAnchorCardState extends ConsumerState<RoutineAnchorCard> {
                 },
                 icon: const Icon(Icons.bookmark_add_outlined, size: 14),
                 label: Text(
-                  isAr ? 'حفظ نقطة التوازن في اكتشافاتي' : 'Save Anchor to Discoveries',
+                  isAr
+                      ? 'حفظ نقطة التوازن في اكتشافاتي'
+                      : (isFr
+                          ? 'Enregistrer dans mes découvertes'
+                          : 'Save Anchor to Discoveries'),
                   style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
                 ),
                 style: TextButton.styleFrom(

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../../../app/theme/lab_theme.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
 import '../../controllers/profile_controller.dart';
 import '../../domain/communication_preferences_catalog.dart';
@@ -123,12 +124,17 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                   children: [
                     // 1. Tone
                     Text(
-                      (strings.isArabic ? 'النبرة وأسلوب الحوار' : 'COMPANION TONE').toUpperCase(),
-                      style: const TextStyle(
+                      (strings.isArabic
+                              ? 'النبرة وأسلوب الحوار'
+                              : (strings.isFrench
+                                  ? 'TON DU COMPAGNON'
+                                  : 'COMPANION TONE'))
+                          .toUpperCase(),
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.8,
-                        color: LabColors.champagneGold,
+                        color: context.tokens.accent,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -141,24 +147,24 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                             HapticFeedback.selectionClick();
                             setState(() => _selectedTone = tone.key);
                           },
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(14),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 140),
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
-                                  : (isDark ? const Color(0xFF101010) : const Color(0xFFFAFAFA)),
-                              borderRadius: BorderRadius.circular(8),
+                                  ? context.tokens.accentSoft
+                                  : context.tokens.surfaceSecondary,
+                              borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: isSelected ? LabColors.champagneGold : border,
+                                color: isSelected ? context.tokens.accent : border,
                                 width: isSelected ? 1.2 : 0.8,
                               ),
                             ),
                             child: Row(
                               children: [
                                 if (tone.icon != null) ...[
-                                  Icon(tone.icon, size: 16, color: isSelected ? LabColors.champagneGold : textSecondary),
+                                  Icon(tone.icon, size: 16, color: isSelected ? context.tokens.accent : textSecondary),
                                   const SizedBox(width: 8),
                                 ],
                                 Expanded(
@@ -167,12 +173,12 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                      color: isSelected ? (isDark ? LabColors.warmIvory : LabColors.deepBurgundy) : textPrimary,
+                                      color: isSelected ? textPrimary : textPrimary,
                                     ),
                                   ),
                                 ),
                                 if (isSelected)
-                                  const Icon(Icons.check_rounded, size: 14, color: LabColors.champagneGold),
+                                  Icon(Icons.check_rounded, size: 14, color: context.tokens.accent),
                               ],
                             ),
                           ),
@@ -184,12 +190,17 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
 
                     // 2. Response Length
                     Text(
-                      (strings.isArabic ? 'طول الشروحات والردود' : 'RESPONSE LENGTH').toUpperCase(),
-                      style: const TextStyle(
+                      (strings.isArabic
+                              ? 'طول الشروحات والردود'
+                              : (strings.isFrench
+                                  ? 'LONGUEUR DES RÉPONSES'
+                                  : 'RESPONSE LENGTH'))
+                          .toUpperCase(),
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.8,
-                        color: LabColors.champagneGold,
+                        color: context.tokens.accent,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -204,17 +215,17 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                                 HapticFeedback.selectionClick();
                                 setState(() => _selectedLength = len.key);
                               },
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 8),
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
-                                      : (isDark ? const Color(0xFF101010) : const Color(0xFFFAFAFA)),
-                                  borderRadius: BorderRadius.circular(6),
+                                      ? context.tokens.accentSoft
+                                      : context.tokens.surfaceSecondary,
+                                  borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                                   border: Border.all(
-                                    color: isSelected ? LabColors.champagneGold : border,
+                                    color: isSelected ? context.tokens.accent : border,
                                   ),
                                 ),
                                 child: Text(
@@ -223,7 +234,7 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                                   style: TextStyle(
                                     fontSize: 10.5,
                                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSelected ? (isDark ? LabColors.warmIvory : LabColors.deepBurgundy) : textSecondary,
+                                    color: isSelected ? context.tokens.accent : textSecondary,
                                   ),
                                 ),
                               ),
@@ -237,12 +248,17 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
 
                     // 3. When distressed
                     Text(
-                      (strings.isArabic ? 'عندما أشعر بالتوتر أو الضيق، أفضّل' : 'WHEN I FEEL DISTRESSED, I PREFER').toUpperCase(),
-                      style: const TextStyle(
+                      (strings.isArabic
+                              ? 'عندما أشعر بالتوتر أو الضيق، أفضّل'
+                              : (strings.isFrench
+                                  ? 'EN CAS DE DÉTRESSE, JE PRÉFÈRE'
+                                  : 'WHEN I FEEL DISTRESSED, I PREFER'))
+                          .toUpperCase(),
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.8,
-                        color: LabColors.champagneGold,
+                        color: context.tokens.accent,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -262,17 +278,17 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                               }
                             });
                           },
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 140),
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
-                                  : (isDark ? const Color(0xFF101010) : const Color(0xFFFAFAFA)),
-                              borderRadius: BorderRadius.circular(6),
+                                  ? context.tokens.accentSoft
+                                  : context.tokens.surfaceSecondary,
+                              borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                               border: Border.all(
-                                color: isSelected ? LabColors.champagneGold : border,
+                                color: isSelected ? context.tokens.accent : border,
                                 width: isSelected ? 1 : 0.8,
                               ),
                             ),
@@ -280,7 +296,7 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (isSelected) ...[
-                                  const Icon(Icons.check_rounded, size: 12, color: LabColors.champagneGold),
+                                  Icon(Icons.check_rounded, size: 12, color: context.tokens.accent),
                                   const SizedBox(width: 4),
                                 ],
                                 Text(
@@ -288,7 +304,7 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSelected ? (isDark ? LabColors.warmIvory : LabColors.deepBurgundy) : textSecondary,
+                                    color: isSelected ? context.tokens.accent : textSecondary,
                                   ),
                                 ),
                               ],
@@ -302,12 +318,17 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
 
                     // 4. What I dislike
                     Text(
-                      (strings.isArabic ? 'أساليب أنفر منها ولا تناسبني' : 'WHAT I DISLIKE / AVOID').toUpperCase(),
-                      style: const TextStyle(
+                      (strings.isArabic
+                              ? 'أساليب أنفر منها ولا تناسبني'
+                              : (strings.isFrench
+                                  ? 'CE QUE JE PRÉFÈRE ÉVITER'
+                                  : 'WHAT I DISLIKE / AVOID'))
+                          .toUpperCase(),
+                      style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.8,
-                        color: LabColors.cherryRedGlow,
+                        color: context.tokens.safetyWarmth,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -327,17 +348,17 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                               }
                             });
                           },
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 140),
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? (isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight)
-                                  : (isDark ? LabColors.nightSurfaceSubtle : LabColors.daylightSurfaceSubtle),
-                              borderRadius: BorderRadius.circular(6),
+                                  ? context.tokens.safetyWarmthSoft
+                                  : context.tokens.surfaceSecondary,
+                              borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                               border: Border.all(
-                                color: isSelected ? LabColors.cherryRed : border,
+                                color: isSelected ? context.tokens.safetyWarmth : border,
                                 width: isSelected ? 1 : 0.8,
                               ),
                             ),
@@ -345,7 +366,7 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (isSelected) ...[
-                                  const Icon(Icons.remove_circle_outline_rounded, size: 12, color: LabColors.cherryRed),
+                                  Icon(Icons.remove_circle_outline_rounded, size: 12, color: context.tokens.safetyWarmth),
                                   const SizedBox(width: 4),
                                 ],
                                 Text(
@@ -353,7 +374,7 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSelected ? LabColors.cherryRedGlow : textSecondary,
+                                    color: isSelected ? context.tokens.safetyWarmth : textSecondary,
                                   ),
                                 ),
                               ],
@@ -376,17 +397,22 @@ class _EditCommunicationSheetState extends ConsumerState<EditCommunicationSheet>
                   width: double.infinity,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white : Colors.black,
-                    borderRadius: BorderRadius.circular(8),
+                    color: context.tokens.accent,
+                    borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    (strings.isArabic ? 'حفظ تفضيلات التواصل' : 'SAVE PREFERENCES').toUpperCase(),
+                    (strings.isArabic
+                            ? 'حفظ تفضيلات التواصل'
+                            : (strings.isFrench
+                                ? 'ENREGISTRER LES PRÉFÉRENCES'
+                                : 'SAVE PREFERENCES'))
+                        .toUpperCase(),
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.6,
-                      color: isDark ? Colors.black : Colors.white,
+                      color: isDark ? context.tokens.background : Colors.white,
                     ),
                   ),
                 ),

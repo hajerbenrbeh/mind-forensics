@@ -45,24 +45,24 @@ class MindButton extends StatelessWidget {
 
     switch (variant) {
       case MindButtonVariant.primary:
-        bg = isDark ? tokens.accent : LabColors.forestGreen;
-        fg = isDark ? LabColors.darkForestBackground : Colors.white;
+        bg = tokens.accent;
+        fg = isDark ? tokens.background : Colors.white;
         border = Colors.transparent;
         break;
       case MindButtonVariant.secondary:
-        bg = Colors.transparent;
+        bg = tokens.surface;
         fg = tokens.textPrimary;
         border = tokens.border;
         break;
       case MindButtonVariant.soft:
         bg = tokens.accentSoft;
-        fg = isDark ? tokens.accent : tokens.textPrimary;
+        fg = isDark ? tokens.accent : tokens.accent;
         border = tokens.border;
         break;
       case MindButtonVariant.danger:
-        bg = isDark ? LabColors.cherryBgDark : LabColors.cherryBgLight;
-        fg = LabColors.cherryRed;
-        border = isDark ? LabColors.cherryBorderDark : LabColors.cherryBorderLight;
+        bg = tokens.safetyWarmthSoft;
+        fg = tokens.safetyWarmth;
+        border = isDark ? LabColors.safetyBorderDark : LabColors.safetyBorderLight;
         break;
     }
 
@@ -89,29 +89,37 @@ class MindButton extends StatelessWidget {
           Icon(leadingIcon, size: 16, color: fg),
           const SizedBox(width: 8),
         ],
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              text,
-              style: TextStyle(
-                color: fg,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.2,
-              ),
-            ),
-            if (subText != null)
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
               Text(
-                subText!,
+                text,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: fg.withValues(alpha: 0.75),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w400,
+                  color: fg,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.2,
                 ),
               ),
-          ],
+              if (subText != null)
+                Text(
+                  subText!,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: fg.withValues(alpha: 0.75),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+            ],
+          ),
         ),
         if (trailingIcon != null && !isLoading) ...[
           const SizedBox(width: 8),

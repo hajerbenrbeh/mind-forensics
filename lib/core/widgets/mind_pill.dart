@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../app/theme/lab_colors.dart';
 import '../../app/theme/mind_tokens.dart';
 import 'mind_pressable.dart';
 
@@ -29,33 +28,33 @@ class MindPill extends StatelessWidget {
     final tokens = context.tokens;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final activeBg = isDark ? tokens.accent : LabColors.forestGreen;
-    final activeFg = isDark ? LabColors.darkForestBackground : Colors.white;
-    final inactiveBg = isDark ? LabColors.darkForestSurface : LabColors.secondaryIvory;
-    final inactiveFg = isDark ? LabColors.darkTextSecondary : LabColors.secondaryText;
-    final borderColor = isDark ? LabColors.darkForestBorder : LabColors.borderIvory;
+    final activeBg = tokens.accent;
+    final activeFg = isDark ? tokens.background : Colors.white;
+    final inactiveBg = tokens.surfaceSecondary;
+    final inactiveFg = tokens.textSecondary;
+    final borderColor = tokens.border;
 
     return MindPressable(
       onPressed: () {
         HapticFeedback.selectionClick();
         onTap();
       },
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(tokens.chipRadius),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOutCubic,
         padding: padding,
         decoration: BoxDecoration(
           color: isSelected ? activeBg : inactiveBg,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(tokens.chipRadius),
           border: Border.all(
             color: isSelected ? activeBg : borderColor,
             width: 1.0,
           ),
-          boxShadow: isSelected
+          boxShadow: (isSelected && !isDark)
               ? [
                   BoxShadow(
-                    color: activeBg.withValues(alpha: 0.2),
+                    color: activeBg.withValues(alpha: 0.16),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),

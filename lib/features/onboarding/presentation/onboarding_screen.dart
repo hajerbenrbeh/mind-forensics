@@ -850,14 +850,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 6,
+                  runSpacing: 4,
                   children: [
                     Text(
                       strings.alreadyHaveVaultPrompt,
+                      textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12, color: textSecondary),
                     ),
-                    const SizedBox(width: 6),
                     Text(
                       strings.signInPromptBtn,
                       style: TextStyle(
@@ -1547,7 +1550,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: Row(
               children: [
                 ChoiceChip(
-                  label: Text(strings.isArabic ? 'الكل' : 'All'),
+                  label: Text(
+                    strings.isArabic
+                        ? 'الكل'
+                        : (strings.isFrench ? 'Tout' : 'All'),
+                  ),
                   selected: _activeSymptomDomain == null,
                   onSelected: (_) =>
                       setState(() => _activeSymptomDomain = null),
@@ -1579,7 +1586,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ...SymptomDomain.values.map((d) {
                   final isSelected = _activeSymptomDomain == d;
                   return Padding(
-                    padding: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsetsDirectional.only(end: 6),
                     child: ChoiceChip(
                       label: Text(d.localized(strings)),
                       selected: isSelected,

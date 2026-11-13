@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../../../app/theme/lab_theme.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../controllers/profile_controller.dart';
 import '../../domain/condition_type.dart';
 import '../../domain/diagnostic_status.dart';
@@ -87,7 +88,7 @@ class EditExperiencesSheet extends ConsumerWidget {
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: Text(
-                    strings.isArabic ? 'تم' : 'Done',
+                    strings.isArabic ? 'تم' : (strings.isFrench ? 'Terminé' : 'Done'),
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -112,11 +113,11 @@ class EditExperiencesSheet extends ConsumerWidget {
                       children: [
                         Text(
                           catTitle.toUpperCase(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.8,
-                            color: LabColors.champagneGold,
+                            color: context.tokens.accent,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -140,17 +141,17 @@ class EditExperiencesSheet extends ConsumerWidget {
                                   isSelected: isSelected,
                                 );
                               },
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 140),
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
-                                      : (isDark ? const Color(0xFF101010) : const Color(0xFFFAFAFA)),
-                                  borderRadius: BorderRadius.circular(6),
+                                      ? context.tokens.accentSoft
+                                      : context.tokens.surfaceSecondary,
+                                  borderRadius: BorderRadius.circular(context.tokens.chipRadius),
                                   border: Border.all(
-                                    color: isSelected ? LabColors.champagneGold : border,
+                                    color: isSelected ? context.tokens.accent : border,
                                     width: isSelected ? 1 : 0.8,
                                   ),
                                 ),
@@ -158,7 +159,7 @@ class EditExperiencesSheet extends ConsumerWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (isSelected) ...[
-                                      const Icon(Icons.check_rounded, size: 12, color: LabColors.champagneGold),
+                                      Icon(Icons.check_rounded, size: 12, color: context.tokens.accent),
                                       const SizedBox(width: 5),
                                     ],
                                     Text(
@@ -167,17 +168,17 @@ class EditExperiencesSheet extends ConsumerWidget {
                                         fontSize: 11,
                                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                         color: isSelected
-                                            ? (isDark ? LabColors.warmIvory : LabColors.deepBurgundy)
+                                            ? context.tokens.accent
                                             : textSecondary,
                                       ),
                                     ),
                                     if (isSelected && entry.status != DiagnosticStatus.preferNotToSay) ...[
                                       const SizedBox(width: 6),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                                         decoration: BoxDecoration(
-                                          color: isDark ? const Color(0xFF181818) : Colors.white,
-                                          borderRadius: BorderRadius.circular(3),
+                                          color: context.tokens.surface,
+                                          borderRadius: BorderRadius.circular(6),
                                           border: Border.all(color: border, width: 0.6),
                                         ),
                                         child: Text(

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../localization/app_strings.dart';
-import '../theme/lab_colors.dart';
+import '../theme/mind_tokens.dart';
 
 /// Calm, organic, modern capsule navigation bar matching the 5-item master reference:
 /// 1. Home
@@ -32,21 +32,23 @@ class ScaffoldWithNavBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final tokens = context.tokens;
     final strings = ref.watch(appStringsProvider);
     final currentIndex = navigationShell.currentIndex;
 
-    final scaffoldBg = isDark ? LabColors.darkForestBackground : LabColors.warmIvory;
-    final navBg = isDark ? LabColors.darkForestSurface : LabColors.cardIvory;
-    final borderColor = isDark ? LabColors.darkForestBorder : LabColors.borderIvory;
-    final activeColor = isDark ? LabColors.lightOlive : LabColors.forestGreen;
-    final inactiveColor = isDark ? LabColors.darkTextSecondary : LabColors.secondaryText;
+    final scaffoldBg = tokens.background;
+    final navBg = tokens.surface;
+    final borderColor = tokens.border;
+    final activeColor = tokens.accent;
+    final inactiveColor = tokens.textSecondary;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return Scaffold(
       backgroundColor: scaffoldBg,
       body: navigationShell,
       bottomNavigationBar: Container(
         color: scaffoldBg,
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
         child: SafeArea(
           top: false,
           child: MediaQuery.withClampedTextScaling(
@@ -56,11 +58,11 @@ class ScaffoldWithNavBar extends ConsumerWidget {
               height: 64,
               decoration: BoxDecoration(
                 color: navBg,
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: borderColor, width: 1.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.30 : 0.05),
+                    color: Colors.black.withValues(alpha: isDark ? 0.28 : 0.05),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -77,6 +79,9 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     label: strings.navHome,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
+                    tokens: tokens,
+                    isDark: isDark,
+                    reduceMotion: reduceMotion,
                   ),
 
                   // 2. Track
@@ -88,19 +93,24 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     label: strings.navTrack,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
+                    tokens: tokens,
+                    isDark: isDark,
+                    reduceMotion: reduceMotion,
                   ),
 
-                  // 3. Inner Observatory (Center Elevated Button)
+                  // 3. AI Guide (Center Elevated Button)
                   _buildNavItem(
                     index: 2,
                     currentIndex: currentIndex,
-                    icon: Icons.hub_outlined,
-                    activeIcon: Icons.hub_rounded,
-                    label: strings.navObservatory,
+                    icon: Icons.psychology_alt_outlined,
+                    activeIcon: Icons.psychology_alt_rounded,
+                    label: strings.navAiGuide,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
+                    tokens: tokens,
                     isCenterAction: true,
                     isDark: isDark,
+                    reduceMotion: reduceMotion,
                   ),
 
                   // 4. Insights
@@ -112,6 +122,9 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     label: strings.navInsights,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
+                    tokens: tokens,
+                    isDark: isDark,
+                    reduceMotion: reduceMotion,
                   ),
 
                   // 5. Profile
@@ -123,6 +136,9 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                     label: strings.navProfile,
                     activeColor: activeColor,
                     inactiveColor: inactiveColor,
+                    tokens: tokens,
+                    isDark: isDark,
+                    reduceMotion: reduceMotion,
                   ),
                 ],
               ),
@@ -141,35 +157,47 @@ class ScaffoldWithNavBar extends ConsumerWidget {
     required String label,
     required Color activeColor,
     required Color inactiveColor,
+    required MindTokens tokens,
     bool isCenterAction = false,
     bool isDark = true,
+    bool reduceMotion = false,
   }) {
     final isSelected = index == currentIndex;
 
     return Expanded(
-      child: InkWell(
-        onTap: () => _onTap(index),
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isCenterAction)
-              Container(
-                width: 36,
-                height: 36,
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        child: MergeSemantics(
+          child: InkWell(
+            onTap: () => _onTap(index),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isCenterAction)
+                  AnimatedContainer(
+                    duration: reduceMotion
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
+                    curve: Curves.easeOutCubic,
+                    width: 38,
+                    height: 38,
                 decoration: BoxDecoration(
-                  color: isDark ? LabColors.forestGreen : LabColors.forestGreen,
+                  color: activeColor,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isSelected ? const Color(0xFFC7CDAD) : Colors.transparent,
+                    color: isSelected
+                        ? (isDark ? tokens.background : Colors.white)
+                        : Colors.transparent,
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: LabColors.forestGreen.withValues(alpha: 0.35),
-                      blurRadius: 6,
+                      color: activeColor.withValues(alpha: isDark ? 0.25 : 0.22),
+                      blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -177,7 +205,7 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                 child: Icon(
                   isSelected ? activeIcon : icon,
                   size: 19,
-                  color: const Color(0xFFF5EEE3),
+                  color: isDark ? tokens.background : Colors.white,
                 ),
               )
             else
@@ -198,7 +226,9 @@ class ScaffoldWithNavBar extends ConsumerWidget {
                 letterSpacing: -0.2,
               ),
             ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -36,7 +36,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Dialogue is smoothly active
-      expect(find.text('REFLECTION'), findsAtLeastNWidgets(1));
+      expect(find.text('AI GUIDE'), findsAtLeastNWidgets(1));
       expect(find.text('Talk with your companion...'), findsOneWidget);
       expect(find.text('AI HUB'), findsNothing);
     });
@@ -67,7 +67,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(caughtError, isNull, reason: 'Expected zero layout overflows near Session label');
-      expect(find.text('REFLECTION'), findsAtLeastNWidgets(1));
+      expect(find.text('AI GUIDE'), findsAtLeastNWidgets(1));
       expect(find.text('SESSION 01'), findsOneWidget);
     });
 

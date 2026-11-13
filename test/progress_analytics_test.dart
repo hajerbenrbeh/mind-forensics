@@ -46,6 +46,7 @@ void main() {
 
     setUp(() {
       now = DateTime.now();
+      final day2Noon = DateTime(now.year, now.month, now.day, 12).subtract(const Duration(days: 2));
 
       sampleTraces = [
         MindTraceModel(
@@ -64,7 +65,7 @@ void main() {
         ),
         MindTraceModel(
           id: 't2',
-          date: now.subtract(const Duration(days: 2)),
+          date: day2Noon,
           overallMood: 'anxious',
           selectedEmotions: const ['Anxious', 'Restless', 'Overwhelmed'],
           moodIntensity: 8,
@@ -73,12 +74,12 @@ void main() {
           sleepQuality: 2,
           physicalTension: 8,
           journalText: 'Deadline pressure caused bodily tightness.',
-          createdAt: now.subtract(const Duration(days: 2)),
-          updatedAt: now.subtract(const Duration(days: 2)),
+          createdAt: day2Noon,
+          updatedAt: day2Noon,
         ),
         MindTraceModel(
           id: 't3',
-          date: now.subtract(const Duration(days: 2, hours: 2)), // Same day as t2
+          date: day2Noon.add(const Duration(hours: 2)), // Same calendar day as t2 (14:00)
           overallMood: 'reflective',
           selectedEmotions: const ['Calm'],
           moodIntensity: 5,
@@ -87,8 +88,8 @@ void main() {
           sleepQuality: 3,
           physicalTension: 3,
           journalText: 'Took an evening walk and calmed down.',
-          createdAt: now.subtract(const Duration(days: 2, hours: 2)),
-          updatedAt: now.subtract(const Duration(days: 2, hours: 2)),
+          createdAt: day2Noon.add(const Duration(hours: 2)),
+          updatedAt: day2Noon.add(const Duration(hours: 2)),
         ),
         MindTraceModel(
           id: 't4',

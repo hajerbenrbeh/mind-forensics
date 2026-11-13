@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../../../app/theme/lab_theme.dart';
+import '../../../../app/theme/mind_tokens.dart';
 import '../../../../core/widgets/bouncing_widget.dart';
 import '../../controllers/profile_controller.dart';
 import '../../domain/profile_goals_catalog.dart';
@@ -145,11 +146,11 @@ class _EditGoalsSheetState extends ConsumerState<EditGoalsSheet> {
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? (isDark ? LabColors.darkWine : const Color(0xFFFBE8E9))
-                                  : (isDark ? const Color(0xFF101010) : const Color(0xFFFAFAFA)),
-                              borderRadius: BorderRadius.circular(8),
+                                  ? context.tokens.accentSoft
+                                  : context.tokens.surfaceSecondary,
+                              borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: isSelected ? LabColors.champagneGold : border,
+                                color: isSelected ? context.tokens.accent : border,
                                 width: isSelected ? 1.2 : 0.8,
                               ),
                             ),
@@ -158,7 +159,7 @@ class _EditGoalsSheetState extends ConsumerState<EditGoalsSheet> {
                                 Icon(
                                   isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                                   size: 16,
-                                  color: isSelected ? LabColors.champagneGold : textSecondary,
+                                  color: isSelected ? context.tokens.accent : textSecondary,
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -168,7 +169,7 @@ class _EditGoalsSheetState extends ConsumerState<EditGoalsSheet> {
                                       fontSize: 12,
                                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                                       color: isSelected
-                                          ? (isDark ? LabColors.warmIvory : LabColors.deepBurgundy)
+                                          ? context.tokens.accent
                                           : textPrimary,
                                     ),
                                   ),
@@ -184,7 +185,12 @@ class _EditGoalsSheetState extends ConsumerState<EditGoalsSheet> {
 
                     // Custom Goal Input
                     Text(
-                      (strings.isArabic ? 'هدف شخصي مخصص' : 'CUSTOM PERSONAL GOAL').toUpperCase(),
+                      (strings.isArabic
+                              ? 'هدف شخصي مخصص'
+                              : (strings.isFrench
+                                  ? 'OBJECTIF PERSONNEL PERSONNALISÉ'
+                                  : 'CUSTOM PERSONAL GOAL'))
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -199,14 +205,16 @@ class _EditGoalsSheetState extends ConsumerState<EditGoalsSheet> {
                       decoration: InputDecoration(
                         hintText: strings.isArabic
                             ? 'أضف هدفاً إضافياً خاصاً بك...'
-                            : 'Enter any other goal meaningful to you...',
+                            : (strings.isFrench
+                                ? 'Saisissez tout autre objectif important pour vous...'
+                                : 'Enter any other goal meaningful to you...'),
                         hintStyle: TextStyle(fontSize: 11.5, color: textSecondary.withValues(alpha: 0.6)),
                         filled: true,
-                        fillColor: isDark ? const Color(0xFF101010) : const Color(0xFFF4F4F5),
+                        fillColor: context.tokens.surfaceSecondary,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: border)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide(color: border)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: LabColors.champagneGold)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: border)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: border)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: context.tokens.accent)),
                       ),
                     ),
 
@@ -224,17 +232,22 @@ class _EditGoalsSheetState extends ConsumerState<EditGoalsSheet> {
                   width: double.infinity,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white : Colors.black,
-                    borderRadius: BorderRadius.circular(8),
+                    color: context.tokens.accent,
+                    borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    (strings.isArabic ? 'حفظ الأهداف' : 'SAVE GOALS').toUpperCase(),
+                    (strings.isArabic
+                            ? 'حفظ الأهداف'
+                            : (strings.isFrench
+                                ? 'ENREGISTRER LES OBJECTIFS'
+                                : 'SAVE GOALS'))
+                        .toUpperCase(),
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.6,
-                      color: isDark ? Colors.black : Colors.white,
+                      color: isDark ? context.tokens.background : Colors.white,
                     ),
                   ),
                 ),

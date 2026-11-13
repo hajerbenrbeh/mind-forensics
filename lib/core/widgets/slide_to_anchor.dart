@@ -68,21 +68,31 @@ class _SlideToAnchorState extends State<SlideToAnchor> with SingleTickerProvider
     });
   }
 
+  Future<void> _completeAnchor(double maxDrag) async {
+    if (_isCompleted) return;
+    setState(() {
+      _dragPosition = maxDrag;
+      _isCompleted = true;
+    });
+    HapticFeedback.heavyImpact();
+    await widget.onCompleted();
+  }
+
   Future<void> _onHorizontalDragEnd(DragEndDetails details, double maxDrag) async {
     if (_isCompleted) return;
 
     final progress = maxDrag > 0 ? _dragPosition / maxDrag : 0.0;
     if (progress >= 0.85) {
-      // Snap to end
-      setState(() {
-        _dragPosition = maxDrag;
-        _isCompleted = true;
-      });
-      HapticFeedback.heavyImpact();
-      await widget.onCompleted();
+      await _completeAnchor(maxDrag);
     } else {
       // Snap back
       _lastHapticStep = 0;
+      if (MediaQuery.disableAnimationsOf(context)) {
+        setState(() {
+          _dragPosition = 0.0;
+        });
+        return;
+      }
       _resetAnimation = Tween<double>(begin: _dragPosition, end: 0.0).animate(
         CurvedAnimation(parent: _resetController, curve: Curves.easeOutCubic),
       );
@@ -95,6 +105,7 @@ class _SlideToAnchorState extends State<SlideToAnchor> with SingleTickerProvider
     final isDark = widget.isDark;
     final trackHeight = widget.height;
     final thumbSize = trackHeight - 8.0;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -105,90 +116,101 @@ class _SlideToAnchorState extends State<SlideToAnchor> with SingleTickerProvider
             (isDark ? const Color(0xFF0D0D0D) : const Color(0xFFF4F4F5));
         final borderColor = isDark ? const Color(0xFF242424) : const Color(0xFFE4E4E7);
 
-        return Container(
-          height: trackHeight,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: trackBg,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: borderColor, width: 1),
-          ),
-          child: Stack(
-            alignment: Alignment.centerLeft,
-            children: [
-              // Filled Progress Glow Track
-              Container(
-                width: _dragPosition + thumbSize + 4.0,
-                height: trackHeight,
-                decoration: BoxDecoration(
-                  color: widget.accentColor.withValues(alpha: isDark ? 0.22 : 0.18),
-                  borderRadius: BorderRadius.circular(9),
-                ),
+        return Semantics(
+          container: true,
+          button: true,
+          enabled: !_isCompleted,
+          label: widget.label,
+          onTap: _isCompleted ? null : () => _completeAnchor(maxDrag),
+          child: ExcludeSemantics(
+            child: Container(
+              height: trackHeight,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: trackBg,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: borderColor, width: 1),
               ),
-
-              // Centered Prompt Label
-              Center(
-                child: Opacity(
-                  opacity: (1.0 - (progress * 1.4)).clamp(0.0, 1.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        widget.label.toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                          color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Icon(
-                        Icons.arrow_forward_ios_rounded,
-                        size: 11,
-                        color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Interactive Draggable Thumb
-              Positioned(
-                left: 4.0 + _dragPosition,
-                child: GestureDetector(
-                  onHorizontalDragUpdate: (details) => _onHorizontalDragUpdate(details, maxDrag),
-                  onHorizontalDragEnd: (details) => _onHorizontalDragEnd(details, maxDrag),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 140),
-                    width: thumbSize,
-                    height: thumbSize,
+              child: Stack(
+                alignment: Alignment.centerLeft,
+                children: [
+                  // Filled Progress Glow Track
+                  Container(
+                    width: _dragPosition + thumbSize + 4.0,
+                    height: trackHeight,
                     decoration: BoxDecoration(
-                      color: _isCompleted
-                          ? widget.accentColor
-                          : (isDark ? Colors.white : Colors.black),
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: widget.accentColor.withValues(alpha: progress * 0.4),
-                          blurRadius: 10,
-                          spreadRadius: 1,
-                        ),
-                      ],
+                      color: widget.accentColor.withValues(alpha: isDark ? 0.22 : 0.18),
+                      borderRadius: BorderRadius.circular(9),
                     ),
-                    child: Center(
-                      child: Icon(
-                        _isCompleted ? Icons.check_rounded : Icons.anchor_rounded,
-                        size: 20,
-                        color: _isCompleted
-                            ? Colors.black
-                            : (isDark ? Colors.black : Colors.white),
+                  ),
+
+                  // Centered Prompt Label
+                  Center(
+                    child: Opacity(
+                      opacity: (1.0 - (progress * 1.4)).clamp(0.0, 1.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.label.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.2,
+                              color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 11,
+                            color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF71717A),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
+
+                  // Interactive Draggable Thumb
+                  Positioned(
+                    left: 4.0 + _dragPosition,
+                    child: GestureDetector(
+                      onHorizontalDragUpdate: (details) => _onHorizontalDragUpdate(details, maxDrag),
+                      onHorizontalDragEnd: (details) => _onHorizontalDragEnd(details, maxDrag),
+                      child: AnimatedContainer(
+                        duration: reduceMotion
+                            ? Duration.zero
+                            : const Duration(milliseconds: 140),
+                        width: thumbSize,
+                        height: thumbSize,
+                        decoration: BoxDecoration(
+                          color: _isCompleted
+                              ? widget.accentColor
+                              : (isDark ? Colors.white : Colors.black),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: widget.accentColor.withValues(alpha: progress * 0.4),
+                              blurRadius: 10,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Icon(
+                            _isCompleted ? Icons.check_rounded : Icons.anchor_rounded,
+                            size: 20,
+                            color: _isCompleted
+                                ? Colors.black
+                                : (isDark ? Colors.black : Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },

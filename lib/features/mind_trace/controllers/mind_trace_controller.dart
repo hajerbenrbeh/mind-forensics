@@ -13,10 +13,10 @@ import '../domain/mind_trace_model.dart';
 import '../domain/trace_milestone.dart';
 
 final mindTraceRepositoryProvider = Provider<MindTraceRepository>((ref) {
-  final authUser = ref.watch(authControllerProvider).user;
+  final userId = ref.watch(authControllerProvider.select((s) => s.user?.id));
   final keyManager = ref.watch(secureKeyManagerProvider);
   return LocalMindTraceRepository(
-    userId: authUser?.id,
+    userId: userId,
     keyManager: keyManager,
   );
 });
@@ -31,7 +31,12 @@ final mindTraceAiServiceProvider = Provider<MindTraceAiService>((ref) {
 class MindTraceNotifier extends AsyncNotifier<List<MindTraceModel>> {
   @override
   Future<List<MindTraceModel>> build() async {
-    final repo = ref.watch(mindTraceRepositoryProvider);
+    final userId = ref.watch(authControllerProvider.select((s) => s.user?.id));
+    final keyManager = ref.watch(secureKeyManagerProvider);
+    final repo = LocalMindTraceRepository(
+      userId: userId,
+      keyManager: keyManager,
+    );
     return repo.getAllTraces();
   }
 
@@ -103,29 +108,48 @@ final mindTraceControllerProvider =
   MindTraceNotifier.new,
 );
 
-/// Computed provider for today's active trace (if recorded)
-final todayTraceProvider = Provider<MindTraceModel?>((ref) {
-  final traces = ref.watch(mindTraceControllerProvider).value ?? [];
-  if (traces.isEmpty) return null;
+extension MindTraceListX on List<MindTraceModel> {
+  MindTraceModel? get todayTrace {
+    if (isEmpty) return null;
+    final now = DateTime.now();
+    final todayKey =
+        '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    for (final t in this) {
+      if (t.dateKey == todayKey) return t;
+    }
+    return null;
+  }
+}
 
+/// Computed provider for today's active trace (if recorded).
+/// Uses .select to prevent redundant invalidation cycles during build.
+final todayTraceProvider = Provider<MindTraceModel?>((ref) {
   final now = DateTime.now();
   final todayKey =
       '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
-  for (final t in traces) {
-    if (t.dateKey == todayKey) return t;
-  }
-  return null;
+  return ref.watch(mindTraceControllerProvider.select((asyncVal) {
+    final traces = asyncVal.value;
+    if (traces == null || traces.isEmpty) return null;
+    for (final t in traces) {
+      if (t.dateKey == todayKey) return t;
+    }
+    return null;
+  }));
 });
 
-/// Computed provider for unlocked milestones
+/// Computed provider for unlocked milestones.
+/// Uses .select to prevent redundant invalidation cycles during build.
 final unlockedMilestonesProvider = Provider<List<TraceMilestone>>((ref) {
-  final traces = ref.watch(mindTraceControllerProvider).value ?? [];
-  final reflectionsCount = traces
-      .where((t) => t.journalText != null && t.journalText!.trim().isNotEmpty)
-      .length;
+  final traceInfo = ref.watch(mindTraceControllerProvider.select((asyncTraces) {
+    final traces = asyncTraces.value ?? [];
+    final reflectionsCount = traces
+        .where((t) => t.journalText != null && t.journalText!.trim().isNotEmpty)
+        .length;
+    return (count: traces.length, reflections: reflectionsCount);
+  }));
 
   return TraceMilestone.allMilestones
-      .where((m) => m.isUnlocked(traces.length, reflectionsCount))
+      .where((m) => m.isUnlocked(traceInfo.count, traceInfo.reflections))
       .toList();
 });

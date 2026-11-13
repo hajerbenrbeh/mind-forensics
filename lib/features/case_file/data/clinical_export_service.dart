@@ -100,7 +100,11 @@ class ClinicalExportService {
       buffer.writeln(isAr
           ? '1. المحفز اللحظي (Activating Catalyst):'
           : (isFr ? '1. STIMULUS DÉCLENCHEUR :' : '1. ACTIVATING CATALYST:'));
-      buffer.writeln(c.incidentDescription.isNotEmpty ? '"${c.incidentDescription}"' : (isAr ? 'لم يُسجل محفز نصي.' : 'No narrative logged.'));
+      buffer.writeln(c.incidentDescription.isNotEmpty
+          ? '"${c.incidentDescription}"'
+          : (isAr
+              ? 'لم يُسجل محفز نصي.'
+              : (isFr ? 'Aucun récit enregistré.' : 'No narrative logged.')));
       buffer.writeln();
 
       // 2. Observable Chain
@@ -141,7 +145,11 @@ class ClinicalExportService {
               : '4. PATIENT GROUNDED REFRAME ANCHOR (Patient’s Own Words):'));
       buffer.writeln(c.userConclusion != null && c.userConclusion!.isNotEmpty
           ? '"${c.userConclusion}"'
-          : (isAr ? 'لم تُحدد خلاصة نهائية بعد.' : 'No conclusion anchored yet.'));
+          : (isAr
+              ? 'لم تُحدد خلاصة نهائية بعد.'
+              : (isFr
+                  ? 'Aucune conclusion formulée pour le moment.'
+                  : 'No conclusion anchored yet.')));
       buffer.writeln('======================================================================\n');
     }
 
