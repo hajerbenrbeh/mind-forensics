@@ -96,7 +96,7 @@ class _LongitudinalAnalysisViewState
                     children: [7, 14, 30].map((days) {
                       final isSelected = _selectedWindowDays == days;
                       return Padding(
-                        padding: const EdgeInsets.only(left: 4),
+                        padding: const EdgeInsetsDirectional.only(start: 4),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(4),
                           onTap: () => setState(() => _selectedWindowDays = days),

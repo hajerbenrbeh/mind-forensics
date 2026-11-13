@@ -257,7 +257,7 @@ class _ThoughtTraceTimelineViewState
             ...distinctEmotions.take(4).map((emotion) {
               final isSelected = _selectedEmotionFilter == emotion;
               return Padding(
-                padding: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsetsDirectional.only(end: 6),
                 child: _buildFilterChip(
                   label: emotion,
                   isSelected: isSelected,

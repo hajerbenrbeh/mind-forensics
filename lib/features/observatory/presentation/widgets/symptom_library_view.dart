@@ -120,7 +120,7 @@ class SymptomLibraryView extends ConsumerWidget {
               ...SymptomDomain.values.map((d) {
                 final isSelected = activeDomain == d;
                 return Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsetsDirectional.only(end: 6),
                   child: ChoiceChip(
                     label: Text(d.localized(strings)),
                     selected: isSelected,

@@ -156,15 +156,20 @@ class HomeDailyCheckInCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '${strings.moodIntensityLabel.toUpperCase()}: ${moodIntensity.toInt()}/10',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
-                  letterSpacing: 0.5,
-                  color: tokens.textSecondary,
+              Expanded(
+                child: Text(
+                  '${strings.moodIntensityLabel.toUpperCase()}: ${moodIntensity.toInt()}/10',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    letterSpacing: 0.5,
+                    color: tokens.textSecondary,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Icon(
                 moodOptions[selectedMoodIndex].icon,
                 size: 20,

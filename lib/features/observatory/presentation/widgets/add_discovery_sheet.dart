@@ -217,7 +217,7 @@ class _AddDiscoverySheetState extends ConsumerState<AddDiscoverySheet> {
                 children: _categories.map((c) {
                   final isSelected = _selectedCategory == c.key;
                   return Padding(
-                    padding: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsetsDirectional.only(end: 6),
                     child: ChoiceChip(
                       label: Text(isAr ? c.ar : (strings.isFrench ? c.fr : c.en)),
                       selected: isSelected,

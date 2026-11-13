@@ -731,12 +731,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   children: [
                                     Row(
                                       children: [
-                                        Text(
-                                          codename,
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
-                                            color: textPrimary,
+                                        Flexible(
+                                          child: Text(
+                                            codename,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                              color: textPrimary,
+                                            ),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
@@ -919,54 +923,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 children: [
                   Text(strings.languageTitle, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: textPrimary)),
                   const SizedBox(height: 12),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: AppLanguage.values.map((lang) {
                       final isSelected = currentLocale.languageCode == lang.code;
-                      return Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 8),
-                        child: InkWell(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            ref.read(localeControllerProvider.notifier).setLanguage(lang);
-                          },
-                          borderRadius: BorderRadius.circular(14),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 140),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                            decoration: BoxDecoration(
+                      return InkWell(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          ref.read(localeControllerProvider.notifier).setLanguage(lang);
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 140),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? (isDark ? LabColors.nightSurfaceElevated : LabColors.daylightSurfaceSubtle)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
                               color: isSelected
-                                  ? (isDark ? LabColors.nightSurfaceElevated : LabColors.daylightSurfaceSubtle)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: isSelected
-                                    ? (isDark ? LabColors.nightAccent : LabColors.daylightAccent)
-                                    : borderColor,
-                                width: 1,
+                                  ? (isDark ? LabColors.nightAccent : LabColors.daylightAccent)
+                                  : borderColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                lang.shortCode,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: isSelected ? (isDark ? LabColors.nightAccent : LabColors.daylightAccent) : textSecondary,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(
-                                  lang.shortCode,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
-                                    color: isSelected ? (isDark ? LabColors.nightAccent : LabColors.daylightAccent) : textSecondary,
-                                    letterSpacing: 0.5,
-                                  ),
+                              const SizedBox(width: 6),
+                              Text(
+                                lang.displayName,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  color: isSelected ? textPrimary : textSecondary,
                                 ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  lang.displayName,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                    color: isSelected ? textPrimary : textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -1243,13 +1247,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
                                   strings.cloudSyncTitle,
                                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: textPrimary),
                                 ),
-                                const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
@@ -1308,13 +1314,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           children: [
                             Icon(Icons.shield_outlined, size: 14, color: isDark ? LabColors.sageGreenGlow : LabColors.forestGreen),
                             const SizedBox(width: 6),
-                            Text(
-                              strings.isArabic
-                                  ? 'التخزين المحلي السيادي: نشط'
-                                  : (strings.isFrench
-                                      ? 'STOCKAGE LOCAL SOUVERAIN : ACTIF'
-                                      : 'LOCAL SOVEREIGN STORAGE: ACTIVE'),
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.4, color: isDark ? LabColors.sageGreenGlow : LabColors.forestGreen),
+                            Expanded(
+                              child: Text(
+                                strings.isArabic
+                                    ? 'التخزين المحلي السيادي: نشط'
+                                    : (strings.isFrench
+                                        ? 'STOCKAGE LOCAL SOUVERAIN : ACTIF'
+                                        : 'LOCAL SOVEREIGN STORAGE: ACTIVE'),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.4, color: isDark ? LabColors.sageGreenGlow : LabColors.forestGreen),
+                              ),
                             ),
                           ],
                         ),
@@ -1679,12 +1689,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 color: isSelected ? (isDark ? LabColors.nightAccent : LabColors.daylightAccent) : textSecondary,
               ),
               const SizedBox(width: 5),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? (isDark ? LabColors.nightAccent : LabColors.daylightAccent) : textSecondary,
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? (isDark ? LabColors.nightAccent : LabColors.daylightAccent) : textSecondary,
+                  ),
                 ),
               ),
             ],

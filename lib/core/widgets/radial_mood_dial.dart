@@ -55,9 +55,11 @@ class RadialMoodDial extends StatelessWidget {
               ),
 
               // Horizontal row of mood selections
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(moods.length, (index) {
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(moods.length, (index) {
                   final isSelected = index == selectedIndex;
                   final item = moods[index];
 
@@ -126,8 +128,9 @@ class RadialMoodDial extends StatelessWidget {
                         ),
                       ),
                     ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
             ],
           ),

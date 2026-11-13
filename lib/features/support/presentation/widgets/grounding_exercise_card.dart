@@ -205,7 +205,7 @@ class _GroundingExerciseCardState extends ConsumerState<GroundingExerciseCard> {
                 return Expanded(
                   child: Container(
                     height: 3,
-                    margin: EdgeInsets.only(right: index == 4 ? 0 : 4),
+                    margin: EdgeInsetsDirectional.only(end: index == 4 ? 0 : 4),
                     decoration: BoxDecoration(
                       color: isPassed
                           ? LabColors.sageGreen

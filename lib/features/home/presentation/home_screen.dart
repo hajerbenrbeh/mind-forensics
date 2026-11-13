@@ -298,14 +298,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             const FingerprintThreadSignature(size: 18, animated: false),
             const SizedBox(width: 6),
-            Text(
-              'Mind Forensics',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 15.5,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
-                color: tokens.textPrimary,
+            Flexible(
+              child: Text(
+                'Mind Forensics',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                  color: tokens.textPrimary,
+                ),
               ),
             ),
           ],
@@ -553,9 +557,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           const OrganicWaveArt(height: 82),
                         ],
                       ),
-                      Positioned(
+                      PositionedDirectional(
                         bottom: 9,
-                        right: 9,
+                        end: 9,
                         child: MindPressable(
                           semanticLabel: strings.viewDetailsTooltip,
                           onPressed: () {
@@ -651,15 +655,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      strings.recentCasesSection,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: tokens.textSecondary,
+                    Expanded(
+                      child: Text(
+                        strings.recentCasesSection,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                          color: tokens.textSecondary,
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     InkWell(
                       onTap: () => context.push('/investigation'),
                       borderRadius: BorderRadius.circular(12),

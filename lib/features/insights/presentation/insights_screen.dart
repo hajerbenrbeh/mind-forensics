@@ -174,7 +174,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
             Row(
               children: ['1W', '1M', '3M', '6M'].map((r) {
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsetsDirectional.only(end: 8),
                   child: MindPill(
                     label: r,
                     isSelected: _selectedRange == r,
@@ -401,15 +401,20 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              strings.yourPatternsHeader,
-              style: TextStyle(
-                color: tokens.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.2,
+            Expanded(
+              child: Text(
+                strings.yourPatternsHeader,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: tokens.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Semantics(
               button: true,
               child: GestureDetector(
@@ -635,14 +640,16 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              MindBadge(
-                label: baseline.statusLabel,
-                backgroundColor: baseline.hasEstablishedBaseline
-                    ? tokens.accentSoft
-                    : tokens.surfaceSecondary,
-                textColor: baseline.hasEstablishedBaseline
-                    ? tokens.accent
-                    : (baseline.hasSufficientData ? tokens.textPrimary : tokens.textSecondary),
+              Flexible(
+                child: MindBadge(
+                  label: baseline.statusLabel,
+                  backgroundColor: baseline.hasEstablishedBaseline
+                      ? tokens.accentSoft
+                      : tokens.surfaceSecondary,
+                  textColor: baseline.hasEstablishedBaseline
+                      ? tokens.accent
+                      : (baseline.hasSufficientData ? tokens.textPrimary : tokens.textSecondary),
+                ),
               ),
             ],
           ),

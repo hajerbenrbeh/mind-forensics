@@ -641,10 +641,15 @@ class _TrackScreenState extends ConsumerState<TrackScreen> with SingleTickerProv
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              label,
-              style: TextStyle(color: tokens.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: tokens.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
+              ),
             ),
+            const SizedBox(width: 8),
             Text(
               '${value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 1)}$unit',
               style: TextStyle(

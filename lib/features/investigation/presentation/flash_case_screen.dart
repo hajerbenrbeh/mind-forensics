@@ -90,11 +90,11 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
                 onPressed: () => setState(() => _showHubView = true),
               ),
         title: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.auto_awesome, size: 16, color: LabColors.secondaryOlive),
             const SizedBox(width: 6),
             Flexible(
+              flex: 2,
               child: Text(
                 strings.navInvestigator.toUpperCase(),
                 overflow: TextOverflow.ellipsis,
@@ -107,29 +107,33 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: _showHubView
-                    ? context.tokens.accentSoft
-                    : context.tokens.surfaceSecondary,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
+            const SizedBox(width: 6),
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
                   color: _showHubView
-                      ? context.tokens.accent.withValues(alpha: 0.35)
-                      : borderColor,
+                      ? context.tokens.accentSoft
+                      : context.tokens.surfaceSecondary,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _showHubView
+                        ? context.tokens.accent.withValues(alpha: 0.35)
+                        : borderColor,
+                  ),
                 ),
-              ),
-              child: Text(
-                _showHubView
-                    ? 'AI HUB'
-                    : (caseModel?.caseNumber ?? 'SESSION 01'),
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.4,
-                  color: _showHubView ? context.tokens.accent : textSecondary,
+                child: Text(
+                  _showHubView
+                      ? 'AI HUB'
+                      : (caseModel?.caseNumber ?? 'SESSION 01'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                    color: _showHubView ? context.tokens.accent : textSecondary,
+                  ),
                 ),
               ),
             ),
