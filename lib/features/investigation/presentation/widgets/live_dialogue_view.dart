@@ -306,13 +306,15 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      strings.cognitiveDistortionSheetTitle,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: textPrimary,
+                    Expanded(
+                      child: Text(
+                        strings.cognitiveDistortionSheetTitle,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                          color: textPrimary,
+                        ),
                       ),
                     ),
                     if (statement.distortionTag != null)
@@ -1154,7 +1156,11 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
               style: TextStyle(fontSize: 13.5, color: textPrimary),
               decoration: InputDecoration(
                 hintText: isPaused
-                    ? 'Session paused for safety'
+                    ? (strings.isArabic
+                        ? 'تم إيقاف الجلسة مؤقتاً لسلامتك'
+                        : (strings.isFrench
+                            ? 'Session mise en pause par sécurité'
+                            : 'Session paused for safety'))
                     : strings.typeMessageHint,
                 hintStyle: TextStyle(
                     fontSize: 12,
@@ -1180,23 +1186,36 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
             ),
           ),
           const SizedBox(width: 8),
-          BouncingWidget(
-            onTap: isPaused || _isInvestigatorTyping ? null : () => _sendMessage(),
-            child: Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: isPaused
-                    ? tokens.border
-                    : tokens.accent,
-                borderRadius: BorderRadius.circular(tokens.buttonRadius),
-              ),
-              child: Icon(
-                isPaused ? Icons.lock_outline_rounded : Icons.arrow_upward_rounded,
-                size: 20,
-                color: isPaused
-                    ? textSecondary
-                    : (isDark ? tokens.background : Colors.white),
+          Semantics(
+            button: true,
+            enabled: !isPaused && !_isInvestigatorTyping,
+            label: isPaused
+                ? (strings.isArabic
+                    ? 'تم إيقاف الجلسة مؤقتاً لسلامتك'
+                    : (strings.isFrench
+                        ? 'Session mise en pause par sécurité'
+                        : 'Session paused for safety'))
+                : (strings.isArabic
+                    ? 'إرسال الرسالة'
+                    : (strings.isFrench ? 'Envoyer le message' : 'Send message')),
+            child: BouncingWidget(
+              onTap: isPaused || _isInvestigatorTyping ? null : () => _sendMessage(),
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: isPaused
+                      ? tokens.border
+                      : tokens.accent,
+                  borderRadius: BorderRadius.circular(tokens.buttonRadius),
+                ),
+                child: Icon(
+                  isPaused ? Icons.lock_outline_rounded : Icons.arrow_upward_rounded,
+                  size: 20,
+                  color: isPaused
+                      ? textSecondary
+                      : (isDark ? tokens.background : Colors.white),
+                ),
               ),
             ),
           ),

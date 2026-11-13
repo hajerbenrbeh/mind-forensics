@@ -1215,36 +1215,45 @@ class _DailyMindTraceStepperState extends ConsumerState<DailyMindTraceStepper> {
               ),
               const SizedBox(height: 10),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(5, (idx) {
                   final score = idx + 1;
                   final isSelected = score == _sleepQuality;
-                  return InkWell(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => _sleepQuality = score);
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      width: 52,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? context.tokens.accentSoft
-                            : context.tokens.surfaceSecondary,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isSelected ? context.tokens.accent : borderColor,
-                        ),
-                      ),
-                      child: Text(
-                        '$score',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected ? context.tokens.accent : textSecondary,
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: Semantics(
+                        button: true,
+                        selected: isSelected,
+                        label: '${strings.isArabic ? 'جودة النوم' : (strings.isFrench ? 'Qualité du sommeil' : 'Sleep quality')} $score/5, ${qualityLabels[idx]}',
+                        child: InkWell(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _sleepQuality = score);
+                          },
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            constraints: const BoxConstraints(minHeight: 48),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? context.tokens.accentSoft
+                                  : context.tokens.surfaceSecondary,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isSelected ? context.tokens.accent : borderColor,
+                              ),
+                            ),
+                            child: Text(
+                              '$score',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight:
+                                    isSelected ? FontWeight.w800 : FontWeight.w600,
+                                color: isSelected ? context.tokens.accent : textSecondary,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),

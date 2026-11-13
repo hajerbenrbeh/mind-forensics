@@ -1057,7 +1057,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
                       children: [
                         _notifFreqChip(
                             'daily',
@@ -1066,7 +1068,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 : (strings.isFrench ? 'Quotidien' : 'Daily'),
                             isDark,
                             borderColor),
-                        const SizedBox(width: 8),
                         _notifFreqChip(
                             'alternate',
                             strings.isArabic
@@ -1076,7 +1077,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                     : 'Alternate Days'),
                             isDark,
                             borderColor),
-                        const SizedBox(width: 8),
                         _notifFreqChip(
                             'weekly',
                             strings.isArabic
@@ -1102,7 +1102,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             child: Text(
                               strings.isArabic
                                   ? 'مثال: "أثر ذهنك اليومي ينتظرك وقتما تكون مستعداً."'
-                                  : 'Sample: "Your daily Mind Trace is waiting whenever you\'re ready."',
+                                  : (strings.isFrench
+                                      ? 'Exemple : « Votre empreinte du jour vous attend quand vous êtes prêt(e). »'
+                                      : 'Sample: "Your daily Mind Trace is waiting whenever you\'re ready."'),
                               style: TextStyle(
                                 fontSize: 11,
                                 fontStyle: FontStyle.italic,

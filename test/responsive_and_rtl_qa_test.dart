@@ -7,7 +7,10 @@ import 'package:mind_forensics/app/router/app_router.dart';
 import 'package:mind_forensics/app/theme/lab_theme.dart';
 import 'package:mind_forensics/features/home/presentation/home_screen.dart';
 import 'package:mind_forensics/features/insights/presentation/insights_screen.dart';
+import 'package:mind_forensics/features/investigation/domain/case_model.dart';
+import 'package:mind_forensics/features/investigation/domain/case_stage.dart';
 import 'package:mind_forensics/features/investigation/presentation/flash_case_screen.dart';
+import 'package:mind_forensics/features/investigation/presentation/widgets/live_dialogue_view.dart';
 import 'package:mind_forensics/features/journey/presentation/journey_screen.dart';
 import 'package:mind_forensics/features/observatory/presentation/inner_observatory_screen.dart';
 import 'package:mind_forensics/features/onboarding/presentation/onboarding_screen.dart';
@@ -30,10 +33,12 @@ void main() {
     double textScale = 1.0,
     Locale locale = const Locale('en'),
     bool isDark = true,
+    Map<String, Object> extraPrefs = const {},
   }) async {
     SharedPreferences.setMockInitialValues({
       'mind_forensics_locale': locale.languageCode,
       'mf_onboarding_completed': true,
+      ...extraPrefs,
     });
     tester.view.physicalSize = logicalSize;
     tester.view.devicePixelRatio = 1.0;
@@ -47,6 +52,7 @@ void main() {
     try {
       await tester.pumpWidget(
         ProviderScope(
+          key: UniqueKey(),
           child: MediaQuery(
             data: MediaQueryData(
               size: logicalSize,
@@ -196,6 +202,77 @@ void main() {
         AppRouter.enableFirstLaunchGating = true;
         tester.view.reset();
       }
+    });
+  });
+
+  group('Phase 10 UX Polish & Localized Controls Regression', () {
+    testWidgets(
+        'SettingsScreen gentle notifications cadence Wrap renders cleanly in FR 320px 1.3x',
+        (tester) async {
+      await pumpViewport(
+        tester,
+        child: const SettingsScreen(),
+        logicalSize: const Size(320, 568),
+        textScale: 1.3,
+        locale: const Locale('fr'),
+        isDark: true,
+        extraPrefs: const {'mf_gentle_notifications': true},
+      );
+      expect(
+        find.text(
+          'Exemple : « Votre empreinte du jour vous attend quand vous êtes prêt(e). »',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+        'SettingsScreen gentle notifications cadence Wrap renders cleanly in AR RTL 320px 1.3x',
+        (tester) async {
+      await pumpViewport(
+        tester,
+        child: const SettingsScreen(),
+        logicalSize: const Size(320, 568),
+        textScale: 1.3,
+        locale: const Locale('ar'),
+        isDark: false,
+        extraPrefs: const {'mf_gentle_notifications': true},
+      );
+      expect(find.text('يوم بيوم'), findsOneWidget);
+    });
+
+    testWidgets(
+        'LiveDialogueView paused-for-safety input hint is localized in FR and AR without overflow at 320px',
+        (tester) async {
+      final now = DateTime(2026, 11, 13, 12);
+      final pausedCase = CaseModel(
+        id: 'paused_case_test',
+        caseNumber: 'CASE-01',
+        title: 'Safety Pause Verification',
+        createdAt: now,
+        updatedAt: now,
+        currentStage: CaseStage.incident,
+        incidentDescription: 'Test scenario',
+        isPausedForSafety: true,
+      );
+
+      await pumpViewport(
+        tester,
+        child: Scaffold(body: LiveDialogueView(caseModel: pausedCase)),
+        logicalSize: const Size(320, 568),
+        locale: const Locale('fr'),
+        isDark: true,
+      );
+      expect(find.text('Session mise en pause par sécurité'), findsOneWidget);
+
+      await pumpViewport(
+        tester,
+        child: Scaffold(body: LiveDialogueView(caseModel: pausedCase)),
+        logicalSize: const Size(320, 568),
+        locale: const Locale('ar'),
+        isDark: true,
+      );
+      expect(find.text('تم إيقاف الجلسة مؤقتاً لسلامتك'), findsOneWidget);
     });
   });
 }
