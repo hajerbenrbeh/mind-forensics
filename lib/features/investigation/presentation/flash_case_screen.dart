@@ -43,10 +43,7 @@ class _FlashCaseScreenState extends ConsumerState<FlashCaseScreen> {
   }
 
   String _engineLabel(AiConfigState config, AppStrings strings) {
-    if (!config.isLiveActive) return strings.engineBadgeOffline;
-    return config.provider == AiEngineProvider.groq
-        ? strings.engineBadgeGroq
-        : strings.engineBadgeGemini;
+    return strings.engineBadgeOffline;
   }
 
   @override

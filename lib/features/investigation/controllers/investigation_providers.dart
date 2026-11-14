@@ -7,7 +7,6 @@ import '../../../core/safety/crisis_keywords.dart';
 import '../../../core/security/secure_key_manager.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../journal/controllers/journal_memory_controller.dart';
-import '../data/direct_gemini_investigator_service.dart';
 import '../data/direct_groq_investigator_service.dart';
 import '../data/local_case_repository.dart';
 import '../data/mock_investigator_service.dart';
@@ -45,8 +44,10 @@ const String kPublicAiProxyUrl = String.fromEnvironment(
 /// Sentinel key representing development mock mode.
 const String kDevMockGeminiKey = 'DEV_MOCK_GEMINI_KEY';
 
-/// Supported live AI inference providers.
+/// Supported AI inference engine providers.
 enum AiEngineProvider {
+  local,
+  grok,
   groq,
   gemini,
 }
@@ -54,23 +55,15 @@ enum AiEngineProvider {
 /// Configuration state for the AI Investigator Engine.
 class AiConfigState {
   const AiConfigState({
-    this.provider = _defaultProvider,
+    this.provider = AiEngineProvider.local,
     this.apiKey = kPublicGeminiApiKey,
     this.groqApiKey = kPublicGroqApiKey,
     this.proxyUrl = kPublicAiProxyUrl,
-    this.useLiveAi = true,
+    this.useLiveAi = false,
     this.modelName = _defaultModel,
   });
 
-  static const AiEngineProvider _defaultProvider =
-      (kPublicGroqApiKey != '' || kPublicAiProxyUrl != '')
-          ? AiEngineProvider.groq
-          : AiEngineProvider.gemini;
-
-  static const String _defaultModel =
-      (kPublicGroqApiKey != '' || kPublicAiProxyUrl != '')
-          ? DirectGroqInvestigatorService.defaultModel
-          : 'gemini-3.5-flash';
+  static const String _defaultModel = 'local-clinical-engine';
 
   final AiEngineProvider provider;
   final String apiKey;
@@ -80,26 +73,35 @@ class AiConfigState {
   final String modelName;
 
   /// Active key for whichever provider is selected.
-  String get activeApiKey =>
-      provider == AiEngineProvider.groq ? groqApiKey : apiKey;
+  String get activeApiKey {
+    if (provider == AiEngineProvider.groq) return groqApiKey;
+    if (provider == AiEngineProvider.gemini) return apiKey;
+    return '';
+  }
 
   bool get hasProxy => proxyUrl.trim().isNotEmpty;
 
-  bool get isMockKey {
-    if (provider == AiEngineProvider.groq) {
-      if (hasProxy) return false;
-      final clean = groqApiKey.trim();
-      return clean.isEmpty || clean == kDevMockGeminiKey;
+  bool get isMockKey => true;
+
+  /// External AI is currently unavailable. Live inference is never active.
+  bool get isLiveActive => false;
+
+  bool get isLocalAiAvailable => true;
+  bool get isExternalAiAvailable => false;
+  bool get isGrokPlanned => true;
+
+  String get defaultModelForProvider {
+    switch (provider) {
+      case AiEngineProvider.groq:
+        return DirectGroqInvestigatorService.defaultModel;
+      case AiEngineProvider.gemini:
+        return 'gemini-3.5-flash';
+      case AiEngineProvider.grok:
+        return 'grok-beta';
+      case AiEngineProvider.local:
+        return 'local-clinical-engine';
     }
-    final clean = apiKey.trim();
-    return clean == kDevMockGeminiKey || clean.isEmpty;
   }
-
-  bool get isLiveActive => useLiveAi && !isMockKey;
-
-  String get defaultModelForProvider => provider == AiEngineProvider.groq
-      ? DirectGroqInvestigatorService.defaultModel
-      : 'gemini-3.5-flash';
 
   AiConfigState copyWith({
     AiEngineProvider? provider,
@@ -122,7 +124,6 @@ class AiConfigState {
 
 class AiConfigNotifier extends Notifier<AiConfigState> {
   static const String _prefUseLive = 'mf_use_live_gemini';
-  static const String _prefProvider = 'mf_ai_provider';
 
   @override
   AiConfigState build() {
@@ -132,7 +133,6 @@ class AiConfigNotifier extends Notifier<AiConfigState> {
 
   Future<void> _loadFromSecureStorage() async {
     final keyManager = ref.read(secureKeyManagerProvider);
-    final prefs = await SharedPreferences.getInstance();
 
     var secureGemini = await keyManager.getGeminiApiKey();
     if (secureGemini.isEmpty &&
@@ -150,79 +150,59 @@ class AiConfigNotifier extends Notifier<AiConfigState> {
 
     if (!ref.mounted) return;
 
-    final savedProvider = prefs.getString(_prefProvider);
-    final AiEngineProvider effectiveProvider;
-    if (savedProvider == AiEngineProvider.groq.name) {
-      effectiveProvider = AiEngineProvider.groq;
-    } else if (savedProvider == AiEngineProvider.gemini.name) {
-      effectiveProvider = AiEngineProvider.gemini;
-    } else {
-      effectiveProvider = (secureGroq.isNotEmpty || kPublicAiProxyUrl.isNotEmpty)
-          ? AiEngineProvider.groq
-          : AiEngineProvider.gemini;
-    }
-
     final effectiveGemini =
         secureGemini.isNotEmpty ? secureGemini : kPublicGeminiApiKey;
     final effectiveGroq =
         secureGroq.isNotEmpty ? secureGroq : kPublicGroqApiKey;
-    final useLive = prefs.getBool(_prefUseLive) ?? true;
 
     state = AiConfigState(
-      provider: effectiveProvider,
+      provider: AiEngineProvider.local,
       apiKey: effectiveGemini,
       groqApiKey: effectiveGroq,
       proxyUrl: kPublicAiProxyUrl,
-      useLiveAi: useLive,
-      modelName: effectiveProvider == AiEngineProvider.groq
-          ? DirectGroqInvestigatorService.defaultModel
-          : 'gemini-3.5-flash',
+      useLiveAi: false,
+      modelName: 'local-clinical-engine',
     );
   }
 
   Future<void> setProvider(AiEngineProvider provider) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefProvider, provider.name);
-    if (!ref.mounted) return;
-    state = state.copyWith(
-      provider: provider,
-      modelName: provider == AiEngineProvider.groq
-          ? DirectGroqInvestigatorService.defaultModel
-          : 'gemini-3.5-flash',
-    );
+    // Gemini and Groq cannot be selected as active providers.
+    // Grok is planned for a future stage.
+    // Active provider remains local.
+    if (provider != AiEngineProvider.local) {
+      return;
+    }
+    state = state.copyWith(provider: AiEngineProvider.local);
   }
 
   Future<void> toggleLiveMode(bool enabled) async {
+    // External AI is unavailable; toggle does not activate live transmission.
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_prefUseLive, enabled);
+    await prefs.setBool(_prefUseLive, false);
     if (!ref.mounted) return;
-    state = state.copyWith(useLiveAi: enabled);
+    state = state.copyWith(useLiveAi: false);
   }
 
   Future<void> setApiKey(String key, {AiEngineProvider? provider}) async {
     final target = provider ?? state.provider;
     final keyManager = ref.read(secureKeyManagerProvider);
-    final prefs = await SharedPreferences.getInstance();
     final clean = key.trim();
-    await prefs.setString(_prefProvider, target.name);
 
     if (target == AiEngineProvider.groq) {
       await keyManager.saveGroqApiKey(clean);
       if (!ref.mounted) return;
       state = state.copyWith(
-        provider: target,
+        provider: AiEngineProvider.local,
         groqApiKey: clean.isNotEmpty ? clean : kPublicGroqApiKey,
-        useLiveAi: true,
-        modelName: DirectGroqInvestigatorService.defaultModel,
+        useLiveAi: false,
       );
     } else {
       await keyManager.saveGeminiApiKey(clean);
       if (!ref.mounted) return;
       state = state.copyWith(
-        provider: target,
+        provider: AiEngineProvider.local,
         apiKey: clean.isNotEmpty ? clean : kPublicGeminiApiKey,
-        useLiveAi: true,
-        modelName: 'gemini-3.5-flash',
+        useLiveAi: false,
       );
     }
   }
@@ -230,10 +210,8 @@ class AiConfigNotifier extends Notifier<AiConfigState> {
   Future<void> clearApiKey({AiEngineProvider? provider}) async {
     final target = provider ?? state.provider;
     final keyManager = ref.read(secureKeyManagerProvider);
-    final prefs = await SharedPreferences.getInstance();
     if (target == AiEngineProvider.groq) {
       await keyManager.clearGroqApiKey();
-      await prefs.setBool(_prefUseLive, false);
       if (!ref.mounted) return;
       state = state.copyWith(
         groqApiKey: '',
@@ -241,13 +219,25 @@ class AiConfigNotifier extends Notifier<AiConfigState> {
       );
     } else {
       await keyManager.clearGeminiApiKey();
-      await prefs.setBool(_prefUseLive, false);
       if (!ref.mounted) return;
       state = state.copyWith(
         apiKey: '',
         useLiveAi: false,
       );
     }
+  }
+
+  Future<void> clearAllHistoricalKeys() async {
+    final keyManager = ref.read(secureKeyManagerProvider);
+    await keyManager.clearGeminiApiKey();
+    await keyManager.clearGroqApiKey();
+    if (!ref.mounted) return;
+    state = state.copyWith(
+      apiKey: '',
+      groqApiKey: '',
+      useLiveAi: false,
+      provider: AiEngineProvider.local,
+    );
   }
 }
 
@@ -286,23 +276,9 @@ class CurrentConversationModeNotifier extends Notifier<ConversationMode> {
 
 /// Provider for the AI Investigator.
 ///
-/// Routes to [DirectGroqInvestigatorService] or [DirectGeminiInvestigatorService]
-/// when live inference is active, or falls back to [MockInvestigatorService] (\$0.00).
+/// External AI inference is currently unavailable. Routes to [MockInvestigatorService]
+/// for deterministic on-device clinical reasoning ($0.00, zero transmission).
 final investigatorServiceProvider = Provider<InvestigatorService>((ref) {
-  final config = ref.watch(aiConfigProvider);
-  if (config.isLiveActive) {
-    if (config.provider == AiEngineProvider.groq) {
-      return DirectGroqInvestigatorService(
-        apiKey: config.groqApiKey,
-        modelName: config.modelName,
-        proxyUrl: config.proxyUrl,
-      );
-    }
-    return DirectGeminiInvestigatorService(
-      apiKey: config.apiKey,
-      modelName: config.modelName,
-    );
-  }
   return MockInvestigatorService();
 });
 

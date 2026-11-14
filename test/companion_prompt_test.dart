@@ -94,6 +94,7 @@ void main() {
         personalGoals: 'Calm the body without fighting thoughts',
         notesForAiCompanion: 'Be direct, no fluff',
         shareWithAiCompanion: true,
+        allowAiPersonalization: true,
         updatedAt: DateTime.now(),
       );
 
@@ -129,6 +130,36 @@ void main() {
       expect(contextAr.contains('Be direct, no fluff'), isTrue);
       expect(contextAr.contains('Triad Exploration'), isTrue);
       expect(contextAr.contains('Felt my stomach drop'), isTrue);
+    });
+
+    test('buildUserContext strictly omits profile context when allowAiPersonalization is false even if shareWithAiCompanion is true', () {
+      final profile = PsychologicalProfileModel(
+        conditions: const [
+          UserConditionEntry(
+            condition: ConditionType.generalizedAnxiety,
+            status: DiagnosticStatus.currentlyBeingEvaluated,
+            note: 'Morning panic peaks',
+          ),
+        ],
+        symptomsAndExperiences: 'Frequent tension headaches',
+        personalGoals: 'Calm the body without fighting thoughts',
+        notesForAiCompanion: 'Be direct, no fluff',
+        shareWithAiCompanion: true,
+        allowAiPersonalization: false,
+        updatedAt: DateTime.now(),
+      );
+
+      final context = PsychologicalCompanionPrompt.buildUserContext(
+        profile: profile,
+        journey: null,
+        languageCode: 'en',
+      );
+
+      expect(context.contains('Generalized Anxiety Disorder (GAD)'), isFalse);
+      expect(context.contains('Morning panic peaks'), isFalse);
+      expect(context.contains('Frequent tension headaches'), isFalse);
+      expect(context.contains('Calm the body without fighting thoughts'), isFalse);
+      expect(context.contains('USER PSYCHOLOGICAL PROFILE'), isFalse);
     });
   });
 }

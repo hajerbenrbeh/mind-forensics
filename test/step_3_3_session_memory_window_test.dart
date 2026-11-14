@@ -586,6 +586,12 @@ void main() {
       allowAiPersonalization: true,
     );
 
+    final bothFalseProfile = PsychologicalProfileModel(
+      updatedAt: now,
+      shareWithAiCompanion: false,
+      allowAiPersonalization: false,
+    );
+
     final noPersonalizeProfile = PsychologicalProfileModel(
       updatedAt: now,
       shareWithAiCompanion: true,
@@ -618,7 +624,7 @@ void main() {
       isPrivate: true,
     );
 
-    test('22. Both cloud consents true & non-private case allows cloud transmission attempt', () async {
+    test('22. Both cloud consents true & non-private case isolates Gemini transmission (zero network requests in Stage 6.1A.3)', () async {
       int payloadCount = 0;
       final service = DirectGeminiInvestigatorService(
         apiKey: 'test-api-key',
@@ -640,10 +646,10 @@ void main() {
         profile: consentedProfile,
       );
 
-      // Cloud request was attempted (incrementing network counter & payload count)
-      // then cleanly caught SocketException and gracefully fell back
-      expect(service.networkRequestsAttempted, greaterThan(0));
-      expect(payloadCount, greaterThan(0));
+      // Stage 6.1A.3: Gemini transmission is permanently disabled (zero network requests)
+      expect(service.networkRequestsAttempted, equals(0));
+      expect(payloadCount, equals(0));
+      expect(service.lastCallWasLive, isFalse);
       expect(question, isNotEmpty);
     });
 
@@ -676,19 +682,23 @@ void main() {
       expect(question, isNotEmpty); // MockInvestigatorService responded locally
     });
 
-    test('24. allowAiPersonalization == false routes to local fallback and transmits zero bytes', () async {
+    test('24. allowAiPersonalization == false with shareWithAiCompanion == true isolates external AI and executes local-only behavior', () async {
       int payloadCount = 0;
+      Map<String, dynamic>? capturedPayload;
       final service = DirectGeminiInvestigatorService(
         apiKey: 'test-api-key',
-        onRequestAttempted: (url, payload) => payloadCount++,
-        clientFactory: () => throw const SocketException('Should never be called'),
+        onRequestAttempted: (url, payload) {
+          payloadCount++;
+          capturedPayload = payload;
+        },
+        clientFactory: () => throw const SocketException('Simulated offline test environment'),
       );
 
       expect(DirectGeminiInvestigatorService.canTransmitCaseData(
         currentCase: regularCase,
         profile: noPersonalizeProfile,
         checkProfileConsent: true,
-      ), isFalse);
+      ), isTrue);
 
       final question = await service.getNextQuestion(
         currentCase: regularCase,
@@ -698,8 +708,11 @@ void main() {
         profile: noPersonalizeProfile,
       );
 
+      // Stage 6.1A.3: Gemini network transmission is permanently disabled (zero requests attempted)
       expect(service.networkRequestsAttempted, equals(0));
       expect(payloadCount, equals(0));
+      expect(capturedPayload, isNull);
+      expect(service.lastCallWasLive, isFalse);
       expect(question, isNotEmpty);
     });
 
@@ -851,8 +864,8 @@ void main() {
       expect(service.networkRequestsAttempted, equals(0));
       expect(payloadCount, equals(0));
 
-      // 3. allowAiPersonalization == false
-      final r3 = await service.generateHypotheses(currentCase: regularCase, profile: noPersonalizeProfile);
+      // 3. both false (shareWithAiCompanion == false, allowAiPersonalization == false)
+      final r3 = await service.generateHypotheses(currentCase: regularCase, profile: bothFalseProfile);
       expect(r3, isNotEmpty);
       expect(service.networkRequestsAttempted, equals(0));
       expect(payloadCount, equals(0));
@@ -892,8 +905,8 @@ void main() {
       expect(service.networkRequestsAttempted, equals(0));
       expect(payloadCount, equals(0));
 
-      // 3. allowAiPersonalization == false
-      final r3 = await service.generateCrossExaminationQuestions(currentCase: regularCase, hypothesis: testHyp, profile: noPersonalizeProfile);
+      // 3. both false (shareWithAiCompanion == false, allowAiPersonalization == false)
+      final r3 = await service.generateCrossExaminationQuestions(currentCase: regularCase, hypothesis: testHyp, profile: bothFalseProfile);
       expect(r3, isNotEmpty);
       expect(service.networkRequestsAttempted, equals(0));
       expect(payloadCount, equals(0));
@@ -925,8 +938,8 @@ void main() {
       expect(service.networkRequestsAttempted, equals(0));
       expect(payloadCount, equals(0));
 
-      // 3. allowAiPersonalization == false
-      final r3 = await service.summarizeFindings(currentCase: regularCase, profile: noPersonalizeProfile);
+      // 3. both false (shareWithAiCompanion == false, allowAiPersonalization == false)
+      final r3 = await service.summarizeFindings(currentCase: regularCase, profile: bothFalseProfile);
       expect(r3, isNotEmpty);
       expect(service.networkRequestsAttempted, equals(0));
       expect(payloadCount, equals(0));
@@ -938,7 +951,7 @@ void main() {
       expect(payloadCount, equals(0));
     });
 
-    test('32. Consented, non-private cases permit Gemini transmission attempt for all 3 secondary operations', () async {
+    test('32. Consented, non-private cases isolate Gemini transmission for all 3 secondary operations (zero network requests in Stage 6.1A.3)', () async {
       int payloadCount = 0;
       final service = DirectGeminiInvestigatorService(
         apiKey: 'test-api-key',
@@ -957,20 +970,20 @@ void main() {
       // 1. generateHypotheses
       final h = await service.generateHypotheses(currentCase: regularCase, profile: consentedProfile);
       expect(h, isNotEmpty);
-      expect(service.networkRequestsAttempted, equals(1));
-      expect(payloadCount, equals(1));
+      expect(service.networkRequestsAttempted, equals(0));
+      expect(payloadCount, equals(0));
 
       // 2. generateCrossExaminationQuestions
       final c = await service.generateCrossExaminationQuestions(currentCase: regularCase, hypothesis: testHyp, profile: consentedProfile);
       expect(c, isNotEmpty);
-      expect(service.networkRequestsAttempted, equals(2));
-      expect(payloadCount, equals(2));
+      expect(service.networkRequestsAttempted, equals(0));
+      expect(payloadCount, equals(0));
 
       // 3. summarizeFindings
       final s = await service.summarizeFindings(currentCase: regularCase, profile: consentedProfile);
       expect(s, isNotEmpty);
-      expect(service.networkRequestsAttempted, equals(3));
-      expect(payloadCount, equals(3));
+      expect(service.networkRequestsAttempted, equals(0));
+      expect(payloadCount, equals(0));
     });
   });
 }

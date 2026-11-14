@@ -199,8 +199,8 @@ Your purpose is to help them understand themselves more clearly and safely.
       );
     }
 
-    // Profile Context (Only if consent given and memory enabled)
-    if (includeMemory && profile != null && profile.shareWithAiCompanion && !profile.isEmpty) {
+    // Profile Context (Only if external sharing and personalization consent given, and memory enabled)
+    if (includeMemory && profile != null && profile.shareWithAiCompanion && profile.allowAiPersonalization && !profile.isEmpty) {
       buffer.writeln('\nUSER PSYCHOLOGICAL PROFILE (CONFIDENTIAL CONTEXT):');
 
       if (profile.preferredName.trim().isNotEmpty) {

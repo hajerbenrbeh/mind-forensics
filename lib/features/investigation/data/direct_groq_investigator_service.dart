@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../../../core/security/daily_usage_limiter.dart';
 import '../../journal/domain/journal_memory_model.dart';
 import '../../journey/domain/journey_state_model.dart';
 import '../../mind_trace/domain/mind_trace_model.dart';
@@ -56,19 +55,21 @@ class DirectGroqInvestigatorService implements InvestigatorService {
   /// Counter tracking external network requests attempted.
   int networkRequestsAttempted = 0;
 
+  /// Status of the most recent AI operation: false for local deterministic fallback.
+  bool? lastCallWasLive;
+
   bool get _hasProxy => proxyUrl.trim().isNotEmpty;
 
   static bool isMockKey(String key) => DirectGeminiInvestigatorService.isMockKey(key);
 
-  Uri get _resolvedEndpoint {
-    final trimmed = proxyUrl.trim();
-    if (trimmed.isNotEmpty) {
-      return Uri.parse(trimmed);
-    }
-    return Uri.parse(defaultEndpoint);
-  }
+
+  static const bool kIsNetworkPermanentlyDisabled = true;
 
   /// Tests connectivity with the Groq API or configured proxy endpoint.
+  ///
+  /// Permanently disabled in Stage 6.1A.3: Mind Forensics will use xAI Grok
+  /// as its sole external AI provider in a future stage. Groq network
+  /// transmission is isolated with zero network requests.
   Future<({bool success, String message})> testConnection() async {
     final cleanKey = apiKey.trim();
     if (!_hasProxy && (cleanKey.isEmpty || isMockKey(cleanKey))) {
@@ -79,132 +80,20 @@ class DirectGroqInvestigatorService implements InvestigatorService {
             : 'Mock mode active (zero network calls)',
       );
     }
-
-    final modelsToTry = [
-      modelName,
-      ...fallbackModels.where((m) => m != modelName),
-    ];
-
-    String lastError = 'No Groq models available';
-
-    for (final currentModel in modelsToTry) {
-      HttpClient? client;
-      try {
-        final url = _resolvedEndpoint;
-        final payload = <String, dynamic>{
-          'model': currentModel,
-          'messages': [
-            {'role': 'user', 'content': 'Ping'},
-          ],
-          'max_tokens': 8,
-          'temperature': 0.2,
-        };
-
-        networkRequestsAttempted++;
-        onRequestAttempted?.call(url, payload);
-
-        client = clientFactory != null
-            ? clientFactory!()
-            : (HttpClient()..connectionTimeout = const Duration(seconds: 6));
-        final request = await client.postUrl(url);
-        request.headers.contentType = ContentType.json;
-        if (cleanKey.isNotEmpty && !isMockKey(cleanKey)) {
-          request.headers.set('Authorization', 'Bearer $cleanKey');
-        }
-        request.write(jsonEncode(payload));
-
-        final response = await request.close();
-        final body = await response.transform(utf8.decoder).join();
-
-        if (response.statusCode == 200) {
-          return (
-            success: true,
-            message: 'Connected to Groq ($currentModel) successfully',
-          );
-        }
-        lastError = 'Status ${response.statusCode}: $body';
-      } on SocketException catch (e) {
-        lastError = 'Network unavailable: ${e.message}';
-        break;
-      } on HandshakeException catch (e) {
-        lastError = 'Handshake failed: ${e.message}';
-        break;
-      } catch (e) {
-        lastError = 'Connection failed: $e';
-      } finally {
-        client?.close();
-      }
-    }
-
-    return (success: false, message: lastError);
+    return (
+      success: false,
+      message:
+          'External AI is currently unavailable. Groq is not supported; local reflection and support engine is active.',
+    );
   }
 
   Future<String?> _callChatCompletions({
     required List<Map<String, String>> messages,
     bool isJsonObject = false,
   }) async {
-    final cleanKey = apiKey.trim();
-    if (!_hasProxy && isMockKey(cleanKey)) return null;
-
-    final canProceed = await DailyUsageLimiter.canMakeRequest();
-    if (!canProceed) return DailyUsageLimiter.limitExceededMessage;
-
-    final modelsToTry = [
-      modelName,
-      ...fallbackModels.where((m) => m != modelName),
-    ];
-
-    for (final currentModel in modelsToTry) {
-      final url = _resolvedEndpoint;
-      final payload = <String, dynamic>{
-        'model': currentModel,
-        'messages': messages,
-        'temperature': 0.65,
-        if (isJsonObject) 'response_format': {'type': 'json_object'},
-      };
-
-      HttpClient? client;
-      try {
-        networkRequestsAttempted++;
-        onRequestAttempted?.call(url, payload);
-
-        client = clientFactory != null
-            ? clientFactory!()
-            : (HttpClient()..connectionTimeout = const Duration(seconds: 6));
-        final request = await client.postUrl(url);
-        request.headers.contentType = ContentType.json;
-        if (cleanKey.isNotEmpty && !isMockKey(cleanKey)) {
-          request.headers.set('Authorization', 'Bearer $cleanKey');
-        }
-        request.write(jsonEncode(payload));
-
-        final response = await request.close();
-        final body = await response.transform(utf8.decoder).join();
-
-        if (response.statusCode == 200) {
-          await DailyUsageLimiter.recordRequest();
-          final decoded = jsonDecode(body) as Map<String, dynamic>;
-          final choices = decoded['choices'] as List<dynamic>?;
-          if (choices != null && choices.isNotEmpty) {
-            final first = choices.first as Map<String, dynamic>?;
-            final message = first?['message'] as Map<String, dynamic>?;
-            final content = message?['content'] as String?;
-            if (content != null && content.trim().isNotEmpty) {
-              return content.trim();
-            }
-          }
-        }
-      } on SocketException {
-        break;
-      } on HandshakeException {
-        break;
-      } catch (_) {
-        // Try fallback model on transient error
-      } finally {
-        client?.close();
-      }
-    }
-
+    // In Stage 6.1A.3: Groq network transmission is permanently disabled.
+    // Mind Forensics uses local deterministic AI behavior until the separate Grok implementation stage.
+    // Outbound HTTP requests, socket connections, and external API key transmissions are strictly blocked.
     return null;
   }
 
@@ -240,7 +129,8 @@ class DirectGroqInvestigatorService implements InvestigatorService {
       profile: profile,
       checkProfileConsent: true,
     )) {
-      return _fallback.getNextQuestion(
+      lastCallWasLive = false;
+    return _fallback.getNextQuestion(
         currentCase: currentCase,
         conversationHistory: conversationHistory,
         includePastCaseSummaries: includePastCaseSummaries,
@@ -344,6 +234,7 @@ class DirectGroqInvestigatorService implements InvestigatorService {
       return result;
     }
 
+    lastCallWasLive = false;
     return _fallback.getNextQuestion(
       currentCase: currentCase,
       conversationHistory: conversationHistory,

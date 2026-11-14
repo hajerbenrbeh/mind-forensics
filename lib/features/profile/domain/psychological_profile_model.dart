@@ -54,6 +54,11 @@ class UserConditionEntry {
 /// 6. Communication Preferences (tone, length, distress preference, disliked styles)
 /// 7. Privacy and AI Personalization (explicit consent, local isolation, reset)
 class PsychologicalProfileModel {
+  /// Schema version identifier for explicit AI consent tracking.
+  /// Version 0: Legacy unversioned profile (consent defaults to false on load).
+  /// Version 1+: Modern explicit consent granted or revoked by user.
+  static const int kCurrentConsentVersion = 1;
+
   const PsychologicalProfileModel({
     this.userId = 'local_user',
 
@@ -104,8 +109,9 @@ class PsychologicalProfileModel {
     this.dislikedApproaches = const [],
 
     // Section 7: Privacy & AI Personalization
-    this.allowAiPersonalization = true,
-    this.shareWithAiCompanion = true,
+    this.allowAiPersonalization = false,
+    this.shareWithAiCompanion = false,
+    this.consentVersion = kCurrentConsentVersion,
 
     required this.updatedAt,
     this.createdAt,
@@ -160,6 +166,7 @@ class PsychologicalProfileModel {
   // Section 7: Privacy & AI Personalization
   final bool allowAiPersonalization;
   final bool shareWithAiCompanion;
+  final int consentVersion;
 
   final DateTime updatedAt;
   final DateTime? createdAt;
@@ -167,6 +174,9 @@ class PsychologicalProfileModel {
   static PsychologicalProfileModel empty({String userId = 'local_user'}) =>
       PsychologicalProfileModel(
         userId: userId,
+        allowAiPersonalization: false,
+        shareWithAiCompanion: false,
+        consentVersion: kCurrentConsentVersion,
         updatedAt: DateTime.now(),
         createdAt: DateTime.now(),
       );
@@ -266,13 +276,10 @@ class PsychologicalProfileModel {
     List<String>? dislikedApproaches,
     bool? allowAiPersonalization,
     bool? shareWithAiCompanion,
+    int? consentVersion,
     DateTime? updatedAt,
     DateTime? createdAt,
   }) {
-    final aiConsent = allowAiPersonalization ??
-        shareWithAiCompanion ??
-        this.allowAiPersonalization;
-
     return PsychologicalProfileModel(
       userId: userId ?? this.userId,
       preferredName: preferredName ?? this.preferredName,
@@ -306,8 +313,10 @@ class PsychologicalProfileModel {
       responseLength: responseLength ?? this.responseLength,
       distressPreferences: distressPreferences ?? this.distressPreferences,
       dislikedApproaches: dislikedApproaches ?? this.dislikedApproaches,
-      allowAiPersonalization: aiConsent,
-      shareWithAiCompanion: aiConsent,
+      allowAiPersonalization:
+          allowAiPersonalization ?? this.allowAiPersonalization,
+      shareWithAiCompanion: shareWithAiCompanion ?? this.shareWithAiCompanion,
+      consentVersion: consentVersion ?? this.consentVersion,
       updatedAt: updatedAt ?? this.updatedAt,
       createdAt: createdAt ?? this.createdAt,
     );
@@ -345,14 +354,26 @@ class PsychologicalProfileModel {
         'dislikedApproaches': dislikedApproaches,
         'allowAiPersonalization': allowAiPersonalization,
         'shareWithAiCompanion': shareWithAiCompanion,
+        'consentVersion': consentVersion,
         'updatedAt': updatedAt.toIso8601String(),
         'createdAt': createdAt?.toIso8601String(),
       };
 
   factory PsychologicalProfileModel.fromJson(Map<String, dynamic> json) {
-    final aiConsent = json['allowAiPersonalization'] as bool? ??
-        json['shareWithAiCompanion'] as bool? ??
-        true;
+    final consentVer = json['consentVersion'] as int? ?? 0;
+    final bool isLegacyConsent = consentVer < kCurrentConsentVersion;
+
+    // Consent Migration Rule:
+    // If consentVersion < 1 (legacy unversioned profile), any previous default 'true'
+    // values cannot be proven to be explicit user consent. We strictly migrate them
+    // to false so the user must grant explicit consent.
+    // If consentVersion >= 1, we respect the explicitly saved booleans (defaulting to false if missing).
+    final bool allowAiPersonalization = isLegacyConsent
+        ? false
+        : (json['allowAiPersonalization'] as bool? ?? false);
+    final bool shareWithAiCompanion = isLegacyConsent
+        ? false
+        : (json['shareWithAiCompanion'] as bool? ?? false);
 
     // Handle backward compatibility for personalGoals
     final rawGoals = json['personalGoals'] as String? ?? '';
@@ -409,8 +430,9 @@ class PsychologicalProfileModel {
               ?.map((e) => e.toString())
               .toList() ??
           const [],
-      allowAiPersonalization: aiConsent,
-      shareWithAiCompanion: aiConsent,
+      allowAiPersonalization: allowAiPersonalization,
+      shareWithAiCompanion: shareWithAiCompanion,
+      consentVersion: isLegacyConsent ? 0 : consentVer,
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'] as String) ?? DateTime.now()
           : DateTime.now(),

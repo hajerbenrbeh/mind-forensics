@@ -798,17 +798,49 @@ class PsychologicalProfileView extends ConsumerWidget {
           Divider(color: borderColor, height: 1),
           const SizedBox(height: 12),
 
+          // 1. External AI processing and data sharing toggle
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Text(
-                  strings.shareWithAiToggle,
+                  strings.aiDataSharingToggle,
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textPrimary),
                 ),
               ),
               Switch.adaptive(
                 value: profile.shareWithAiCompanion,
+                activeTrackColor: context.tokens.accent,
+                onChanged: (val) {
+                  HapticFeedback.lightImpact();
+                  ref.read(profileControllerProvider.notifier).setShareWithAiCompanion(val);
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            profile.shareWithAiCompanion
+                ? strings.aiDataSharingDescEnabled
+                : strings.aiDataSharingDescDisabled,
+            style: TextStyle(fontSize: 11, height: 1.35, color: textSecondary),
+          ),
+          const SizedBox(height: 12),
+          Divider(color: borderColor, height: 1),
+          const SizedBox(height: 12),
+
+          // 2. Profile personalization toggle
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  strings.aiPersonalizationToggle,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textPrimary),
+                ),
+              ),
+              Switch.adaptive(
+                value: profile.allowAiPersonalization,
                 activeTrackColor: context.tokens.accent,
                 onChanged: (val) {
                   HapticFeedback.lightImpact();
@@ -819,7 +851,9 @@ class PsychologicalProfileView extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            strings.shareWithAiDesc,
+            profile.allowAiPersonalization
+                ? strings.aiPersonalizationDescEnabled
+                : strings.aiPersonalizationDescDisabled,
             style: TextStyle(fontSize: 11, height: 1.35, color: textSecondary),
           ),
         ],

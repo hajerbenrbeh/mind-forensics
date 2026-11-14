@@ -94,25 +94,29 @@ void main() {
       container.dispose();
     });
 
-    test('Initial config starts with default DEV_MOCK_GEMINI_KEY and selects MockInvestigatorService', () {
+    test('Initial config starts with local clinical engine and selects MockInvestigatorService', () {
       final config = container.read(aiConfigProvider);
       expect(config.apiKey, equals(kPublicGeminiApiKey));
-      expect(config.useLiveAi, isTrue);
+      expect(config.useLiveAi, isFalse);
       expect(config.isMockKey, isTrue);
       expect(config.isLiveActive, isFalse);
+      expect(config.isLocalAiAvailable, isTrue);
+      expect(config.isExternalAiAvailable, isFalse);
+      expect(config.provider, equals(AiEngineProvider.local));
 
       final service = container.read(investigatorServiceProvider);
       expect(service, isA<MockInvestigatorService>());
     });
 
-    test('Explicit live Gemini API key activates DirectGeminiInvestigatorService', () async {
+    test('Saving historical API key preserves key securely but keeps external AI disabled (Local engine active)', () async {
       await container.read(aiConfigProvider.notifier).setApiKey('AIzaSyValidProductionApiKeyForTesting');
       final config = container.read(aiConfigProvider);
-      expect(config.isMockKey, isFalse);
-      expect(config.isLiveActive, isTrue);
+      expect(config.apiKey, equals('AIzaSyValidProductionApiKeyForTesting'));
+      expect(config.isLiveActive, isFalse);
+      expect(config.provider, equals(AiEngineProvider.local));
 
       final service = container.read(investigatorServiceProvider);
-      expect(service, isA<DirectGeminiInvestigatorService>());
+      expect(service, isA<MockInvestigatorService>());
     });
 
     test('Toggling live mode off preserves key but reverts provider to mock',
@@ -120,7 +124,7 @@ void main() {
       await container.read(aiConfigProvider.notifier).toggleLiveMode(false);
 
       final config = container.read(aiConfigProvider);
-      expect(config.apiKey, equals(kPublicGeminiApiKey));
+      expect(config.apiKey, equals('AIzaSyValidProductionApiKeyForTesting'));
       expect(config.useLiveAi, isFalse);
       expect(config.isLiveActive, isFalse);
 

@@ -17,7 +17,6 @@ import '../../auth/controllers/auth_controller.dart';
 import '../../backup/data/unified_backup_service.dart';
 import '../../case_file/presentation/clinical_export_preview_sheet.dart';
 import '../../investigation/controllers/investigation_providers.dart';
-import '../../investigation/data/cloud_sync_service.dart';
 import '../../investigation/presentation/widgets/ai_engine_config_sheet.dart';
 import '../../profile/controllers/profile_controller.dart';
 import '../../profile/presentation/psychological_profile_screen.dart';
@@ -48,7 +47,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   static const String _prefNotifFreq = 'mf_notification_freq';
 
   bool _aiHistoryAccess = true;
-  bool _cloudSyncEnabled = true;
   bool _gentleNotifications = false;
   String _notificationFrequency = 'daily';
 
@@ -60,11 +58,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _loadPersistedSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    final syncEnabled = await ref.read(cloudSyncServiceProvider).isSyncEnabled();
     if (mounted) {
       setState(() {
         _aiHistoryAccess = prefs.getBool(_prefAiHistory) ?? true;
-        _cloudSyncEnabled = syncEnabled;
         _gentleNotifications = prefs.getBool(_prefGentleNotif) ?? false;
         _notificationFrequency = prefs.getString(_prefNotifFreq) ?? 'daily';
       });
@@ -118,7 +114,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.cloud_upload_outlined, size: 20, color: isDark ? LabColors.nightAccent : LabColors.daylightAccent),
+                Icon(Icons.lock_outline_rounded, size: 20, color: isDark ? LabColors.nightAccent : LabColors.daylightAccent),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -209,8 +205,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Navigator.of(ctx).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(success ? 'Account successfully linked to cloud.' : 'Failed to link account.'),
+                        content: Text(success ? strings.linkEmailSuccess : strings.linkEmailFailure),
                         duration: const Duration(seconds: 2),
+                        behavior: SnackBarBehavior.floating,
                       ),
                     );
                   }
@@ -752,7 +749,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(
-                                            isAnon ? 'ANONYMOUS' : 'CLOUD SYNCED',
+                                            isAnon ? 'ANONYMOUS' : 'LOCAL SECURED',
                                             style: TextStyle(
                                               fontSize: 8,
                                               fontWeight: FontWeight.w800,
@@ -789,7 +786,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                   padding: const EdgeInsets.symmetric(vertical: 9),
                                 ),
-                                icon: const Icon(Icons.cloud_upload_outlined, size: 15),
+                                icon: const Icon(Icons.lock_outline_rounded, size: 15),
                                 label: Text(
                                   strings.linkEmailTitle.toUpperCase(),
                                   style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, letterSpacing: 0.4),
@@ -1267,13 +1264,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             const SizedBox(height: 24),
 
-            // Section 6: Data Backup & Cloud Synchronization
+            // Section 6: Local Backup & Data Export
             _sectionLabel(
               strings.isArabic
-                  ? 'النسخ الاحتياطي والمزامنة السحابية'
+                  ? 'النسخ الاحتياطي والتصدير المحلي'
                   : (strings.isFrench
-                      ? 'SAUVEGARDE ET RESTAURATION CLOUD'
-                      : 'DATA BACKUP & CLOUD RESTORATION'),
+                      ? 'SAUVEGARDE LOCALE ET EXPORT'
+                      : 'LOCAL BACKUP & DATA EXPORT'),
               textSecondary,
             ),
             Container(
@@ -1286,61 +1283,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 4,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                Text(
-                                  strings.cloudSyncTitle,
-                                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: textPrimary),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: (isDark ? LabColors.nightAccent : LabColors.daylightAccent).withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: (isDark ? LabColors.nightAccent : LabColors.daylightAccent).withValues(alpha: 0.3)),
-                                  ),
-                                  child: Text(
-                                    'SPARK & LOCAL',
-                                    style: TextStyle(
-                                      fontSize: 8.5,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.3,
-                                      color: isDark ? LabColors.nightAccent : LabColors.daylightAccent,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            strings.cloudSyncTitle,
+                            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: textPrimary),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: (isDark ? LabColors.nightAccent : LabColors.daylightAccent).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: (isDark ? LabColors.nightAccent : LabColors.daylightAccent).withValues(alpha: 0.3)),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              strings.cloudSyncDesc,
-                              style: TextStyle(fontSize: 12, color: textSecondary, height: 1.3),
+                            child: Text(
+                              'LOCAL SOVEREIGN',
+                              style: TextStyle(
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.3,
+                                color: isDark ? LabColors.nightAccent : LabColors.daylightAccent,
+                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Switch(
-                        value: _cloudSyncEnabled,
-                        activeTrackColor: context.tokens.accent,
-                        activeThumbColor: context.tokens.background,
-                        inactiveThumbColor: context.tokens.textTertiary,
-                        inactiveTrackColor: context.tokens.surfaceSecondary,
-                        onChanged: (val) async {
-                          HapticFeedback.lightImpact();
-                          setState(() => _cloudSyncEnabled = val);
-                          await ref.read(cloudSyncServiceProvider).setSyncEnabled(val);
-                        },
+                      const SizedBox(height: 4),
+                      Text(
+                        strings.cloudSyncDesc,
+                        style: TextStyle(fontSize: 12, color: textSecondary, height: 1.3),
                       ),
                     ],
                   ),
@@ -1377,10 +1354,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         const SizedBox(height: 4),
                         Text(
                           strings.isArabic
-                              ? 'كل السجلات اليومية وجلسات الاستبصار والملف النفسي محفوظة بأمان على جهازك. يتم تفعيل المزامنة السحابية تلقائياً عند توفر بيانات Firebase.'
+                              ? 'تُشفّر سجلات المزاج وجلسات الاستبصار والملفات النفسية محلياً بتشفير AES-256-GCM. تبقى تفضيلات التطبيق والملفات المصدّرة غير مشفرة. لا تتم أي مزامنة سحابية تلقائية لسجلاتك؛ وتتم معالجة الذكاء الاصطناعي الخارجية فقط عند تفعيلك أو استخدامك لميزة ذكاء اصطناعي وفق أذونات الخصوصية المحددة.'
                               : (strings.isFrench
-                                  ? 'Tous vos journaux d’humeur, sessions de réflexion et profils cliniques sont conservés en sécurité sur cet appareil.'
-                                  : 'All mood logs, reflection sessions, and clinical profiles are securely stored on this device. Cloud sync activates automatically when Firebase credentials (google-services.json) are provided.'),
+                                  ? 'Vos journaux d’humeur, sessions de réflexion et profils cliniques sont chiffrés au repos avec AES-256-GCM local. Les préférences et exports restent non chiffrés. Aucune synchronisation cloud automatique n’est effectuée ; le traitement IA externe n’intervient que si vous utilisez expressément une fonctionnalité IA selon vos autorisations.'
+                                  : 'Your mood logs, reflection sessions, and clinical profiles are encrypted at rest with local AES-256-GCM. App preferences and exported files remain unencrypted. Personal records are never automatically synced to the cloud; external AI processing occurs only when you explicitly use an AI feature under your privacy controls.'),
                           style: TextStyle(fontSize: 11, color: textSecondary, height: 1.35),
                         ),
                       ],

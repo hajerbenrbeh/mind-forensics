@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../../../core/security/daily_usage_limiter.dart';
 import '../../journal/domain/journal_memory_model.dart';
 import '../../journey/domain/journey_state_model.dart';
 import '../../mind_trace/domain/mind_trace_model.dart';
@@ -58,8 +57,8 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
   ///
   /// Enforces:
   /// 1. Private case isolation: If [currentCase.isPrivate == true], external AI calls are strictly forbidden.
-  /// 2. Dual-consent requirement: If [checkProfileConsent == true], [profile] must be non-null and
-  ///    both [shareWithAiCompanion] and [allowAiPersonalization] must be true.
+  /// 2. External data transmission authorization: If [checkProfileConsent == true], [profile] must be non-null and
+  ///    [shareWithAiCompanion] must be true.
   static bool canTransmitCaseData({
     required CaseModel currentCase,
     PsychologicalProfileModel? profile,
@@ -70,7 +69,7 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
     }
     if (checkProfileConsent) {
       if (profile == null) return false;
-      if (!profile.shareWithAiCompanion || !profile.allowAiPersonalization) {
+      if (!profile.shareWithAiCompanion) {
         return false;
       }
     }
@@ -90,7 +89,13 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
     'gemini-flash-latest',
   ];
 
+  static const bool kIsNetworkPermanentlyDisabled = true;
+
   /// Tests the validity of the provided API key with a minimal query.
+  ///
+  /// Permanently disabled in Stage 6.1A.3: Mind Forensics will use xAI Grok
+  /// as its sole external AI provider in a future stage. Gemini network
+  /// transmission is isolated with zero network requests.
   Future<({bool success, String message})> testConnection() async {
     final cleanKey = apiKey.trim();
     if (cleanKey.isEmpty) {
@@ -102,83 +107,11 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
         message: 'Mock API key configured (zero network mode)',
       );
     }
-
-    final modelsToTry = [
-      modelName,
-      ...fallbackModels.where((m) => m != modelName),
-    ];
-
-    String lastError = 'No models available';
-
-    for (final currentModel in modelsToTry) {
-      HttpClient? client;
-      try {
-        final url = Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/$currentModel:generateContent',
-        );
-        final payload = {
-          'contents': [
-            {
-              'parts': [
-                {'text': 'Ping'}
-              ]
-            }
-          ],
-          'generationConfig': {
-            'maxOutputTokens': 5,
-          },
-        };
-
-        networkRequestsAttempted++;
-        onRequestAttempted?.call(url, payload);
-
-        client = clientFactory != null
-            ? clientFactory!()
-            : (HttpClient()..connectionTimeout = const Duration(seconds: 4));
-        final request = await client.postUrl(url);
-        request.headers.contentType = ContentType.json;
-        request.headers.set('x-goog-api-key', cleanKey);
-        request.write(jsonEncode(payload));
-
-        final response = await request.close();
-        final body = await response.transform(utf8.decoder).join();
-
-        if (response.statusCode == 200) {
-          lastModelUsed = currentModel;
-          return (
-            success: true,
-            message: 'Connected to Gemini ($currentModel) successfully'
-          );
-        } else if (response.statusCode == 401 || response.statusCode == 403) {
-          return (
-            success: false,
-            message: 'Authentication failed (HTTP ${response.statusCode}): Invalid or unauthorized API key'
-          );
-        } else if (response.statusCode == 400) {
-          return (
-            success: false,
-            message: 'Invalid request (HTTP 400): $body'
-          );
-        } else if (response.statusCode == 429 || response.statusCode == 503) {
-          lastError = 'HTTP ${response.statusCode} on $currentModel';
-          continue;
-        } else {
-          lastError = 'Status ${response.statusCode}: $body';
-        }
-      } on SocketException catch (e) {
-        lastError = 'Network unavailable: ${e.message}';
-        break;
-      } on HandshakeException catch (e) {
-        lastError = 'Handshake failed: ${e.message}';
-        break;
-      } catch (e) {
-        lastError = 'Connection failed: $e';
-      } finally {
-        client?.close();
-      }
-    }
-
-    return (success: false, message: lastError);
+    return (
+      success: false,
+      message:
+          'External AI is currently unavailable. Gemini is not supported; local reflection and support engine is active.',
+    );
   }
 
   Future<String?> _callGemini({
@@ -205,93 +138,11 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
     required String systemInstruction,
     bool isJson = false,
   }) async {
-    final cleanKey = apiKey.trim();
-    if (isMockKey(cleanKey)) return null;
-
-    final canProceed = await DailyUsageLimiter.canMakeRequest();
-    if (!canProceed) return DailyUsageLimiter.limitExceededMessage;
-
-    final modelsToTry = [
-      modelName,
-      ...fallbackModels.where((m) => m != modelName),
-    ];
-
-    for (final currentModel in modelsToTry) {
-      final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/$currentModel:generateContent',
-      );
-
-      final payload = {
-        'system_instruction': {
-          'parts': [
-            {'text': systemInstruction}
-          ]
-        },
-        'contents': contents,
-        'generationConfig': {
-          'temperature': 0.7,
-          if (isJson) 'response_mime_type': 'application/json',
-        },
-      };
-
-      HttpClient? client;
-      try {
-        networkRequestsAttempted++;
-        onRequestAttempted?.call(url, payload);
-
-        client = clientFactory != null
-            ? clientFactory!()
-            : (HttpClient()..connectionTimeout = const Duration(seconds: 4));
-        final request = await client.postUrl(url);
-        request.headers.contentType = ContentType.json;
-        request.headers.set('x-goog-api-key', cleanKey);
-        request.write(jsonEncode(payload));
-
-        final response = await request.close();
-        final body = await response.transform(utf8.decoder).join();
-
-        if (response.statusCode == 200) {
-          lastCallWasLive = true;
-          lastModelUsed = currentModel;
-          lastErrorMessage = null;
-          await DailyUsageLimiter.recordRequest();
-          final Map<String, dynamic> decoded =
-              jsonDecode(body) as Map<String, dynamic>;
-          final candidates = decoded['candidates'] as List<dynamic>?;
-          if (candidates != null && candidates.isNotEmpty) {
-            final content =
-                candidates.first['content'] as Map<String, dynamic>?;
-            final parts = content?['parts'] as List<dynamic>?;
-            if (parts != null && parts.isNotEmpty) {
-              return parts.first['text'] as String?;
-            }
-          }
-        } else if (response.statusCode == 401 || response.statusCode == 403) {
-          lastErrorMessage = 'Authentication failed (HTTP ${response.statusCode})';
-          break; // Stop retrying on invalid key
-        } else if (response.statusCode == 400) {
-          lastErrorMessage = 'Invalid request (HTTP 400): $body';
-          break; // Do not retry identical bad request
-        } else if (response.statusCode == 429 || response.statusCode == 503) {
-          lastErrorMessage = 'HTTP ${response.statusCode} on $currentModel';
-          continue; // Try next fallback model
-        } else {
-          lastErrorMessage = 'Status ${response.statusCode}: $body';
-        }
-      } on SocketException catch (e) {
-        lastErrorMessage = 'Network unavailable: ${e.message}';
-        break;
-      } on HandshakeException catch (e) {
-        lastErrorMessage = 'Handshake failed: ${e.message}';
-        break;
-      } catch (e) {
-        lastErrorMessage = 'Error on $currentModel: $e';
-      } finally {
-        client?.close();
-      }
-    }
-
+    // In Stage 6.1A.3: Gemini network transmission is permanently disabled.
+    // Mind Forensics uses local deterministic AI behavior until the separate Grok implementation stage.
+    // Outbound HTTP requests, socket connections, and external API key transmissions are strictly blocked.
     lastCallWasLive = false;
+    lastErrorMessage = 'Gemini network transmission disabled; local clinical fallback used.';
     return null;
   }
 
@@ -316,6 +167,7 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
       profile: profile,
       checkProfileConsent: true,
     )) {
+      lastCallWasLive = false;
       return _fallback.getNextQuestion(
         currentCase: currentCase,
         conversationHistory: conversationHistory,

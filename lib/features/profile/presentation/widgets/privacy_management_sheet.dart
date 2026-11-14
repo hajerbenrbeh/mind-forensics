@@ -31,17 +31,25 @@ class PrivacyManagementSheet extends ConsumerStatefulWidget {
 }
 
 class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet> {
-  late bool _allowAi;
+  late bool _shareWithAi;
+  late bool _allowPersonalization;
 
   @override
   void initState() {
     super.initState();
-    _allowAi = widget.profile.allowAiPersonalization;
+    _shareWithAi = widget.profile.shareWithAiCompanion;
+    _allowPersonalization = widget.profile.allowAiPersonalization;
   }
 
-  Future<void> _toggleAi(bool val) async {
+  Future<void> _toggleShareWithAi(bool val) async {
     HapticFeedback.lightImpact();
-    setState(() => _allowAi = val);
+    setState(() => _shareWithAi = val);
+    await ref.read(profileControllerProvider.notifier).setShareWithAiCompanion(val);
+  }
+
+  Future<void> _togglePersonalization(bool val) async {
+    HapticFeedback.lightImpact();
+    setState(() => _allowPersonalization = val);
     await ref.read(profileControllerProvider.notifier).setAiPersonalization(val);
   }
 
@@ -213,16 +221,16 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
 
                 const SizedBox(height: 20),
 
-                // AI Consent Card
+                // 1. External AI Processing & Data Sharing Consent Card
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: _allowAi
+                    color: _shareWithAi
                         ? context.tokens.accentSoft
                         : context.tokens.surfaceSecondary,
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: _allowAi ? context.tokens.accent : border,
+                      color: _shareWithAi ? context.tokens.accent : border,
                     ),
                   ),
                   child: Column(
@@ -233,9 +241,7 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                         children: [
                           Expanded(
                             child: Text(
-                              strings.isArabic
-                                  ? 'السماح بتخصيص ردود المساعد الذكي'
-                                  : 'Allow my profile to personalize AI responses',
+                              strings.aiDataSharingToggle,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
@@ -244,21 +250,65 @@ class _PrivacyManagementSheetState extends ConsumerState<PrivacyManagementSheet>
                             ),
                           ),
                           Switch.adaptive(
-                            value: _allowAi,
+                            value: _shareWithAi,
                             activeTrackColor: context.tokens.accent,
-                            onChanged: _toggleAi,
+                            onChanged: _toggleShareWithAi,
                           ),
                         ],
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        _allowAi
-                            ? (strings.isArabic
-                                ? 'مفعل: يستخدم المساعد أهدافك ونبرتك المفضلة لتخصيص الحوار بدقة، وتبقى بياناتك محفوظة محلياً على جهازك فقط.'
-                                : 'Enabled: Companion references your goals and preferred communication style. Data strictly stays on your local device.')
-                            : (strings.isArabic
-                                ? 'معطل: لن يتم تزويد المساعد الذكي بأي تفاصيل من ملفك النفسي. التطبيق يظل يعمل بكامل وظائفه.'
-                                : 'Disabled: Profile context is strictly excluded from AI inquiries. All app features remain fully functional.'),
+                        _shareWithAi
+                            ? strings.aiDataSharingDescEnabled
+                            : strings.aiDataSharingDescDisabled,
+                        style: TextStyle(fontSize: 11, height: 1.35, color: textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // 2. Profile Personalization Consent Card
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: _allowPersonalization
+                        ? context.tokens.accentSoft
+                        : context.tokens.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: _allowPersonalization ? context.tokens.accent : border,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              strings.aiPersonalizationToggle,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: textPrimary,
+                              ),
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: _allowPersonalization,
+                            activeTrackColor: context.tokens.accent,
+                            onChanged: _togglePersonalization,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _allowPersonalization
+                            ? strings.aiPersonalizationDescEnabled
+                            : strings.aiPersonalizationDescDisabled,
                         style: TextStyle(fontSize: 11, height: 1.35, color: textSecondary),
                       ),
                     ],

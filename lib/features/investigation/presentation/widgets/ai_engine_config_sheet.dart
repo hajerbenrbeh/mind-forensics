@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/localization/app_strings.dart';
 import '../../../../app/theme/lab_colors.dart';
 import '../../controllers/investigation_providers.dart';
-import '../../data/direct_gemini_investigator_service.dart';
-import '../../data/direct_groq_investigator_service.dart';
 
-/// Modal bottom sheet allowing users and developers to inspect AI status,
-/// test Google Gemini connectivity, switch between Live and Test Mode,
-/// and securely manage their Gemini developer key.
+/// Modal bottom sheet displaying truthful AI engine status,
+/// provider availability, and local clinical processing guarantees.
 class AiEngineConfigSheet extends ConsumerStatefulWidget {
   const AiEngineConfigSheet({super.key});
 
@@ -27,128 +25,114 @@ class AiEngineConfigSheet extends ConsumerStatefulWidget {
 }
 
 class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
-  late final TextEditingController _keyController;
-  bool _obscureKey = true;
   bool _isTesting = false;
   String? _testResult;
   bool? _testSuccess;
 
-  late AiEngineProvider _selectedProvider;
-
-  @override
-  void initState() {
-    super.initState();
-    final config = ref.read(aiConfigProvider);
-    _selectedProvider = config.provider;
-    final keyToDisplay = config.isMockKey ? '' : config.activeApiKey;
-    _keyController = TextEditingController(text: keyToDisplay);
-  }
-
-  void _switchProvider(AiEngineProvider provider) {
-    HapticFeedback.selectionClick();
-    final config = ref.read(aiConfigProvider);
-    ref.read(aiConfigProvider.notifier).setProvider(provider);
-    final nextKey = provider == AiEngineProvider.groq
-        ? config.groqApiKey
-        : (config.apiKey == kDevMockGeminiKey ? '' : config.apiKey);
-    setState(() {
-      _selectedProvider = provider;
-      _keyController.text = nextKey;
-      _testResult = null;
-      _testSuccess = null;
-    });
-  }
-
-  @override
-  void dispose() {
-    _keyController.dispose();
-    super.dispose();
-  }
-
   Future<void> _testConnection() async {
-    final key = _keyController.text.trim();
-    final config = ref.read(aiConfigProvider);
-    if (key.isEmpty && !(_selectedProvider == AiEngineProvider.groq && config.hasProxy)) {
-      setState(() {
-        _testResult = 'Please enter an API key to test connection.';
-        _testSuccess = false;
-      });
-      return;
-    }
-
     setState(() {
       _isTesting = true;
       _testResult = null;
     });
     HapticFeedback.lightImpact();
 
-    try {
-      final ({bool success, String message}) result;
-      if (_selectedProvider == AiEngineProvider.groq) {
-        final service = DirectGroqInvestigatorService(
-          apiKey: key,
-          proxyUrl: config.proxyUrl,
-        );
-        result = await service.testConnection();
-      } else {
-        final service = DirectGeminiInvestigatorService(apiKey: key);
-        result = await service.testConnection();
-      }
-      if (mounted) {
-        setState(() {
-          _isTesting = false;
-          _testSuccess = result.success;
-          _testResult = result.message;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isTesting = false;
-          _testSuccess = false;
-          _testResult = 'Connection check failed: $e';
-        });
-      }
-    }
-  }
+    await Future<void>.delayed(const Duration(milliseconds: 150));
 
-  Future<void> _saveKey() async {
-    final key = _keyController.text.trim();
-    HapticFeedback.mediumImpact();
-    await ref.read(aiConfigProvider.notifier).setApiKey(
-          key,
-          provider: _selectedProvider,
-        );
-    final providerLabel =
-        _selectedProvider == AiEngineProvider.groq ? 'Groq' : 'Gemini';
     if (mounted) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(key.isNotEmpty
-              ? '$providerLabel API key saved and activated.'
-              : 'Switched to offline clinical simulator.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      setState(() {
+        _isTesting = false;
+        _testSuccess = false;
+        _testResult =
+            'External AI is currently unavailable. Gemini and Groq are not supported; local reflection and support engine is active.';
+      });
     }
   }
 
-  Future<void> _clearKey() async {
+  Future<void> _clearHistoricalKeys() async {
     HapticFeedback.lightImpact();
-    await ref
-        .read(aiConfigProvider.notifier)
-        .clearApiKey(provider: _selectedProvider);
+    final strings = ref.read(appStringsProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textDirection = Directionality.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return Directionality(
+          textDirection: textDirection,
+          child: AlertDialog(
+            backgroundColor:
+                isDark ? LabColors.nightSurface : LabColors.daylightSurface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: isDark ? LabColors.nightBorder : LabColors.daylightBorder,
+              ),
+            ),
+            title: Text(
+              strings.purgeHistoricalKeysTitle,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? LabColors.nightTextPrimary
+                    : LabColors.daylightTextPrimary,
+              ),
+            ),
+            content: Text(
+              strings.purgeHistoricalKeysMessage,
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.4,
+                color: isDark
+                    ? LabColors.nightTextSecondary
+                    : LabColors.daylightTextSecondary,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(
+                  strings.cancelBtn,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? LabColors.nightTextSecondary
+                        : LabColors.daylightTextSecondary,
+                  ),
+                ),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: LabColors.safetyWarmth,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(
+                  strings.confirmPurgeBtn,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    await ref.read(aiConfigProvider.notifier).clearAllHistoricalKeys();
     if (mounted) {
-      _keyController.clear();
       setState(() {
         _testResult = null;
         _testSuccess = null;
       });
-      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('API key cleared. Offline mock mode active.'),
+        SnackBar(
+          content: Text(strings.historicalKeysClearedToast),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -159,12 +143,19 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final strings = ref.watch(appStringsProvider);
     final aiConfig = ref.watch(aiConfigProvider);
 
     final bg = isDark ? LabColors.nightSurface : LabColors.daylightSurface;
     final border = isDark ? LabColors.nightBorder : LabColors.daylightBorder;
-    final textPrimary = isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary;
-    final textSecondary = isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
+    final textPrimary =
+        isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary;
+    final textSecondary =
+        isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
+
+    final hasHistoricalKeys =
+        (aiConfig.apiKey.isNotEmpty && aiConfig.apiKey != kDevMockGeminiKey) ||
+            aiConfig.groqApiKey.isNotEmpty;
 
     return Container(
       decoration: BoxDecoration(
@@ -194,40 +185,44 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // Header Row
             Row(
               children: [
-                Icon(Icons.auto_awesome, size: 20, color: isDark ? LabColors.sageGreenGlow : LabColors.forestGreen),
+                Icon(
+                  Icons.psychology_outlined,
+                  size: 20,
+                  color: textPrimary,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'MIND ASSISTANT ENGINE',
+                    strings.aiEngineStatusTitle.toUpperCase(),
                     style: TextStyle(
                       fontFamily: 'Inter',
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: textPrimary,
                     ),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: aiConfig.isLiveActive
-                        ? LabColors.sageGreenGlow.withValues(alpha: 0.15)
-                        : LabColors.warmBeige.withValues(alpha: 0.15),
+                    color: isDark
+                        ? LabColors.nightSurfaceElevated
+                        : LabColors.daylightSurfaceSubtle,
                     borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: border),
                   ),
                   child: Text(
-                    aiConfig.isLiveActive
-                        ? (aiConfig.provider == AiEngineProvider.groq
-                            ? 'LIVE GROQ'
-                            : 'LIVE GEMINI')
-                        : 'TEST MODE (\$0.00)',
+                    strings.engineBadgeOffline.toUpperCase(),
                     style: TextStyle(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.4,
-                      color: aiConfig.isLiveActive ? LabColors.sageGreenGlow : LabColors.warmBeige,
+                      color: textPrimary,
                     ),
                   ),
                 ),
@@ -235,131 +230,84 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Mind Forensics supports Groq (Llama 3.3 free tier) or Google Gemini for live specialist dialogue, or offline mock mode with zero transmission.',
-              style: TextStyle(fontSize: 12, color: textSecondary, height: 1.4),
+              strings.aiEngineStatusDesc,
+              style:
+                  TextStyle(fontSize: 12, color: textSecondary, height: 1.4),
             ),
-            const SizedBox(height: 14),
-
-            // Provider Selector (Groq vs Gemini)
-            Row(
-              children: [
-                Expanded(
-                  child: ChoiceChip(
-                    selected: _selectedProvider == AiEngineProvider.groq,
-                    label: const Center(
-                      child: Text(
-                        'Groq (Free Llama)',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    onSelected: (_) => _switchProvider(AiEngineProvider.groq),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ChoiceChip(
-                    selected: _selectedProvider == AiEngineProvider.gemini,
-                    label: const Center(
-                      child: Text(
-                        'Google Gemini',
-                        style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    onSelected: (_) => _switchProvider(AiEngineProvider.gemini),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-
-            // Mode Selector: Test Mode toggle
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isDark ? LabColors.nightSurfaceElevated : LabColors.daylightSurfaceSubtle,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: border),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Development / Test Mode',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Enforce offline mock mode for zero-cost and automated testing.',
-                          style: TextStyle(fontSize: 11, color: textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Switch.adaptive(
-                    value: !aiConfig.useLiveAi || aiConfig.isMockKey,
-                    onChanged: (isTestMode) async {
-                      HapticFeedback.lightImpact();
-                      await ref.read(aiConfigProvider.notifier).toggleLiveMode(!isTestMode);
-                    },
-                    activeThumbColor: LabColors.warmBeige,
-                  ),
-                ],
-              ),
-            ),
-
             const SizedBox(height: 16),
 
-            Text(
-              _selectedProvider == AiEngineProvider.groq
-                  ? 'GROQ API KEY (CONSOLE.GROQ.COM)'
-                  : 'GOOGLE GEMINI API KEY',
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.0,
-                color: textSecondary,
-              ),
+            // Availability Matrix: 4 Status Cards
+            // 1. Local AI
+            _buildStatusCard(
+              title: strings.localAiTitle,
+              badgeText: 'AVAILABLE & ACTIVE',
+              badgeColor: LabColors.sageGreenGlow,
+              badgeBg: LabColors.sageGreenGlow.withValues(alpha: 0.12),
+              description: strings.localAiDesc,
+              borderColor: LabColors.sageGreenGlow.withValues(alpha: 0.35),
+              isDark: isDark,
+              textPrimary: textPrimary,
+              textSecondary: textSecondary,
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _keyController,
-              obscureText: _obscureKey,
-              style: TextStyle(fontSize: 13, color: textPrimary),
-              decoration: InputDecoration(
-                hintText: _selectedProvider == AiEngineProvider.groq
-                    ? 'Paste gsk_... key (or use --dart-define=AI_PROXY_URL)'
-                    : 'Paste key from aistudio.google.com...',
-                hintStyle: TextStyle(fontSize: 12, color: textSecondary.withValues(alpha: 0.6)),
-                filled: true,
-                fillColor: isDark ? LabColors.nightSurfaceElevated : LabColors.daylightSurfaceSubtle,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: border)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: border)),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: isDark ? Colors.white : Colors.black, width: 1.5)),
-                suffixIcon: IconButton(
-                  tooltip: 'Toggle key visibility',
-                  icon: Icon(_obscureKey ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
-                  onPressed: () => setState(() => _obscureKey = !_obscureKey),
-                ),
-              ),
+            const SizedBox(height: 10),
+
+            // 2. External Cloud AI
+            _buildStatusCard(
+              title: strings.externalAiTitle,
+              badgeText: 'UNAVAILABLE',
+              badgeColor: textSecondary,
+              badgeBg: (isDark ? Colors.white : Colors.black)
+                  .withValues(alpha: 0.06),
+              description: strings.externalAiDesc,
+              borderColor: border,
+              isDark: isDark,
+              textPrimary: textPrimary,
+              textSecondary: textSecondary,
+            ),
+            const SizedBox(height: 10),
+
+            // 3. xAI Grok (Planned)
+            _buildStatusCard(
+              title: strings.grokTitle,
+              badgeText: 'PLANNED',
+              badgeColor: LabColors.warmBeige,
+              badgeBg: LabColors.warmBeige.withValues(alpha: 0.12),
+              description: strings.grokDesc,
+              borderColor: LabColors.warmBeige.withValues(alpha: 0.3),
+              isDark: isDark,
+              textPrimary: textPrimary,
+              textSecondary: textSecondary,
+            ),
+            const SizedBox(height: 10),
+
+            // 4. Google Gemini & Groq (Not Supported)
+            _buildStatusCard(
+              title: strings.unsupportedProvidersTitle,
+              badgeText: 'NOT SUPPORTED',
+              badgeColor: LabColors.safetyWarmth,
+              badgeBg: LabColors.safetyWarmth.withValues(alpha: 0.12),
+              description: strings.unsupportedProvidersDesc,
+              borderColor: LabColors.safetyWarmth.withValues(alpha: 0.3),
+              isDark: isDark,
+              textPrimary: textPrimary,
+              textSecondary: textSecondary,
             ),
 
             if (_testResult != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: (_testSuccess == true ? LabColors.sageGreenGlow : LabColors.safetyWarmth).withValues(alpha: 0.12),
+                  color: (_testSuccess == true
+                          ? LabColors.sageGreenGlow
+                          : LabColors.safetyWarmth)
+                      .withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: _testSuccess == true ? LabColors.sageGreenGlow : LabColors.safetyWarmth,
+                    color: _testSuccess == true
+                        ? LabColors.sageGreenGlow
+                        : LabColors.safetyWarmth,
                     width: 1,
                   ),
                 ),
@@ -367,9 +315,13 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
-                      _testSuccess == true ? Icons.check_circle_outline : Icons.error_outline,
+                      _testSuccess == true
+                          ? Icons.check_circle_outline
+                          : Icons.info_outline,
                       size: 16,
-                      color: _testSuccess == true ? LabColors.sageGreenGlow : LabColors.safetyWarmth,
+                      color: _testSuccess == true
+                          ? LabColors.sageGreenGlow
+                          : LabColors.safetyWarmth,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -378,7 +330,9 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
                         style: TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w600,
-                          color: _testSuccess == true ? LabColors.sageGreenGlow : LabColors.safetyWarmth,
+                          color: _testSuccess == true
+                              ? LabColors.sageGreenGlow
+                              : LabColors.safetyWarmth,
                           height: 1.3,
                         ),
                       ),
@@ -388,8 +342,9 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
               ),
             ],
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
 
+            // Action Buttons
             Row(
               children: [
                 Expanded(
@@ -397,13 +352,18 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       side: BorderSide(color: border),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: _isTesting ? null : _testConnection,
                     child: _isTesting
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : Text(
-                            'TEST CONNECTION',
+                            strings.testConnectionBtn,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -420,30 +380,114 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
                       backgroundColor: isDark ? Colors.white : Colors.black,
                       foregroundColor: isDark ? Colors.black : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
-                    onPressed: _saveKey,
-                    child: const Text(
-                      'SAVE & ACTIVATE',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      strings.doneBtn.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
 
-            if (_keyController.text.isNotEmpty || !aiConfig.isMockKey) ...[
-              const SizedBox(height: 8),
+            if (hasHistoricalKeys) ...[
+              const SizedBox(height: 14),
+              Text(
+                strings.historicalKeysNote,
+                style:
+                    TextStyle(fontSize: 11, color: textSecondary, height: 1.3),
+              ),
+              const SizedBox(height: 6),
               Center(
                 child: TextButton(
-                  style: TextButton.styleFrom(foregroundColor: LabColors.safetyWarmth),
-                  onPressed: _clearKey,
-                  child: const Text('Revert to Offline Mock Mode', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600)),
+                  style: TextButton.styleFrom(
+                      foregroundColor: LabColors.safetyWarmth),
+                  onPressed: _clearHistoricalKeys,
+                  child: Text(
+                    strings.clearHistoricalKeysBtn,
+                    style: const TextStyle(
+                        fontSize: 11.5, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatusCard({
+    required String title,
+    required String badgeText,
+    required Color badgeColor,
+    required Color badgeBg,
+    required String description,
+    required Color borderColor,
+    required bool isDark,
+    required Color textPrimary,
+    required Color textSecondary,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? LabColors.nightSurfaceElevated
+            : LabColors.daylightSurfaceSubtle,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: textPrimary,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  badgeText,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.4,
+                    color: badgeColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: TextStyle(
+              fontSize: 11.5,
+              color: textSecondary,
+              height: 1.35,
+            ),
+          ),
+        ],
       ),
     );
   }

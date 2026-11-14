@@ -229,12 +229,24 @@ class ProfileNotifier extends AsyncNotifier<PsychologicalProfileModel> {
     await ref.read(profileRepositoryProvider).saveProfile(updated, userId: _currentUserId);
   }
 
-  // 7. Privacy & AI Personalization
+  // 7. Privacy & AI Consent
+  Future<void> setShareWithAiCompanion(bool allow) async {
+    final current = state.value ?? PsychologicalProfileModel.empty(userId: _currentUserId ?? 'local_user');
+    final updated = current.copyWith(
+      shareWithAiCompanion: allow,
+      consentVersion: PsychologicalProfileModel.kCurrentConsentVersion,
+      updatedAt: DateTime.now(),
+    );
+
+    state = AsyncValue.data(updated);
+    await ref.read(profileRepositoryProvider).saveProfile(updated, userId: _currentUserId);
+  }
+
   Future<void> setAiPersonalization(bool allow) async {
     final current = state.value ?? PsychologicalProfileModel.empty(userId: _currentUserId ?? 'local_user');
     final updated = current.copyWith(
       allowAiPersonalization: allow,
-      shareWithAiCompanion: allow,
+      consentVersion: PsychologicalProfileModel.kCurrentConsentVersion,
       updatedAt: DateTime.now(),
     );
 
@@ -285,6 +297,7 @@ class ProfileNotifier extends AsyncNotifier<PsychologicalProfileModel> {
     String? personalGoals,
     String? notesForAiCompanion,
     bool? shareWithAiCompanion,
+    bool? allowAiPersonalization,
   }) async {
     final current = state.value ?? PsychologicalProfileModel.empty(userId: _currentUserId ?? 'local_user');
     final updated = current.copyWith(
@@ -296,8 +309,11 @@ class ProfileNotifier extends AsyncNotifier<PsychologicalProfileModel> {
       personalGoals: personalGoals,
       notesForAiCompanion: notesForAiCompanion,
       personalContext: notesForAiCompanion ?? current.personalContext,
-      shareWithAiCompanion: shareWithAiCompanion,
-      allowAiPersonalization: shareWithAiCompanion ?? current.allowAiPersonalization,
+      shareWithAiCompanion: shareWithAiCompanion ?? current.shareWithAiCompanion,
+      allowAiPersonalization: allowAiPersonalization ?? current.allowAiPersonalization,
+      consentVersion: (shareWithAiCompanion != null || allowAiPersonalization != null)
+          ? PsychologicalProfileModel.kCurrentConsentVersion
+          : current.consentVersion,
       updatedAt: DateTime.now(),
     );
 

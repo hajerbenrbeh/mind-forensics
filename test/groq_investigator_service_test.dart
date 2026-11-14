@@ -10,7 +10,6 @@ import 'package:mind_forensics/core/security/secure_key_manager.dart';
 import 'package:mind_forensics/features/investigation/controllers/investigation_providers.dart';
 import 'package:mind_forensics/features/investigation/data/direct_groq_investigator_service.dart';
 import 'package:mind_forensics/features/investigation/data/mock_investigator_service.dart';
-import 'package:mind_forensics/features/investigation/domain/ai_companion_system_prompt.dart';
 import 'package:mind_forensics/features/investigation/domain/case_model.dart';
 import 'package:mind_forensics/features/investigation/domain/case_stage.dart';
 import 'package:mind_forensics/features/investigation/domain/hypothesis.dart';
@@ -76,12 +75,10 @@ class _FakeHttpClient implements HttpClient {
   _FakeHttpClient({
     required this.statusCode,
     required this.responseBody,
-    this.throwSocketError = false,
   });
 
   final int statusCode;
   final String responseBody;
-  final bool throwSocketError;
   final List<_FakeHttpHeaders> capturedHeaders = [];
 
   @override
@@ -89,9 +86,6 @@ class _FakeHttpClient implements HttpClient {
 
   @override
   Future<HttpClientRequest> postUrl(Uri url) async {
-    if (throwSocketError) {
-      throw const SocketException('Simulated offline state');
-    }
     final headers = _FakeHttpHeaders();
     capturedHeaders.add(headers);
     return _FakeHttpClientRequest(
@@ -158,7 +152,7 @@ void main() {
       expect(service.networkRequestsAttempted, equals(0));
     });
 
-    test('Active Groq key sends Bearer header + specialist prompt and parses reply', () async {
+    test('Groq network transmission is permanently disabled: fake client never invoked and returns local fallback', () async {
       Uri? capturedUri;
       Map<String, dynamic>? capturedPayload;
       final fakeClient = _FakeHttpClient(
@@ -192,25 +186,16 @@ void main() {
         languageCode: 'en',
       );
 
-      expect(
-        capturedUri.toString(),
-        equals('https://proxy.example.com/v1/chat/completions'),
-      );
-      expect(
-        fakeClient.capturedHeaders.single.values['Authorization'],
-        equals('Bearer gsk_test_123'),
-      );
-      final messages = capturedPayload?['messages'] as List<dynamic>;
-      final systemMsg = (messages.first as Map)['content'] as String;
-      expect(systemMsg, contains('Psychological Inquiry Specialist'));
-      expect(systemMsg, contains('Zero generic AI filler'));
-      expect(
-        reply,
-        contains('Notice how your chest tightened before any facts arrived.'),
-      );
+      // Stage 6.1A.3: Prove fake client is NEVER invoked even with active key and consented profile
+      expect(capturedUri, isNull);
+      expect(capturedPayload, isNull);
+      expect(fakeClient.capturedHeaders, isEmpty);
+      expect(service.networkRequestsAttempted, equals(0));
+      // Local fallback produces grounded clinical inquiry
+      expect(reply.isNotEmpty, isTrue);
     });
 
-    test('Groq parses JSON hypotheses and falls back silently on SocketException', () async {
+    test('Groq hypothesis generation is permanently disabled and uses local clinical generator', () async {
       final jsonClient = _FakeHttpClient(
         statusCode: 200,
         responseBody: jsonEncode({
@@ -243,19 +228,12 @@ void main() {
         currentCase: buildSampleCase(),
         profile: buildConsentedProfile(),
       );
-      expect(hypotheses, hasLength(1));
-      expect(hypotheses.first.title, equals('Busy afternoon'));
+      // Local fallback generates 3 high-fidelity clinical hypotheses
+      expect(hypotheses, hasLength(3));
+      expect(jsonClient.capturedHeaders, isEmpty);
+      expect(service.networkRequestsAttempted, equals(0));
 
-      final offlineService = DirectGroqInvestigatorService(
-        apiKey: 'gsk_test_offline',
-        clientFactory: () => _FakeHttpClient(
-          statusCode: 500,
-          responseBody: '',
-          throwSocketError: true,
-        ),
-      );
-
-      final questions = await offlineService.generateCrossExaminationQuestions(
+      final questions = await service.generateCrossExaminationQuestions(
         currentCase: buildSampleCase(),
         hypothesis: const Hypothesis(
           id: 'hyp-1',
@@ -269,7 +247,23 @@ void main() {
       expect(questions.length, greaterThanOrEqualTo(1));
     });
 
-    test('investigatorServiceProvider routes to DirectGroqInvestigatorService when Groq key saved', () async {
+    test('Groq testConnection returns network disabled without opening sockets', () async {
+      final fakeClient = _FakeHttpClient(statusCode: 200, responseBody: '{}');
+      final service = DirectGroqInvestigatorService(
+        apiKey: 'gsk_live_123',
+        clientFactory: () => fakeClient,
+      );
+
+      final result = await service.testConnection();
+      expect(result.success, isFalse);
+      expect(result.message, contains('External AI is currently unavailable'));
+      expect(result.message, contains('Groq is not supported'));
+      expect(result.message, contains('local reflection and support engine is active'));
+      expect(fakeClient.capturedHeaders, isEmpty);
+      expect(service.networkRequestsAttempted, equals(0));
+    });
+
+    test('investigatorServiceProvider routes to MockInvestigatorService even when Groq key saved', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
@@ -283,15 +277,15 @@ void main() {
           .setApiKey('gsk_live_test_999', provider: AiEngineProvider.groq);
 
       final config = container.read(aiConfigProvider);
-      expect(config.provider, equals(AiEngineProvider.groq));
-      expect(config.isLiveActive, isTrue);
+      expect(config.provider, equals(AiEngineProvider.local));
+      expect(config.isLiveActive, isFalse);
       expect(
         container.read(investigatorServiceProvider),
-        isA<DirectGroqInvestigatorService>(),
+        isA<MockInvestigatorService>(),
       );
     });
 
-    testWidgets('AiEngineConfigSheet allows switching between Groq and Gemini cleanly', (tester) async {
+    testWidgets('AiEngineConfigSheet displays truthful 4-part availability matrix', (tester) async {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
@@ -301,17 +295,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Groq (Free Llama)'), findsOneWidget);
-      expect(find.text('Google Gemini'), findsOneWidget);
+      expect(find.text('Local Reflection & Support Engine'), findsOneWidget);
+      expect(find.text('AVAILABLE & ACTIVE'), findsOneWidget);
+      expect(find.text('External Cloud AI'), findsOneWidget);
+      expect(find.text('UNAVAILABLE'), findsOneWidget);
+      expect(find.text('xAI Grok'), findsOneWidget);
+      expect(find.text('PLANNED'), findsOneWidget);
+      expect(find.text('Google Gemini & Groq'), findsOneWidget);
+      expect(find.text('NOT SUPPORTED'), findsOneWidget);
 
-      await tester.tap(find.text('Groq (Free Llama)'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('GROQ API KEY (CONSOLE.GROQ.COM)'), findsOneWidget);
-      expect(
-        AiCompanionSystemPrompt.coreIdentityPrompt,
-        contains('Psychological Inquiry Specialist'),
-      );
+      // Obsolete controls are removed
+      expect(find.text('Groq (Free Llama)'), findsNothing);
+      expect(find.text('SAVE & ACTIVATE'), findsNothing);
     });
   });
 }

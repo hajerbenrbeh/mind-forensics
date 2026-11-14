@@ -1,8 +1,3 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
-import '../../../core/security/daily_usage_limiter.dart';
 import '../../journey/domain/journey_activity.dart';
 import '../../profile/domain/psychological_profile_model.dart';
 import '../domain/mind_trace_model.dart';
@@ -24,6 +19,7 @@ class MindTraceAiService {
   });
 
   static const String kDevMockKey = 'DEV_MOCK_GEMINI_KEY';
+  static const bool kIsNetworkPermanentlyDisabled = true;
   static const List<String> fallbackModels = [
     'gemini-3.5-flash',
     'gemini-3.1-flash-lite',
@@ -45,14 +41,12 @@ class MindTraceAiService {
     lastCallWasLive = null;
     lastError = null;
 
-    final hasConsent = profile != null &&
-        profile.shareWithAiCompanion &&
-        profile.allowAiPersonalization;
+    final canShareExternally = profile != null && profile.shareWithAiCompanion;
 
-    // Consent Gate: If consent for AI companion or personalization is revoked,
-    // NEVER transmit telemetry to external cloud AI APIs (Gemini).
-    // Instantly route to the 100% on-device local generator with zero historical linkage.
-    if (!hasConsent) {
+    // Consent Gate: If consent for external data sharing is missing or revoked,
+    // NEVER transmit telemetry to external cloud AI APIs.
+    // Instantly route to the 100% on-device local generator.
+    if (!canShareExternally) {
       lastCallWasLive = false;
       return _generateLocalReflection(
         currentTrace: currentTrace,
@@ -62,190 +56,19 @@ class MindTraceAiService {
       );
     }
 
-    final cleanKey = apiKey?.trim() ?? '';
-
-    if (cleanKey.isNotEmpty && cleanKey != kDevMockKey) {
-      try {
-        final geminiResult = await _callGeminiReflection(
-          apiKey: cleanKey,
-          currentTrace: currentTrace,
-          history: history,
-          profile: profile,
-          languageCode: languageCode,
-        );
-        if (geminiResult != null && geminiResult.trim().isNotEmpty) {
-          lastCallWasLive = true;
-          return geminiResult.trim();
-        }
-      } catch (e) {
-        lastError = 'Connection failed: $e';
-      }
-    }
-
+    // In Stage 6.1A.3: Gemini network transmission is permanently disabled.
+    // Mind Forensics uses local deterministic reflection until the separate Grok implementation stage.
+    // External transmission is strictly blocked with zero outbound HTTP requests.
     lastCallWasLive = false;
-    // Local Clinical Generator (Offline fallback)
+    final allowsPersonalization = profile.allowAiPersonalization;
     return _generateLocalReflection(
       currentTrace: currentTrace,
-      history: history,
+      history: allowsPersonalization ? history : const [],
       profile: profile,
       languageCode: languageCode,
     );
   }
 
-  Future<String?> _callGeminiReflection({
-    required String apiKey,
-    required MindTraceModel currentTrace,
-    required List<MindTraceModel> history,
-    required PsychologicalProfileModel? profile,
-    required String languageCode,
-  }) async {
-    final cleanKey = apiKey.trim();
-    if (cleanKey.isEmpty || cleanKey == kDevMockKey) return null;
-    // Defense-in-depth consent check
-    final hasConsent = profile != null &&
-        profile.shareWithAiCompanion &&
-        profile.allowAiPersonalization;
-    if (!hasConsent) return null;
-
-    final canProceed = await DailyUsageLimiter.canMakeRequest();
-    if (!canProceed) return null;
-
-    final systemInstruction = '''
-You are the Mind Forensics Psychological Companion providing a short, deeply compassionate, and scientifically informed Daily Mind Trace reflection.
-
-CLINICAL GUIDELINES:
-1. ACKNOWLEDGE: Reflect the user's self-reported feelings, somatic state, and intensity in 1 gentle sentence.
-2. DISTINGUISH OBSERVATION FROM HYPOTHESIS:
-   - Clear distinction: "I notice that..." (observation) vs. "I wonder if..." (collaborative hypothesis).
-   - Only point out patterns across past check-ins if actual data shows it. Never fabricate or assume.
-3. ONE MEANINGFUL QUESTION:
-   - Conclude with exactly ONE grounded, open question that invites psychological self-attunement.
-4. BOUNDARIES:
-   - Never diagnose. Never state absolute causes.
-   - Strictly NO emojis anywhere in the response.
-5. LANGUAGE:
-${languageCode == 'ar' ? '''
-- Respond in warm, authentic Tunisian Arabic dialect (لهجة تونسية رزينة، متفهمة، دافية، ومبنية على العلاج النفسي الواعي):
-  * استعمل مفردات تونسية سلسة مثل "لاحظت اللي...", "زعمة فما رابط...", "شنوة تحس...".
-  * اطرح سؤال واحد يخليه يفكر في روحه برحمة.
-''' : (languageCode == 'fr' ? '''
-- Respond in warm, articulate, psychologically attuned French.
-''' : '''
-- Respond in warm, dignified, psychologically informed English.
-''')}
-''';
-
-    final promptBuffer = StringBuffer();
-    promptBuffer.writeln('TODAY\'S CHECK-IN DATA:');
-    promptBuffer.writeln('- Overall Mood: ${currentTrace.overallMood}');
-    promptBuffer.writeln('- Intensity (1-10): ${currentTrace.moodIntensity}');
-    if (currentTrace.energyLevel != null && currentTrace.energyLevel! >= 1 && currentTrace.energyLevel! <= 10) {
-      promptBuffer.writeln('- Energy Level (1-10): ${currentTrace.energyLevel}');
-    }
-    if (currentTrace.anxietyLevel != null) {
-      promptBuffer.writeln('- Anxiety Level: ${currentTrace.anxietyLevel}');
-    }
-    if (currentTrace.selectedEmotions.isNotEmpty) {
-      promptBuffer.writeln('- Emotions: ${currentTrace.selectedEmotions.join(', ')}');
-    }
-    if (currentTrace.sleepHours != null) {
-      promptBuffer.writeln('- Sleep Hours: ${currentTrace.sleepHours}');
-    }
-    if (currentTrace.physicalTension != null) {
-      promptBuffer.writeln('- Physical Tension (1-10): ${currentTrace.physicalTension}');
-    }
-    // Note: Raw journalText is strictly excluded across all AI prompt builders to protect personal diary privacy.
-
-    if (history.isNotEmpty) {
-      promptBuffer.writeln('\nPREVIOUS CHECK-INS HISTORY (Past ${history.take(4).length} days):');
-      for (final h in history.take(4)) {
-        promptBuffer.writeln('• ${h.dateKey}: Mood=${h.overallMood}, Intensity=${h.moodIntensity}${h.energyLevel != null ? ', Energy=${h.energyLevel}' : ''}');
-      }
-    }
-
-    final modelsToTry = [
-      modelName,
-      ...fallbackModels.where((m) => m != modelName),
-    ];
-
-    for (final currentModel in modelsToTry) {
-      final url = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/$currentModel:generateContent?key=$apiKey',
-      );
-
-      final payload = {
-        'system_instruction': {
-          'parts': [
-            {'text': systemInstruction}
-          ]
-        },
-        'contents': [
-          {
-            'role': 'user',
-            'parts': [
-              {'text': promptBuffer.toString()}
-            ]
-          }
-        ],
-        'generationConfig': {
-          'temperature': 0.6,
-          'maxOutputTokens': 800,
-        },
-      };
-
-      HttpClient? client;
-      try {
-        client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
-        final request = await client.postUrl(url);
-        request.headers.contentType = ContentType.json;
-        request.write(jsonEncode(payload));
-
-        final response = await request.close().timeout(const Duration(seconds: 15));
-        final body = await response.transform(utf8.decoder).join().timeout(const Duration(seconds: 15));
-
-        if (response.statusCode == 200) {
-          lastModelUsed = currentModel;
-          lastError = null;
-          await DailyUsageLimiter.recordRequest();
-          final Map<String, dynamic> decoded = jsonDecode(body) as Map<String, dynamic>;
-          final candidates = decoded['candidates'] as List<dynamic>?;
-          if (candidates != null && candidates.isNotEmpty) {
-            final content = candidates.first['content'] as Map<String, dynamic>?;
-            final parts = content?['parts'] as List<dynamic>?;
-            if (parts != null && parts.isNotEmpty) {
-              return parts.first['text'] as String?;
-            }
-          }
-        } else if (response.statusCode == 401 || response.statusCode == 403) {
-          lastError = 'Authentication failed (HTTP ${response.statusCode})';
-          break; // Stop retrying on invalid key
-        } else if (response.statusCode == 400) {
-          lastError = 'Invalid request (HTTP 400): $body';
-          break; // Do not retry identical bad request
-        } else if (response.statusCode == 429 || response.statusCode == 503) {
-          lastError = 'HTTP ${response.statusCode} on $currentModel';
-          continue; // Try next fallback model immediately
-        } else {
-          lastError = 'Status ${response.statusCode}: $body';
-        }
-      } on SocketException catch (e) {
-        lastError = 'Network unavailable: ${e.message}';
-        break;
-      } on HandshakeException catch (e) {
-        lastError = 'Handshake failed: ${e.message}';
-        break;
-      } on TimeoutException {
-        lastError = 'Timeout on $currentModel';
-        continue;
-      } catch (e) {
-        lastError = 'Error on $currentModel: $e';
-      } finally {
-        client?.close();
-      }
-    }
-
-    return null;
-  }
 
   String _generateLocalReflection({
     required MindTraceModel currentTrace,

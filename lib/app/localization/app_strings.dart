@@ -296,14 +296,22 @@ class AppStrings {
   String get unlockWithBiometricsBtn => isArabic ? 'فتح القفل بالبصمة' : (isFrench ? 'DÉVERROUILLER' : 'UNLOCK');
   String get biometricFailedSnackbar => isArabic ? 'فشلت المصادقة البيومترية' : (isFrench ? 'Échec de l’authentification' : 'Biometric authentication failed');
   String get biometricNotAvailableSnackbar => isArabic ? 'البصمة غير متوفرة في هذا الجهاز' : (isFrench ? 'Biométrie non disponible' : 'Biometrics not available on this device');
-  // Cloud Sync (Firebase Spark Plan - Step 11)
-  String get cloudSyncTitle => isArabic ? 'النسخ الاحتياطي والمزامنة' : (isFrench ? 'Sauvegarde & Synchronisation' : 'Backup & Synchronization');
+  // Local Backup & Export (Step 6.1A Data Transparency)
+  String get cloudSyncTitle => isArabic
+      ? 'النسخ الاحتياطي والتصدير المحلي'
+      : (isFrench ? 'Sauvegarde locale & Export' : 'Local Backup & Export');
   String get cloudSyncDesc => isArabic 
-      ? 'نسخ احتياطي محلي سيادي متوافق مع قيود الخصوصية والتكلفة (\$0.00)' 
-      : (isFrench ? 'Sauvegarde locale souveraine sans facturation (\$0.00)' : 'Local sovereign backup on device with zero billing linked (\$0.00)');
+      ? 'نسخ الحفظ المحلية على الجهاز مشفرة، بينما ملفات JSON المصدّرة نص غير مشفر. ملفات النسخ الاحتياطي لا تُرسل إلى أي خادم خارجي.'
+      : (isFrench
+          ? 'Les instantanés locaux sont chiffrés ; les exports JSON sont en texte clair non chiffré. Vos sauvegardes ne sont jamais envoyées à des serveurs distants.'
+          : 'On-device backup snapshots are encrypted; exported JSON files are unencrypted plaintext. Backup files are never sent to remote servers.');
   String get exportVaultBtn => isArabic ? 'تصدير نسخة احتياطية (JSON)' : (isFrench ? 'Exporter la sauvegarde (JSON)' : 'Export Full Backup (JSON)');
-  String get exportVaultSuccess => isArabic ? 'تم نسخ النسخة الاحتياطية إلى الحافظة' : (isFrench ? 'Sauvegarde complète copiée' : 'Full backup copied to clipboard');
-  String get sparkPlanBadge => isArabic ? 'خطة SPARK المجانية (\$0.00)' : (isFrench ? 'FORFAIT SPARK (\$0.00)' : 'SPARK FREE TIER (\$0.00)');
+  String get exportVaultSuccess => isArabic
+      ? 'تم نسخ النسخة الاحتياطية إلى الحافظة (ملاحظة: ملف JSON غير مشفر، يرجى حفظه بأمان).'
+      : (isFrench
+          ? 'Sauvegarde complète copiée (Note : le JSON n’est pas chiffré, conservez-le en lieu sûr).'
+          : 'Full backup copied to clipboard (Note: exported JSON is unencrypted; store securely).');
+  String get sparkPlanBadge => isArabic ? 'تخزين محلي سيادي (\$0.00)' : (isFrench ? 'STOCKAGE LOCAL SOUVERAIN (\$0.00)' : 'LOCAL SOVEREIGN STORAGE (\$0.00)');
 
   String get wipeDataTitle => isArabic ? 'مسح السجلات نهائياً' : (isFrench ? 'Purger toutes les données' : 'Purge All Records');
   String get wipeDataDesc => isArabic ? 'حذف كافة الجلسات والتحليلات المعرفية المحفوظة على هذا الجهاز' : (isFrench ? 'Suppression irréversible de l’historique des sessions' : 'Irreversibly delete all cognitive history from this device');
@@ -745,12 +753,44 @@ class AppStrings {
   String get treatmentLabel => isArabic ? 'المتابعة أو العلاج المهني الحالي' : (isFrench ? 'Accompagnement ou traitement actuel' : 'Current treatment or professional support');
   String get goalsLabel => isArabic ? 'أهدافك الشخصية من الاستكشاف' : (isFrench ? 'Vos objectifs personnels' : 'Personal goals');
   String get notesForAiLabel => isArabic ? 'ما ترغب أن يدركه مرافقك الذكي' : (isFrench ? 'Ce que l’IA devrait comprendre de vous' : 'Things you want your AI companion to understand');
-  String get shareWithAiToggle => isArabic ? 'مشاركة الملف مع المرافق الذكي' : (isFrench ? 'Partager avec le compagnon IA' : 'Share profile with AI companion');
-  String get shareWithAiDesc => isArabic
-      ? 'يسمح للمرافق الذكي بتخصيص أسئلته وفقاً لحالتك وأهدافك الشخصية، مع الحفاظ على سرية بياناتك على هذا الجهاز فقط.'
+  String get shareWithAiToggle => aiDataSharingToggle;
+  String get shareWithAiDesc => aiDataSharingDescEnabled;
+
+  String get aiDataSharingToggle => isArabic
+      ? 'المعالجة الخارجية ومشاركة البيانات مع الذكاء الاصطناعي'
       : (isFrench
-          ? 'Permet au compagnon de personnaliser son écoute selon vos besoins en toute confidentialité locale.'
-          : 'Allows your companion to personalize inquiry to your goals with strict on-device confidentiality.');
+          ? 'Traitement externe par IA'
+          : 'External AI processing & sharing');
+
+  String get aiDataSharingDescEnabled => isArabic
+      ? 'مفعّل: يسمح بإرسال المحتوى والسياق المحدد إلى مزود الذكاء الاصطناعي المعتمد للتحليل. لا يتم تخزين أي بيانات شخصية عن بعد بواسطة Mind Forensics، ويمكنك إلغاء الإذن في أي وقت.'
+      : (isFrench
+          ? 'Activé : autorise l’envoi des requêtes et du contexte sélectionné au fournisseur d’IA configuré. Aucune donnée personnelle n’est conservée à distance par Mind Forensics, révocable à tout moment.'
+          : 'Enabled: Permits sending prompts and selected context to the configured AI provider. No personal data is stored remotely by Mind Forensics, and you can revoke this at any time.');
+
+  String get aiDataSharingDescDisabled => isArabic
+      ? 'معطّل: معالجة الذكاء الاصطناعي الخارجي محجوبة تماماً عبر جميع الميزات. تظل يومياتك وسجلاتك وأدواتك المحلية تعمل بالكامل على هذا الجهاز.'
+      : (isFrench
+          ? 'Désactivé : les requêtes d’IA externe sont totalement bloquées. Le journal, le suivi et tous les outils locaux restent pleinement opérationnels sur cet appareil.'
+          : 'Disabled: Outbound AI processing is completely blocked across all features. All tracking, journaling, and local tools remain fully functional on this device.');
+
+  String get aiPersonalizationToggle => isArabic
+      ? 'تخصيص ردود المرافق الذكي بسياق الملف'
+      : (isFrench
+          ? 'Personnaliser l’IA avec mon profil'
+          : 'Personalize AI with profile context');
+
+  String get aiPersonalizationDescEnabled => isArabic
+      ? 'مفعّل: يسترشد المرافق الذكي بأهدافك وصعوباتك ونبرتك المفضلة لتكييف إجاباته، مع إبقاء البيانات سرية على جهازك.'
+      : (isFrench
+          ? 'Activé : le compagnon adapte ses questions d’après vos objectifs, difficultés et préférences de communication tout en maintenant vos données confidentielles sur cet appareil.'
+          : 'Enabled: Companion tailors reflection questions using your stated goals, difficulties, and communication preferences while keeping data strictly on this device.');
+
+  String get aiPersonalizationDescDisabled => isArabic
+      ? 'معطّل: يتم حجب بيانات ملفك النفسي تماماً عن أي سياق يرسل للذكاء الاصطناعي.'
+      : (isFrench
+          ? 'Désactivé : le contenu de votre profil est strictement exclu des requêtes transmises à l’IA.'
+          : 'Disabled: Profile context is strictly excluded from AI prompts even if external AI processing is permitted.');
   String get saveProfileBtn => isArabic ? 'حفظ الملف النفسي' : (isFrench ? 'ENREGISTRER LE PROFIL' : 'SAVE PROFILE');
   String get profileSavedSnackbar => isArabic ? 'تم حفظ الملف النفسي وتحديث سياق المرافق بنجاح' : (isFrench ? 'Profil psychologique mis à jour avec succès' : 'Psychological profile saved and AI context updated');
   String get editConditionStatusTitle => isArabic ? 'تحديد حالة التقييم' : (isFrench ? 'Définir le statut' : 'Specify Evaluation Status');
@@ -818,17 +858,27 @@ class AppStrings {
   String get startExplorationBtn => isArabic ? 'ابدأ رحلة الاستكشاف' : (isFrench ? 'Commencer l’exploration' : 'Start Exploration');
   String get signInPromptBtn => isArabic ? 'تسجيل الدخول' : (isFrench ? 'Se connecter' : 'Sign In');
   String get biometricUnlockBtn => isArabic ? 'فتح سريع بالبصمة' : (isFrench ? 'Déverrouillage biométrique' : 'Quick Biometric Unlock');
-  String get linkEmailTitle => isArabic ? 'الربط بحساب سحابي' : (isFrench ? 'Associer un compte cloud' : 'Sync to Cloud Account');
+  String get linkEmailTitle => isArabic ? 'حماية الحساب بكلمة مرور' : (isFrench ? 'Protéger par mot de passe' : 'Protect Account with Password');
   String get linkEmailSubtitle => isArabic
-      ? 'اربط بريدك الإلكتروني لمزامنة مسارك النفسي بين أجهزتك بأمان دون فقدان أي ملاحظة.'
+      ? 'أضف بريداً إلكترونياً وكلمة مرور لحماية حسابك على هذا الجهاز. تُحفظ كلمة المرور محلياً كتجزئة مشفرة ومملّحة.'
       : (isFrench
-          ? 'Associez un email pour synchroniser votre parcours entre vos appareils sans rien perdre.'
-          : 'Link an email and password to securely sync your journey across devices without losing data.');
-  String get linkEmailBtn => isArabic ? 'ربط ومزامنة الحساب' : (isFrench ? 'ASSOCIER & SYNCHRONISER' : 'LINK & SYNC ACCOUNT');
+          ? 'Ajoutez un email et un mot de passe pour protéger votre compte sur cet appareil. Votre mot de passe est conservé localement sous forme de hachage cryptographique salé.'
+          : 'Add an email and password to protect your account on this device. Your password is stored locally as a salted cryptographic hash.');
+  String get linkEmailBtn => isArabic ? 'حفظ وتأمين الحساب' : (isFrench ? 'ENREGISTRER & PROTÉGER' : 'SAVE & PROTECT ACCOUNT');
+  String get linkEmailSuccess => isArabic
+      ? 'تم تأمين الحساب بكلمة المرور المحلية بنجاح.'
+      : (isFrench
+          ? 'Compte protégé par mot de passe local avec succès.'
+          : 'Account successfully protected with local password.');
+  String get linkEmailFailure => isArabic
+      ? 'فشل تأمين الحساب. يرجى التحقق من صحة البيانات.'
+      : (isFrench
+          ? 'Échec de la protection du compte. Veuillez vérifier vos informations.'
+          : 'Failed to protect account. Please check your inputs.');
   String get signOutBtn => isArabic ? 'تسجيل الخروج' : (isFrench ? 'Se déconnecter' : 'Sign Out');
   String get deleteAccountBtn => isArabic ? 'حذف الحساب والبيانات' : (isFrench ? 'Supprimer le compte et les données' : 'Delete Account & Data');
   String get vaultStatusAnonymous => isArabic ? 'حساب محلي على الجهاز' : (isFrench ? 'Compte local (sur l’appareil)' : 'Local On-Device Account');
-  String get vaultStatusCloud => isArabic ? 'حساب متزامن سحابياً' : (isFrench ? 'Compte synchronisé dans le cloud' : 'Cloud-Synced Account');
+  String get vaultStatusCloud => isArabic ? 'حساب محلي محمي بكلمة مرور' : (isFrench ? 'Compte local protégé par mot de passe' : 'Local Password-Secured Account');
   String get onboardingVaultChoiceTitle => isArabic ? 'الحساب والخصوصية' : (isFrench ? 'Compte & Confidentialité' : 'Account & Privacy');
   String get onboardingVaultChoiceSubtitle => isArabic
       ? 'حدد كيفية حفظ بياناتك وتأمينها.'
@@ -836,7 +886,7 @@ class AppStrings {
           ? 'Choisissez comment sauvegarder et sécuriser vos données.'
           : 'Choose how your reflections and data are stored and protected.');
   String get anonymousChoiceBadge => isArabic ? 'أعلى درجات الخصوصية' : (isFrench ? 'CONFIDENTIALITÉ MAXIMALE' : 'MAXIMUM PRIVACY');
-  String get cloudChoiceBadge => isArabic ? 'مزامنة متعددة الأجهزة' : (isFrench ? 'SYNCHRONISATION MULTI-APPAREILS' : 'MULTI-DEVICE SYNC');
+  String get cloudChoiceBadge => isArabic ? 'محمي بكلمة مرور محلية' : (isFrench ? 'PROTÉGÉ LOCALEMENT' : 'LOCAL PASSWORD PROTECTED');
   String get biometricEnableToggle => isArabic ? 'تأمين هذا الجهاز ببصمة الإصبع أو الوجه' : (isFrench ? 'Protéger l’accès par biométrie' : 'Secure device with Biometrics');
 
   // =========================================================================
@@ -1476,7 +1526,65 @@ class AppStrings {
   String get myAccountTitle => isArabic ? 'ملفي النفسي وحسابي' : (isFrench ? 'Mon Profil & Compte' : 'My Account & Context');
   String get myAccountSub => isArabic ? 'السياق الشخصي وتفضيلات الحوار' : (isFrench ? 'Gérer le contexte personnel et les préférences' : 'Manage psychological context and preferences');
   String get mindAssistantEngineTitle => isArabic ? 'محرّك المساعد الذهني' : (isFrench ? 'Moteur d’Assistant Mental' : 'Mind Assistant Engine');
-  String get mindAssistantEngineSub => isArabic ? 'وضع الاختبار المحلي أو الاتصال السحابي' : (isFrench ? 'Mode test local et diagnostics Gemini' : 'Gemini live AI & safe test mode status');
+  String get mindAssistantEngineSub => isArabic
+      ? 'محرّك محلي للتأمل والدعم'
+      : (isFrench
+          ? 'Moteur local de réflexion et de soutien'
+          : 'Local reflection and support engine');
+  String get aiEngineStatusTitle => isArabic ? 'حالة محرّك المساعد' : (isFrench ? 'État du Moteur' : 'Engine Status');
+  String get aiEngineStatusDesc => isArabic
+      ? 'يعمل Mind Forensics عبر محرّك محلي للتأمل والدعم على هذا الجهاز. مزودو الذكاء الاصطناعي الخارجيون غير متاحين حالياً.'
+      : (isFrench
+          ? 'Mind Forensics fonctionne via un moteur local de réflexion et de soutien sur cet appareil. Les fournisseurs d’IA externes sont actuellement indisponibles.'
+          : 'Mind Forensics operates via a local reflection and support engine on this device. External AI providers are currently unavailable.');
+  String get localAiTitle => isArabic ? 'محرّك محلي للتأمل والدعم (على الجهاز)' : (isFrench ? 'Moteur local de réflexion et de soutien' : 'Local Reflection & Support Engine');
+  String get localAiStatus => isArabic ? 'متاح ونشط' : (isFrench ? 'Disponible et actif' : 'Available & Active');
+  String get localAiDesc => isArabic
+      ? 'معالجة محددة قائمة على القواعد وحوار تأملي. معالجة محلية بالكامل دون أي إرسال خارجي.'
+      : (isFrench
+          ? 'Traitement déterministe basé sur des règles et dialogue réflexif. 100% local sans transmission externe.'
+          : 'Deterministic, rule-based processing and reflective dialogue. 100% local with zero external transmission.');
+  String get externalAiTitle => isArabic ? 'ذكاء اصطناعي سحابي خارجي' : (isFrench ? 'IA cloud externe' : 'External Cloud AI');
+  String get externalAiStatus => isArabic ? 'غير متاح حالياً' : (isFrench ? 'Actuellement indisponible' : 'Currently Unavailable');
+  String get externalAiDesc => isArabic
+      ? 'الإرسال إلى الذكاء الاصطناعي عن بعد معطل في جميع الوحدات. لا تغادر أي سجلات شخصية جهازك.'
+      : (isFrench
+          ? 'La transmission vers l’IA distante est désactivée dans tous les modules. Aucun enregistrement personnel ne quitte l’appareil.'
+          : 'Remote AI transmission is disabled across all modules. No personal records or messages leave your device.');
+  String get grokTitle => 'xAI Grok';
+  String get grokStatus => isArabic ? 'مخطط (غير مطبق)' : (isFrench ? 'Planifié (Non implémenté)' : 'Planned (Not Implemented)');
+  String get grokDesc => isArabic
+      ? 'المزود الخارجي المستقبلي المخصص. مخطط لإصدار قادم مع موافقة صريحة من المستخدم.'
+      : (isFrench
+          ? 'Futur fournisseur d’IA externe désigné. Prévu pour une version ultérieure avec consentement explicite.'
+          : 'Designated future external AI provider. Planned for a future release with explicit user opt-in consent.');
+  String get unsupportedProvidersTitle => isArabic ? 'Google Gemini و Groq' : (isFrench ? 'Google Gemini et Groq' : 'Google Gemini & Groq');
+  String get unsupportedProvidersStatus => isArabic ? 'غير مدعوم' : (isFrench ? 'Non pris en charge' : 'Not Supported');
+  String get unsupportedProvidersDesc => isArabic
+      ? 'إرسال الشبكة معطل بشكل دائم. Gemini و Groq غير مدعومين كمزودين خارجيين.'
+      : (isFrench
+          ? 'Transmission réseau définitivement désactivée. Gemini et Groq ne sont pas pris en charge comme fournisseurs externes.'
+          : 'Network transmission permanently disabled. Gemini and Groq are not supported as external providers.');
+  String get clearHistoricalKeysBtn => isArabic ? 'مسح المفاتيح التاريخية المخزنة' : (isFrench ? 'Purger les clés historiques' : 'Purge Stored Historical Keys');
+  String get purgeHistoricalKeysTitle => isArabic
+      ? 'مسح مفاتيح API المخزنة؟'
+      : (isFrench
+          ? 'Purger les clés API stockées ?'
+          : 'Purge Stored API Keys?');
+  String get purgeHistoricalKeysMessage => isArabic
+      ? 'يقوم هذا الإجراء بحذف مفاتيح API التجريبية لـ Gemini و Groq المخزنة سابقاً على هذا الجهاز بشكل دائم. لا يحذف هذا الإجراء بياناتك الشخصية، أو السجلات المشفرة، أو مفتاح التشفير الرئيسي، أو بيانات الاسترداد.'
+      : (isFrench
+          ? 'Cette action supprime définitivement de cet appareil les clés API développeur Gemini et Groq précédemment stockées. Vos données personnelles, enregistrements chiffrés, clé principale et données de récupération ne sont pas supprimés.'
+          : 'This action permanently removes previously stored Gemini and Groq developer API keys from this device. It does not delete personal data, encrypted records, the master encryption key, or recovery material.');
+  String get confirmPurgeBtn => isArabic
+      ? 'تأكيد المسح'
+      : (isFrench ? 'Confirmer la purge' : 'Confirm Purge');
+  String get historicalKeysClearedToast => isArabic ? 'تم مسح مفاتيح API التاريخية من الجهاز.' : (isFrench ? 'Clés API historiques purgées de l’appareil.' : 'Historical API keys purged from device storage.');
+  String get historicalKeysNote => isArabic
+      ? 'المفاتيح السابقة مخزنة محلياً فقط ولا تُرسل عبر الشبكة.'
+      : (isFrench
+          ? 'Les clés précédentes sont stockées localement et ne sont jamais transmises.'
+          : 'Historical developer keys are retained in secure local storage only and are never transmitted.');
   String get sharePacketTitle => isArabic ? 'تحضير ملخص للمشاركة (اختياري)' : (isFrench ? 'Préparer un dossier de partage' : 'Build Share Packet');
   String get sharePacketSub => isArabic ? 'اختر البيانات التي تشاركها بإرادتك' : (isFrench ? 'Choisissez exactement quoi inclure' : 'Choose what to include before exporting');
 
@@ -1519,8 +1627,8 @@ class AppStrings {
       ? 'محلي على جهازك'
       : (isFrench ? 'Local sur l’appareil' : 'Local On-Device');
   String get privacyCloudConsentedTag => isArabic
-      ? 'سحابي مشفّر بموافقتك'
-      : (isFrench ? 'Cloud chiffré autorisé' : 'Encrypted Cloud Consented');
+      ? 'معالجة ذكاء اصطناعي بموافقتك'
+      : (isFrench ? 'Traitement IA autorisé' : 'AI Processing Consented');
   String get privacyPrivateSessionTag => isArabic
       ? 'جلسة خاصة (محلية فقط)'
       : (isFrench ? 'Session privée (Locale)' : 'Private Session (Local Only)');

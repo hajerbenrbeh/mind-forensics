@@ -107,6 +107,7 @@ void main() {
       final profileWithConsent = PsychologicalProfileModel(
         preferredName: 'Leila',
         shareWithAiCompanion: true,
+        allowAiPersonalization: true,
         updatedAt: DateTime(2026, 1, 1),
         conditions: const [
           UserConditionEntry(
