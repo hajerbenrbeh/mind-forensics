@@ -111,6 +111,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     if (classification == SafetyClassification.immediateMedicalEmergency ||
         classification == SafetyClassification.imminentIntentOrCrisis ||
         classification == SafetyClassification.accidentalIngestionAlert) {
+      bool statementPersisted = false;
       try {
         await notifier.addStatement(
           text,
@@ -118,7 +119,12 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
           label: LabelType.assumption,
           isSafetyStatement: true,
         );
-      } catch (_) {}
+        statementPersisted = true;
+      } catch (e) {
+        // Record safe diagnostic information without logging sensitive statement contents
+        debugPrint(
+            'Safety Warning: Failed to persist safety statement: ${e.runtimeType}');
+      }
 
       // Attempt safety pause state persistence with graceful fail-safe handling
       final pausePersisted = await notifier.pauseCaseForSafety();
@@ -127,12 +133,18 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
       if (mounted) {
         SafetyInterceptor.showCrisisPauseDialog(
           context,
-          isMedicalEmergency: classification == SafetyClassification.immediateMedicalEmergency,
-          isAccidentalIngestion: classification == SafetyClassification.accidentalIngestionAlert,
+          isMedicalEmergency:
+              classification == SafetyClassification.immediateMedicalEmergency,
+          isAccidentalIngestion:
+              classification == SafetyClassification.accidentalIngestionAlert,
         );
         if (!pausePersisted) {
-          // Log or silently inform without suppressing the modal
-          debugPrint('Warning: Safety pause flag failed to persist to disk, but medical dialog was presented.');
+          debugPrint(
+              'Safety Warning: Safety pause flag failed to persist to disk: fail-closed in memory active.');
+        }
+        if (!statementPersisted) {
+          debugPrint(
+              'Safety Warning: Safety statement failed to persist to disk: statement kept in volatile memory only.');
         }
       }
       return;
@@ -474,8 +486,18 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
   }
 
   Future<void> _synthesizeCaseBrief() async {
-    final currentCase = ref.read(activeCaseControllerProvider).value;
-    if (currentCase == null || currentCase.statements.isEmpty || _isSynthesizing) {
+    final activeCase = ref.read(activeCaseControllerProvider).value;
+    if (activeCase == null ||
+        activeCase.statements.isEmpty ||
+        _isSynthesizing ||
+        activeCase.isPausedForSafety) {
+      if (activeCase == null) {
+        debugPrint(
+            'Safety Warning: Case synthesis aborted because active case is unavailable or unverified.');
+      } else if (activeCase.isPausedForSafety) {
+        debugPrint(
+            'Safety Warning: Case synthesis blocked because session is paused for safety.');
+      }
       return;
     }
 
@@ -490,7 +512,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
       final tokens = context.tokens;
 
       final summary = await service.summarizeFindings(
-        currentCase: currentCase,
+        currentCase: activeCase,
         languageCode: locale.languageCode,
         profile: profile,
       );
@@ -502,7 +524,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
       if (mounted) {
         final router = GoRouter.maybeOf(context);
         if (router != null) {
-          router.push('/case/${currentCase.id}');
+          router.push('/case/${activeCase.id}');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -555,7 +577,9 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     final aiConfig = ref.watch(aiConfigProvider);
     final profile = ref.watch(profileControllerProvider).value;
 
-    final statements = widget.caseModel.statements;
+    final activeCase = ref.watch(activeCaseControllerProvider).value;
+    final isPaused = activeCase == null || activeCase.isPausedForSafety;
+    final statements = activeCase?.statements ?? widget.caseModel.statements;
     final hasUserMessages =
         statements.any((s) => s.speaker == StatementSpeaker.user);
     final isLive = aiConfig.isLiveActive;
@@ -566,6 +590,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
           tokens: tokens,
           strings: strings,
           hasUserMessages: hasUserMessages,
+          isPaused: isPaused,
         ),
         Expanded(
           child: !hasUserMessages
@@ -601,6 +626,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
           tokens: tokens,
           strings: strings,
           hasUserMessages: hasUserMessages,
+          isPaused: isPaused,
         ),
         _buildBottomInputBar(
           isDark: isDark,
@@ -615,6 +641,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     required MindTokens tokens,
     required AppStrings strings,
     required bool hasUserMessages,
+    required bool isPaused,
   }) {
     final modeTitle = localizedModeName(_currentMode, strings);
     final hasCustomInstructions =
@@ -734,11 +761,11 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
               ),
             ),
           ),
-          if (hasUserMessages)
+          if (hasUserMessages && !isPaused)
             MindPressable(
               semanticLabel: strings.saveTakeawayReportBtn,
               borderRadius: BorderRadius.circular(12),
-              onPressed: _isSynthesizing ? null : _synthesizeCaseBrief,
+              onPressed: (_isSynthesizing || isPaused) ? null : _synthesizeCaseBrief,
               child: Container(
                 constraints: const BoxConstraints(minHeight: 40),
                 padding: const EdgeInsets.symmetric(
@@ -1257,6 +1284,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     required MindTokens tokens,
     required AppStrings strings,
     required bool hasUserMessages,
+    required bool isPaused,
   }) {
     return Container(
       width: double.infinity,
@@ -1284,7 +1312,7 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
             highlighted: true,
             onPressed: () => ContextualSupportSheet.show(context),
           ),
-          if (hasUserMessages)
+          if (hasUserMessages && !isPaused)
             _buildReplyChip(
               tokens: tokens,
               icon: Icons.bookmark_added_outlined,
