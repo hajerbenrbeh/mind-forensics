@@ -6,13 +6,16 @@ import 'package:mind_forensics/app/localization/locale_controller.dart';
 import 'package:mind_forensics/app/theme/lab_theme.dart';
 import 'package:mind_forensics/core/widgets/mind_button.dart';
 import 'package:mind_forensics/core/widgets/mind_card.dart';
+import 'package:mind_forensics/core/widgets/mind_segmented.dart';
 import 'package:mind_forensics/features/insights/presentation/insights_screen.dart';
+import 'package:mind_forensics/features/investigation/controllers/investigation_providers.dart';
 import 'package:mind_forensics/features/mind_trace/controllers/mind_trace_controller.dart';
 import 'package:mind_forensics/features/mind_trace/domain/mind_trace_model.dart';
 import 'package:mind_forensics/features/mind_trace/presentation/widgets/daily_mind_trace_stepper.dart';
 import 'package:mind_forensics/features/track/presentation/track_screen.dart';
 import 'package:mind_forensics/features/track/presentation/widgets/track_entry_detail_sheet.dart';
 import 'package:mind_forensics/features/track/presentation/widgets/track_month_calendar.dart';
+import 'package:mind_forensics/features/track/presentation/widgets/track_mood_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Widget createTestHarness(Widget child) {
@@ -45,19 +48,24 @@ void main() {
         await tester.pumpWidget(createTestHarness(const TrackScreen()));
         await tester.pumpAndSettle();
 
-        // Exactly 2 consolidated tabs + Full Calendar action
-        expect(find.byType(Tab), findsNWidgets(2));
+        // Exactly 2 consolidated segments + Full Calendar action
+        expect(find.byType(MindSegmented), findsOneWidget);
         expect(find.text('Check-In Today'), findsOneWidget);
         expect(find.text('History & Calendar'), findsOneWidget);
         expect(find.byTooltip('Full Calendar & Analytics'), findsOneWidget);
 
-        // 5 Core State cards ('Calm' also appears as the slider left anchor)
+        // 5 Core State cards in 2-col TrackMoodPicker
         expect(find.text("TODAY'S CORE STATE"), findsOneWidget);
-        expect(find.text('Calm'), findsAtLeastNWidgets(1));
+        expect(find.byType(TrackMoodPicker), findsOneWidget);
+        expect(find.byType(TrackIntensitySlider), findsOneWidget);
+        expect(find.text('Calm'), findsOneWidget);
         expect(find.text('Anxious'), findsOneWidget);
         expect(find.text('Frustrated'), findsOneWidget);
         expect(find.text('Heavy'), findsOneWidget);
         expect(find.text('Restless'), findsOneWidget);
+        expect(find.text('Calm 1'), findsOneWidget);
+        expect(find.text('Overwhelmed 10'), findsOneWidget);
+        expect(find.text('What is on your mind? (optional)'), findsOneWidget);
 
         // Primary Intensity slider is visible immediately; context sliders are collapsed initially
         expect(find.text('Intensity'), findsOneWidget);
@@ -116,6 +124,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Daily check-in and note saved'), findsOneWidget);
+        expect(find.text('Saved'), findsOneWidget);
         expect(find.text("Update Today's Entry"), findsOneWidget);
 
         // Open discreet step-by-step guided modal sheet
@@ -207,9 +216,13 @@ void main() {
         expect(find.text('Long afternoon debugging.'), findsOneWidget);
 
         // Scroll back to calendar top and tap past calendar day to filter history list
-        await tester.ensureVisible(find.text('$altDay'));
+        final calDayFinder = find.descendant(
+          of: find.byType(TrackMonthCalendar),
+          matching: find.text('$altDay'),
+        );
+        await tester.ensureVisible(calDayFinder);
         await tester.pumpAndSettle();
-        await tester.tap(find.text('$altDay'));
+        await tester.tap(calDayFinder);
         await tester.pumpAndSettle();
 
         expect(find.text('Show all'), findsOneWidget);
@@ -296,6 +309,18 @@ void main() {
 
         expect(find.text('Updated evening reflection.'), findsNothing);
         expect(find.text('Quiet morning walk.'), findsOneWidget);
+
+        // Explore with AI Guide seeds activeCaseControllerProvider with mood, intensity, and note
+        await tester.tap(find.text('Quiet morning walk.'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Explore with AI Guide'));
+        await tester.pumpAndSettle();
+
+        final activeCase = container.read(activeCaseControllerProvider).value;
+        expect(activeCase, isNotNull);
+        expect(activeCase!.incidentDescription, contains('Calm'));
+        expect(activeCase.incidentDescription, contains('4/10'));
+        expect(activeCase.incidentDescription, contains('Quiet morning walk.'));
       },
     );
   });

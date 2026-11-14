@@ -17,6 +17,7 @@ import 'package:mind_forensics/features/profile/domain/diagnostic_status.dart';
 import 'package:mind_forensics/features/profile/domain/psychological_profile_model.dart';
 import 'package:mind_forensics/features/progress/data/progress_analytics_service.dart';
 import 'package:mind_forensics/features/progress/domain/progress_analytics_model.dart';
+import 'package:mind_forensics/features/track/presentation/track_screen.dart';
 
 void main() {
   setUp(() {
@@ -253,7 +254,7 @@ void main() {
   });
 
   group('Navigation & Routing Aliasing Tests', () {
-    testWidgets('resolves /check-in redirect to MindTraceScreen without throwing', (tester) async {
+    testWidgets('resolves /check-in and /mind-trace redirects to TrackScreen without throwing', (tester) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp.router(
@@ -264,12 +265,22 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // Navigate to /check-in alias
+      // Navigate to /check-in alias -> lands on TrackScreen
       AppRouter.router.go('/check-in');
       await tester.pumpAndSettle();
+      expect(find.byType(TrackScreen), findsOneWidget);
+      expect(find.text('Check-In Today'), findsOneWidget);
 
-      // Verify we arrived at MindTraceScreen
-      expect(find.textContaining('DAILY MIND TRACE'), findsOneWidget);
+      // Navigate to /mind-trace alias -> lands on TrackScreen
+      AppRouter.router.go(AppRouter.mindTrace);
+      await tester.pumpAndSettle();
+      expect(find.byType(TrackScreen), findsOneWidget);
+
+      // Navigate with initialTabIndex: 1 -> lands on History & Calendar tab
+      AppRouter.router.go(AppRouter.mindTrace, extra: {'initialTabIndex': 1});
+      await tester.pumpAndSettle();
+      expect(find.byType(TrackScreen), findsOneWidget);
+      expect(find.byTooltip('Previous month'), findsOneWidget);
 
       // Return home
       AppRouter.router.go(AppRouter.home);

@@ -107,6 +107,7 @@ void main() {
     final screens = <({String name, Widget Function() build})>[
       (name: 'HomeScreen', build: () => const HomeScreen()),
       (name: 'TrackScreen', build: () => const TrackScreen()),
+      (name: 'TrackScreenHistory', build: () => const TrackScreen(initialTab: 1)),
       (name: 'InnerObservatoryScreen', build: () => const InnerObservatoryScreen()),
       (name: 'InsightsScreen', build: () => const InsightsScreen()),
       (name: 'SettingsScreen', build: () => const SettingsScreen()),
