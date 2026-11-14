@@ -1340,6 +1340,25 @@ class AppStrings {
   String get editEntryTitle => isArabic ? 'تعديل التسجيل' : (isFrench ? 'Modifier le bilan' : 'Edit Check-In Entry');
   String get saveChangesBtn => isArabic ? 'حفظ التعديلات' : (isFrench ? 'Enregistrer' : 'Save Changes');
   String get cancelActionLabel => isArabic ? 'إلغاء' : (isFrench ? 'Annuler' : 'Cancel');
+  String get calmScaleAnchor => isArabic ? 'هادي 1' : (isFrench ? 'Calme 1' : 'Calm 1');
+  String get overwhelmedScaleAnchor => isArabic ? 'مضغوط 10' : (isFrench ? 'Débordé 10' : 'Overwhelmed 10');
+  String get whatsOnYourMindHint => isArabic
+      ? 'شنوّة اللي في بالك توّا؟ (اختياري)'
+      : (isFrench
+          ? 'Qu’avez-vous en tête ? (optionnel)'
+          : 'What is on your mind? (optional)');
+  String get pickHowYouFeelFirst => isArabic
+      ? 'اختار شعورك قبل الحفظ.'
+      : (isFrench
+          ? 'Choisissez d’abord votre ressenti.'
+          : 'Pick how you feel first.');
+  String get savedBadgeLabel => isArabic ? 'تم الحفظ' : (isFrench ? 'Enregistré' : 'Saved');
+  String get timelineOverline => isArabic ? 'السجل الزمني' : (isFrench ? 'CHRONOLOGIE' : 'TIMELINE');
+  String get exploreMoodContextPrefix => isArabic
+      ? 'استكشاف حالة مزاجية مسجّلة:'
+      : (isFrench
+          ? 'Explorer ce bilan d’humeur :'
+          : 'Explore mood check-in:');
 
   String trackTriggerDisplay(String key) {
     switch (key) {
@@ -1391,6 +1410,25 @@ class AppStrings {
     const fr = [
       'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
       'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+    ];
+    const ar = [
+      'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
+      'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+    ];
+    final idx = (month - 1).clamp(0, 11);
+    if (isArabic) return ar[idx];
+    if (isFrench) return fr[idx];
+    return en[idx];
+  }
+
+  String shortMonthName(int month) {
+    const en = [
+      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+    ];
+    const fr = [
+      'JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUIN',
+      'JUIL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC',
     ];
     const ar = [
       'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
