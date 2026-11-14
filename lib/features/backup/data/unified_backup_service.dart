@@ -342,6 +342,15 @@ class UnifiedBackupService {
   /// High-security work factor for user-initiated backup encryption (OWASP recommendation).
   static const int kBackupPbkdf2Iterations = 100000;
 
+  /// Explicitly supported legacy PBKDF2 iteration count for recognized legacy backup formats.
+  static const int kLegacyPbkdf2Iterations = 10000;
+
+  /// Minimum allowed PBKDF2 iteration count for modern standard backups.
+  static const int kMinPbkdf2Iterations = 50000;
+
+  /// Maximum allowed PBKDF2 iteration count to prevent CPU exhaustion attacks.
+  static const int kMaxPbkdf2Iterations = 500000;
+
   /// Generates an optional password-encrypted backup package using AES-256-GCM.
   Future<BackupOperationResult> createPasswordEncryptedBackup(String password) async {
     final rawResult = await createFullBackup();
@@ -404,7 +413,78 @@ class UnifiedBackupService {
 
       final saltB64 = data['salt'] as String?;
       final ciphertext = data['ciphertext'] as String?;
-      final iterations = data['iterations'] as int? ?? AuthService.kPbkdf2Iterations;
+      final schemaVersion = data['schemaVersion']?.toString() ?? '1.0.0';
+      final kdf = data['kdf']?.toString();
+
+      // Only pbkdf2_sha256 KDF is supported for password-encrypted backups
+      if (kdf != null && kdf != 'pbkdf2_sha256') {
+        return BackupOperationResult(
+          success: false,
+          message: 'Unsupported key derivation function: $kdf',
+        );
+      }
+
+      final iterationsRaw = data['iterations'];
+      int iterations;
+
+      // Determine if payload represents an explicitly supported legacy backup format:
+      // - Format 1: schemaVersion 1.x or absent schemaVersion
+      // - Format 2: explicitly verified legacy format using 10,000 iterations
+      final bool isLegacyFormat = schemaVersion.startsWith('1.') ||
+          data['schemaVersion'] == null ||
+          (iterationsRaw == kLegacyPbkdf2Iterations &&
+              (data['app'] == 'Mind Forensics' || data['app'] == null));
+
+      if (iterationsRaw == null) {
+        // Missing iteration fields are accepted ONLY for a recognized legacy format.
+        if (isLegacyFormat) {
+          iterations = kLegacyPbkdf2Iterations;
+        } else {
+          return const BackupOperationResult(
+            success: false,
+            message: 'Invalid encrypted backup: missing required iterations field for modern schema.',
+          );
+        }
+      } else if (iterationsRaw is! int) {
+        return const BackupOperationResult(
+          success: false,
+          message: 'Invalid encrypted backup: iterations field has unexpected type.',
+        );
+      } else {
+        iterations = iterationsRaw;
+      }
+
+      // Validate iteration count before running PBKDF2:
+      // Zero, negative, and excessively large values are rejected unconditionally
+      // to prevent computation exhaustion / DoS attacks.
+      if (iterations <= 0) {
+        return const BackupOperationResult(
+          success: false,
+          message: 'Invalid backup security parameters: PBKDF2 iteration count must be positive.',
+        );
+      }
+      if (iterations > kMaxPbkdf2Iterations) {
+        return BackupOperationResult(
+          success: false,
+          message:
+              'Invalid backup security parameters: PBKDF2 iteration count ($iterations) exceeds maximum safe threshold ($kMaxPbkdf2Iterations).',
+        );
+      }
+
+      // Check minimum bounds:
+      // 10,000 is accepted ONLY for explicitly supported legacy backup formats.
+      // All other backups must have at least kMinPbkdf2Iterations (50,000).
+      if (iterations < kMinPbkdf2Iterations) {
+        if (iterations == kLegacyPbkdf2Iterations && isLegacyFormat) {
+          // Explicitly supported legacy format with verified legacy work factor
+        } else {
+          return BackupOperationResult(
+            success: false,
+            message:
+                'Invalid backup security parameters: PBKDF2 iteration count ($iterations) is below safe minimum ($kMinPbkdf2Iterations).',
+          );
+        }
+      }
 
       if (saltB64 == null || ciphertext == null) {
         return const BackupOperationResult(

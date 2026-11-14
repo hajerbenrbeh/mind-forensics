@@ -6,6 +6,8 @@ import '../../app/localization/app_strings.dart';
 import '../../app/theme/lab_colors.dart';
 import '../widgets/bouncing_widget.dart';
 import 'app_lock_provider.dart';
+import 'master_key_recovery_dialog.dart';
+import 'master_key_status_provider.dart';
 
 /// Full-screen biometric lock overlay protecting private cognitive sessions.
 ///
@@ -19,6 +21,20 @@ class LockOverlay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Check if master encryption key is missing while encrypted data is present
+    final masterKeyStatus = ref.watch(masterKeyStatusProvider);
+    masterKeyStatus.whenData((isIntact) {
+      if (!isIntact) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            MasterKeyRecoveryDialog.show(context, onRecovered: () {
+              ref.invalidate(masterKeyStatusProvider);
+            });
+          }
+        });
+      }
+    });
+
     final lockState = ref.watch(appLockProvider);
     final strings = ref.watch(appStringsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;

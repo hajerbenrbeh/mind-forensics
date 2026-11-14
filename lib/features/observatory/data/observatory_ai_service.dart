@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,9 +20,16 @@ class ObservatoryAiService {
   });
 
   static const String kDevMockKey = 'DEV_MOCK_GEMINI_KEY';
+  static const List<String> fallbackModels = [
+    'gemini-3.5-flash',
+    'gemini-3.1-flash-lite',
+  ];
 
   final String? apiKey;
   final String modelName;
+  bool? lastCallWasLive;
+  String? lastModelUsed;
+  String? lastError;
 
   /// Suggests a single context-aware, non-intrusive adaptive follow-up inquiry.
   String generateAdaptiveFollowUpQuestion({
@@ -101,6 +109,9 @@ class ObservatoryAiService {
     required PsychologicalProfileModel? profile,
     required String languageCode,
   }) async {
+    lastCallWasLive = null;
+    lastError = null;
+
     final hasConsent = profile != null &&
         profile.shareWithAiCompanion &&
         profile.allowAiPersonalization;
@@ -120,10 +131,16 @@ class ObservatoryAiService {
           baseline: baseline,
           languageCode: languageCode,
         );
-        if (geminiResult != null) return geminiResult;
-      } catch (_) {}
+        if (geminiResult != null) {
+          lastCallWasLive = true;
+          return geminiResult;
+        }
+      } catch (e) {
+        lastError = 'Connection failed: $e';
+      }
     }
 
+    lastCallWasLive = false;
     // Default: High-fidelity local deterministic analysis
     return _generateLocalAnalysis(
       selectedSymptoms: selectedSymptoms,
@@ -204,58 +221,124 @@ class ObservatoryAiService {
     final canProceed = await DailyUsageLimiter.canMakeRequest();
     if (!canProceed) return null;
 
-    final client = HttpClient();
-    client.connectionTimeout = const Duration(seconds: 10);
+    final modelsToTry = [
+      modelName,
+      ...fallbackModels.where((m) => m != modelName),
+    ];
 
-    try {
-      final symptomList = selectedSymptoms.map((s) => s.titleEn).join(', ');
-      final uri = Uri.parse(
-        'https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=$apiKey',
-      );
+    for (final currentModel in modelsToTry) {
+      final client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 4);
 
-      final prompt =
-          'You are The Warm Investigator in Mind Forensics. '
-          'Strict rules: 0 emojis. Never diagnose. Never state hypotheses as medical facts. Distinguish observations from interpretations. '
-          'Language: $languageCode. '
-          'Reported Symptoms: $symptomList. Intensity: $intensity/10. Context: $contextTrigger. Somatic: $somaticLocation. Follow-up: $userAdaptiveAnswer. '
-          'Return JSON with keys "analysis" and "stabilizingStrategy".';
+      try {
+        final symptomList = selectedSymptoms.map((s) => s.titleEn).join(', ');
+        final uri = Uri.parse(
+          'https://generativelanguage.googleapis.com/v1beta/models/$currentModel:generateContent?key=$apiKey',
+        );
 
-      final request = await client.postUrl(uri);
-      request.headers.contentType = ContentType.json;
-      request.write(jsonEncode({
-        'contents': [
-          {
-            'parts': [
-              {'text': prompt}
-            ]
+        final prompt =
+            'You are The Warm Investigator in Mind Forensics, a reflective companion inspired by CBT. '
+            'You are not a therapist, medical doctor, or diagnostic system. '
+            'Strict rules: 0 emojis. Never diagnose mental conditions. Never state hypotheses as medical facts. '
+            'Never validate or reinforce delusions, paranoia, or destructive beliefs. '
+            'Distinguish user observations from interpretations. Avoid clinical jargon. '
+            'If self-harm or deep crisis is indicated, prioritize safety and professional crisis resources. '
+            'Language: $languageCode. '
+            'Reported Symptoms: $symptomList. Intensity: $intensity/10. Context: $contextTrigger. Somatic: $somaticLocation. Follow-up: $userAdaptiveAnswer. '
+            'Return JSON with keys "analysis" and "stabilizingStrategy".';
+
+        final request = await client.postUrl(uri);
+        request.headers.contentType = ContentType.json;
+        request.write(jsonEncode({
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
+            }
+          ],
+          'generationConfig': {
+            'temperature': 0.3,
+            'maxOutputTokens': 1200,
+            'response_mime_type': 'application/json',
           }
-        ],
-        'generationConfig': {
-          'temperature': 0.3,
-          'maxOutputTokens': 500,
-          'responseMimeType': 'application/json',
-        }
-      }));
+        }));
 
-      final response = await request.close();
-      if (response.statusCode == 200) {
-        await DailyUsageLimiter.recordRequest();
-        final body = await response.transform(utf8.decoder).join();
-        final json = jsonDecode(body) as Map<String, dynamic>;
-        final text = json['candidates']?[0]?['content']?['parts']?[0]?['text'] as String?;
-        if (text != null) {
-          final parsed = jsonDecode(text) as Map<String, dynamic>;
-          return (
-            analysis: parsed['analysis'] as String? ?? '',
-            stabilizingStrategy: parsed['stabilizingStrategy'] as String? ?? '',
-          );
+        final response = await client.postUrl(uri).then((req) async {
+          req.headers.contentType = ContentType.json;
+          req.write(jsonEncode({
+            'contents': [
+              {
+                'parts': [
+                  {'text': prompt}
+                ]
+              }
+            ],
+            'generationConfig': {
+              'temperature': 0.3,
+              'maxOutputTokens': 1200,
+              'response_mime_type': 'application/json',
+            }
+          }));
+          return await req.close().timeout(const Duration(seconds: 15));
+        });
+
+        if (response.statusCode == 200) {
+          lastModelUsed = currentModel;
+          lastError = null;
+          await DailyUsageLimiter.recordRequest();
+          final body = await response.transform(utf8.decoder).join().timeout(const Duration(seconds: 15));
+          final json = jsonDecode(body) as Map<String, dynamic>;
+          final rawText = json['candidates']?[0]?['content']?['parts']?[0]?['text'] as String?;
+          if (rawText != null) {
+            final clean = rawText
+                .replaceAll(RegExp(r'^```json\s*|^```\s*|```$', multiLine: true), '')
+                .trim();
+            final parsed = jsonDecode(clean) as Map<String, dynamic>;
+            return (
+              analysis: _extractFieldString(parsed['analysis']),
+              stabilizingStrategy: _extractFieldString(parsed['stabilizingStrategy']),
+            );
+          }
+        } else if (response.statusCode == 401 || response.statusCode == 403) {
+          lastError = 'Authentication failed (HTTP ${response.statusCode})';
+          break; // Stop retrying on invalid key
+        } else if (response.statusCode == 400) {
+          lastError = 'Invalid request (HTTP 400)';
+          break; // Do not retry identical bad request
+        } else if (response.statusCode == 429 || response.statusCode == 503) {
+          lastError = 'HTTP ${response.statusCode} on $currentModel';
+          continue; // Try next fallback model immediately
+        } else {
+          lastError = 'Status ${response.statusCode}';
         }
+      } on SocketException catch (e) {
+        lastError = 'Network unavailable: ${e.message}';
+        break;
+      } on HandshakeException catch (e) {
+        lastError = 'Handshake failed: ${e.message}';
+        break;
+      } on TimeoutException {
+        lastError = 'Timeout on $currentModel';
+        continue;
+      } catch (e) {
+        lastError = 'Error on $currentModel: $e';
+      } finally {
+        client.close();
       }
-      return null;
-    } catch (_) {
-      return null;
-    } finally {
-      client.close();
     }
+    return null;
+  }
+
+  static String _extractFieldString(dynamic val) {
+    if (val == null) return '';
+    if (val is String) return val.trim();
+    if (val is Map) {
+      return val.entries.map((e) => '${e.key}: ${e.value}').join('\n');
+    }
+    if (val is List) {
+      return val.map((item) => item.toString()).join('\n');
+    }
+    return val.toString().trim();
   }
 }

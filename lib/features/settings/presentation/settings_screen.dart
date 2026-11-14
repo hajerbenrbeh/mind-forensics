@@ -23,6 +23,7 @@ import '../../profile/controllers/profile_controller.dart';
 import '../../profile/presentation/psychological_profile_screen.dart';
 import '../../journal/presentation/widgets/journal_memory_sheet.dart';
 import 'clinical_sharing_history_sheet.dart';
+import 'widgets/recovery_key_backup_sheet.dart';
 
 /// The Lab Settings screen: Vercel Luxury Dark & Minimalist Precision.
 ///
@@ -1165,8 +1166,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
             const SizedBox(height: 24),
 
-            // Section 5: Device Security
-            _sectionLabel(strings.biometricLockTitle.toUpperCase(), textSecondary),
+            // Section 5: Device Security & Recovery Key
+            _sectionLabel(strings.securityAndRecoveryTitle, textSecondary),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -1174,48 +1175,91 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: borderColor, width: 1),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          strings.biometricLockTitle,
-                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: textPrimary),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              strings.biometricLockTitle,
+                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: textPrimary),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              strings.biometricLockDesc,
+                              style: TextStyle(fontSize: 12, color: textSecondary, height: 1.3),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          strings.biometricLockDesc,
-                          style: TextStyle(fontSize: 12, color: textSecondary, height: 1.3),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final appLockState = ref.watch(appLockProvider);
-                      return Switch(
-                        value: appLockState.isEnabled,
-                        activeTrackColor: context.tokens.accent,
-                        activeThumbColor: context.tokens.background,
-                        inactiveThumbColor: context.tokens.textTertiary,
-                        inactiveTrackColor: context.tokens.surfaceSecondary,
-                        onChanged: (val) async {
-                          final success = await ref.read(appLockProvider.notifier).toggleBiometrics(val);
-                          if (!success && val && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(strings.biometricNotAvailableSnackbar),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          }
+                      ),
+                      const SizedBox(width: 12),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final appLockState = ref.watch(appLockProvider);
+                          return Switch(
+                            value: appLockState.isEnabled,
+                            activeTrackColor: context.tokens.accent,
+                            activeThumbColor: context.tokens.background,
+                            inactiveThumbColor: context.tokens.textTertiary,
+                            inactiveTrackColor: context.tokens.surfaceSecondary,
+                            onChanged: (val) async {
+                              final success = await ref.read(appLockProvider.notifier).toggleBiometrics(val);
+                              if (!success && val && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(strings.biometricNotAvailableSnackbar),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                          );
                         },
-                      );
-                    },
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(color: borderColor, height: 1, thickness: 1),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        strings.masterRecoveryKeyTitle,
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: textPrimary),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        strings.masterRecoveryKeyDesc,
+                        style: TextStyle(fontSize: 12, color: textSecondary, height: 1.3),
+                      ),
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: textPrimary,
+                            side: BorderSide(color: borderColor, width: 1),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          ),
+                          icon: const Icon(Icons.key_rounded, size: 14),
+                          label: Text(
+                            strings.revealKeyBtn.toUpperCase(),
+                            style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, letterSpacing: 0.4),
+                          ),
+                          onPressed: () {
+                            HapticFeedback.lightImpact();
+                            RecoveryKeyBackupSheet.show(context);
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

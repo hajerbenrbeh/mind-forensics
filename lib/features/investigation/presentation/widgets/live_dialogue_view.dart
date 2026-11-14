@@ -106,19 +106,34 @@ class _LiveDialogueViewState extends ConsumerState<LiveDialogueView> {
     final service = ref.read(investigatorServiceProvider);
     final locale = ref.read(localeControllerProvider);
 
-    // Offline Level-2 pre-generation crisis interception
-    final safetyLevel = CrisisKeywords.evaluateText(text);
-    if (safetyLevel == 2) {
-      await notifier.addStatement(
-        text,
-        StatementSpeaker.user,
-        label: LabelType.assumption,
-        isSafetyStatement: true,
-      );
+    // Offline Level-2 pre-generation crisis & medical emergency interception
+    final classification = CrisisKeywords.classifyText(text);
+    if (classification == SafetyClassification.immediateMedicalEmergency ||
+        classification == SafetyClassification.imminentIntentOrCrisis ||
+        classification == SafetyClassification.accidentalIngestionAlert) {
+      try {
+        await notifier.addStatement(
+          text,
+          StatementSpeaker.user,
+          label: LabelType.assumption,
+          isSafetyStatement: true,
+        );
+      } catch (_) {}
+
+      // Attempt safety pause state persistence with graceful fail-safe handling
       final pausePersisted = await notifier.pauseCaseForSafety();
-      if (!pausePersisted) return;
+
+      // Regardless of persistence failure, always prioritize immediate user safety and display guidance
       if (mounted) {
-        SafetyInterceptor.showCrisisPauseDialog(context);
+        SafetyInterceptor.showCrisisPauseDialog(
+          context,
+          isMedicalEmergency: classification == SafetyClassification.immediateMedicalEmergency,
+          isAccidentalIngestion: classification == SafetyClassification.accidentalIngestionAlert,
+        );
+        if (!pausePersisted) {
+          // Log or silently inform without suppressing the modal
+          debugPrint('Warning: Safety pause flag failed to persist to disk, but medical dialog was presented.');
+        }
       }
       return;
     }

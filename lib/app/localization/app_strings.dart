@@ -1661,6 +1661,89 @@ class AppStrings {
     }
   }
 
+  // Master Recovery Key & Device Security
+  String get securityAndRecoveryTitle => isArabic ? 'الأمان واستعادة البيانات' : (isFrench ? 'SÉCURITÉ & RÉCUPÉRATION' : 'SECURITY & RECOVERY');
+  String get masterRecoveryKeyTitle => isArabic ? 'مفتاح الاستعادة المحلي' : (isFrench ? 'Clé de récupération locale' : 'Master Recovery Key');
+  String get masterRecoveryKeyDesc => isArabic
+      ? 'عرض وحفظ مفتاح التشفير الاحتياطي لاستعادة بياناتك في حال ضياع وحدة التخزين الآمنة للجهاز.'
+      : (isFrench
+          ? 'Consultez et sauvegardez votre clé de chiffrement pour restaurer vos données si le stockage sécurisé est perdu.'
+          : 'View and back up your local encryption key to restore your private data if secure device storage is ever lost.');
+  String get revealKeyBtn => isArabic ? 'إظهار مفتاح الاستعادة' : (isFrench ? 'Révéler la clé' : 'Reveal Recovery Key');
+  String get copyKeyBtn => isArabic ? 'نسخ المفتاح' : (isFrench ? 'Copier la clé' : 'Copy Recovery Key');
+  String get keyCopiedSnackbar => isArabic ? 'تم نسخ المفتاح إلى الحافظة بأمان.' : (isFrench ? 'Clé copiée dans le presse-papiers.' : 'Recovery key copied to clipboard.');
+  String get recoveryKeyWarning => isArabic
+      ? 'احفظ هذا المفتاح في مكان آمن وخاص. لا تشاركه مع أي شخص أبداً. تطبيق Mind Forensics لا يستطيع استعادة بياناتك في حال ضياعه.'
+      : (isFrench
+          ? 'Conservez cette clé en lieu sûr et confidentiel. Ne la partagez avec personne. Mind Forensics ne peut pas restaurer vos données en cas de perte.'
+          : 'Store this key somewhere private and safe. Never share it with anyone. Mind Forensics cannot recover your local data if this key is lost.');
+  String get recoveryKeySavedCheckbox => isArabic
+      ? 'أؤكد أنني حفظت هذا المفتاح في مكان آمن وخاص.'
+      : (isFrench
+          ? 'Je confirme avoir sauvegardé cette clé en lieu sûr.'
+          : 'I have safely saved my recovery key in a secure location.');
+  String get doneBtn => isArabic ? 'تم' : (isFrench ? 'Terminé' : 'Done');
+
+  // Recovery After Key Loss
+  String get restoreKeyPromptTitle => isArabic ? 'استعادة مفتاح التشفير' : (isFrench ? 'Restauration de la clé' : 'Restore Encryption Key');
+  String get restoreKeyPromptBody => isArabic
+      ? 'تم العثور على بيانات محلية مشفرة، ولكن مفتاح التخزين الآمن للجهاز مفقود أو تمت إعادة ضبطه. أدخل مفتاح الاستعادة المكوّن من 64 رمزاً لفك تشفير بياناتك.'
+      : (isFrench
+          ? 'Des données locales chiffrées sont présentes, mais la clé de stockage sécurisée est introuvable. Entrez votre clé de 64 caractères pour déchiffrer vos données.'
+          : 'Encrypted local data was detected on this device, but the secure storage key was reset or lost. Enter your 64-character recovery key to decrypt your records.');
+  String get recoveryKeyInputLabel => isArabic ? 'مفتاح الاستعادة (64 رمزاً ست عشرياً)' : (isFrench ? 'Clé de récupération (64 caractères hex)' : 'Recovery Key (64 hex characters)');
+  String get recoveryKeyInputHint => '0123456789ABCDEF...';
+  String get restoreActionBtn => isArabic ? 'استعادة البيانات' : (isFrench ? 'Restaurer les données' : 'Restore Data');
+  String get invalidKeyFormatError => isArabic
+      ? 'تنسيق المفتاح غير صالح. يجب أن يتكون من 64 رمزاً ست عشرياً (0-9، A-F).'
+      : (isFrench
+          ? 'Format de clé invalide. La clé doit comporter exactement 64 caractères hexadécimaux.'
+          : 'Invalid key format. The recovery key must be exactly 64 hexadecimal characters.');
+  String get restoreSuccessMsg => isArabic
+      ? 'تم استعادة مفتاح التشفير بنجاح وفك قفل البيانات.'
+      : (isFrench
+          ? 'Clé de chiffrement restaurée avec succès.'
+          : 'Master encryption key restored successfully.');
+  String get incorrectKeyError => isArabic
+      ? 'مفتاح الاستعادة غير صحيح أو لا يطابق هذه البيانات المشفرة. لم يتم المساس ببياناتك.'
+      : (isFrench
+          ? 'Clé de récupération incorrecte pour ces données. Vos données existantes sont préservées intactes.'
+          : 'The recovery key does not match this encrypted data. Your existing data remains safe and untouched.');
+
+  // Acute Ingestion & Medical Emergency
+  String get medicalEmergencyTitle => isArabic
+      ? 'تنبيه طبي عاجل • نجدة طبية فورية'
+      : (isFrench
+          ? 'Urgence Médicale Immédiate'
+          : 'Immediate Medical Emergency');
+  String get medicalEmergencyBody => isArabic
+      ? 'إذا تناولت أدوية أو مواد قد تسبب لك الأذى أو تشعر بخطر صحي مباشر، يُرجى طلب الإسعاف الطبي فوراً أو التوجه لأقرب قسم طوارئ. التدخل الطبي السريع هو الأولوية القصوى الآن.'
+      : (isFrench
+          ? 'Si vous avez ingéré des médicaments ou substances pouvant nuire à votre santé, contactez immédiatement les secours médicaux ou rendez-vous aux urgences. L’assistance médicale est la priorité absolue.'
+          : 'If you have ingested medication or substances to harm yourself, please contact emergency medical services or go to the nearest emergency room immediately. Prompt medical care is the absolute priority.');
+  String get callSamu190Btn => isArabic
+      ? 'الاتصال بالإسعاف الطبي (190)'
+      : (isFrench
+          ? 'Appeler le SAMU (190)'
+          : 'Call SAMU / Emergency (190)');
+  String get callProtectionCivile198Btn => isArabic
+      ? 'الاتصال بالحماية المدنية (198)'
+      : (isFrench
+          ? 'Appeler la Protection Civile (198)'
+          : 'Call Civil Protection (198)');
+
+  // Accidental Overdose / Ingestion Guidance
+  String get accidentalOverdoseTitle => isArabic
+      ? 'تنبيه تناول جرعة زائدة عرضية • استشارة طبية عاجلة'
+      : (isFrench
+          ? 'Surdosage Médicamenteux Accidentel'
+          : 'Accidental Overdose / Medication Guidance');
+  String get accidentalOverdoseBody => isArabic
+      ? 'إذا تناولت بالخطأ كمية دواء أكبر من الموصوفة، لا تنتظر ظهور الأعراض. اتصل فوراً بمركز مكافحة التسمم أو الإسعاف الطبي (190) للحصول على إرشادات طبية دقيقة حول كيفية التصرف بأمان.'
+      : (isFrench
+          ? 'Si vous avez pris par erreur une dose de médicament supérieure à celle prescrite, n’attendez pas l’apparition de symptômes. Contactez immédiatement un centre antipoison ou le SAMU (190) pour un avis médical urgent.'
+          : 'If you accidentally took more medication than prescribed, do not wait for symptoms to appear. Contact emergency medical services (190) or a poison control center immediately for safe medical guidance.');
+
   // Helper factory
   static AppStrings of(BuildContext context) {
     final locale = Localizations.localeOf(context);
