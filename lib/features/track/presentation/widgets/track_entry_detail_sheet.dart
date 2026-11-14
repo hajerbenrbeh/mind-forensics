@@ -10,6 +10,7 @@ import '../../../../core/widgets/mind_button.dart';
 import '../../../../core/widgets/mind_pressable.dart';
 import '../../../mind_trace/controllers/mind_trace_controller.dart';
 import '../../../mind_trace/domain/mind_trace_model.dart';
+import 'track_mood_picker.dart';
 import 'track_mood_utils.dart';
 
 /// Detail inspector sheet for any Track entry with Edit, Explore with AI Guide,
@@ -254,9 +255,10 @@ class TrackEntryDetailSheet extends ConsumerWidget {
                 Text(
                   strings.triggersContextHeader,
                   style: TextStyle(
-                    fontSize: 10.5,
+                    fontFamily: 'Inter',
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 0.7,
+                    letterSpacing: strings.isArabic ? 0 : 0.6,
                     color: tokens.textSecondary,
                   ),
                 ),
@@ -314,6 +316,7 @@ class TrackEntryDetailSheet extends ConsumerWidget {
                       },
                       child: Container(
                         constraints: const BoxConstraints(minHeight: 48),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
                           color: tokens.surfaceSecondary,
                           borderRadius:
@@ -329,12 +332,17 @@ class TrackEntryDetailSheet extends ConsumerWidget {
                               color: tokens.textPrimary,
                             ),
                             const SizedBox(width: 6),
-                            Text(
-                              strings.editEntryBtn,
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w600,
-                                color: tokens.textPrimary,
+                            Flexible(
+                              child: Text(
+                                strings.editEntryBtn,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: tokens.textPrimary,
+                                ),
                               ),
                             ),
                           ],
@@ -351,6 +359,7 @@ class TrackEntryDetailSheet extends ConsumerWidget {
                           _confirmAndDelete(context, ref, strings, tokens),
                       child: Container(
                         constraints: const BoxConstraints(minHeight: 48),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
                           color: tokens.safetyWarmthSoft,
                           borderRadius:
@@ -368,12 +377,17 @@ class TrackEntryDetailSheet extends ConsumerWidget {
                               color: tokens.safetyWarmth,
                             ),
                             const SizedBox(width: 6),
-                            Text(
-                              strings.deleteEntryBtn,
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
-                                color: tokens.safetyWarmth,
+                            Flexible(
+                              child: Text(
+                                strings.deleteEntryBtn,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: tokens.safetyWarmth,
+                                ),
                               ),
                             ),
                           ],
@@ -468,7 +482,7 @@ class _EditPastTraceSheetState extends ConsumerState<EditPastTraceSheet> {
               BorderRadius.vertical(top: Radius.circular(tokens.cardRadius)),
           border: Border.all(color: tokens.border),
         ),
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+        padding: const EdgeInsetsDirectional.fromSTEB(20, 14, 20, 20),
         child: SafeArea(
           top: false,
           child: SingleChildScrollView(
@@ -479,96 +493,36 @@ class _EditPastTraceSheetState extends ConsumerState<EditPastTraceSheet> {
                 Text(
                   '${strings.editEntryTitle} (${widget.trace.dateKey})',
                   style: TextStyle(
+                    fontFamily: 'Inter',
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
                     color: tokens.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: trackCoreMoods.map((opt) {
-                    final selected = _mood == opt.key;
-                    return MindPressable(
-                      semanticLabel: trackMoodLabel(opt.key, strings),
-                      borderRadius: BorderRadius.circular(14),
-                      onPressed: () => setState(() => _mood = opt.key),
-                      child: Container(
-                        constraints:
-                            const BoxConstraints(minWidth: 88, minHeight: 48),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? opt.color.withValues(alpha: 0.16)
-                              : tokens.surfaceSecondary,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: selected ? opt.color : tokens.border,
-                            width: selected ? 1.5 : 1.0,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(opt.icon, size: 17, color: opt.color),
-                            const SizedBox(width: 6),
-                            Text(
-                              trackMoodLabel(opt.key, strings),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: selected
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: tokens.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                TrackMoodPicker(
+                  selectedMoodKey: _mood,
+                  strings: strings,
+                  onSelect: (key) => setState(() => _mood = key),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      strings.moodIntensityLabel,
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: tokens.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      '${_intensity.round()} / 10',
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: tokens.accent,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-                Slider(
+                TrackIntensitySlider(
                   value: _intensity,
-                  min: 1,
-                  max: 10,
-                  divisions: 9,
+                  strings: strings,
+                  inCard: false,
                   onChanged: (v) => setState(() => _intensity = v),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 TextField(
                   controller: _noteCtrl,
                   maxLines: 3,
-                  style: TextStyle(fontSize: 13.5, color: tokens.textPrimary),
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13.5,
+                    color: tokens.textPrimary,
+                  ),
                   decoration: InputDecoration(
-                    hintText: strings.addNoteOptionalHint,
+                    hintText: strings.whatsOnYourMindHint,
                     filled: true,
                     fillColor: tokens.surfaceSecondary,
                     border: OutlineInputBorder(

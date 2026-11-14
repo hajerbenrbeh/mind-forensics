@@ -14,15 +14,19 @@ import '../../../core/widgets/mind_button.dart';
 import '../../../core/widgets/mind_card.dart';
 import '../../../core/widgets/mind_pill.dart';
 import '../../../core/widgets/mind_pressable.dart';
+import '../../../core/widgets/mind_segmented.dart';
 import '../../auth/controllers/auth_controller.dart';
+import '../../home/presentation/widgets/home_organic_exercise_art.dart';
 import '../../investigation/controllers/investigation_providers.dart';
 import '../../investigation/domain/case_model.dart';
+import '../../investigation/domain/conversation_mode.dart';
 import '../../mind_trace/controllers/mind_trace_controller.dart';
 import '../../mind_trace/domain/mind_trace_model.dart';
 import '../../mind_trace/presentation/widgets/daily_mind_trace_stepper.dart';
 import '../../mind_trace/presentation/widgets/trace_investigation_sheet.dart';
 import 'widgets/track_entry_detail_sheet.dart';
 import 'widgets/track_month_calendar.dart';
+import 'widgets/track_mood_picker.dart';
 import 'widgets/track_mood_utils.dart';
 
 /// Consolidated daily tracking workspace combining fast check-ins with an
@@ -62,6 +66,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
   late TextEditingController _noteController;
 
   // Tab 0: Check-In Today form state
+  late int _activeTab;
   String _selectedMood = 'calm';
   double _moodIntensity = 5.0;
   double _energyLevel = 5.0;
@@ -70,8 +75,10 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
   final Set<String> _selectedTriggers = {};
   final Set<String> _selectedHelped = {};
   bool _isSaving = false;
+  bool _savedConfirmed = false;
   bool _initializedFromTrace = false;
   bool _showOptionalContext = false;
+  String _lastSavedNote = '';
 
   // Tab 1: History & Calendar state
   DateTime _calendarMonth =
@@ -81,12 +88,15 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
   @override
   void initState() {
     super.initState();
+    _activeTab = widget.initialTab.clamp(0, 1);
     _noteController = TextEditingController();
+    _noteController.addListener(_onNoteChanged);
     _tabController = TabController(
       length: 2,
       vsync: this,
-      initialIndex: widget.initialTab.clamp(0, 1),
+      initialIndex: _activeTab,
     );
+    _tabController.addListener(_handleTabControllerTick);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _hydrateFromTrace(ref.read(todayTraceProvider));
@@ -94,8 +104,35 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
   }
 
   @override
+  void didUpdateWidget(covariant TrackScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final nextInitial = widget.initialTab.clamp(0, 1);
+    if (oldWidget.initialTab != widget.initialTab &&
+        nextInitial != _tabController.index) {
+      _tabController.animateTo(nextInitial);
+    }
+  }
+
+  void _handleTabControllerTick() {
+    if (!mounted) return;
+    if (_tabController.index != _activeTab) {
+      setState(() => _activeTab = _tabController.index);
+    }
+  }
+
+  void _onNoteChanged() {
+    if (_savedConfirmed &&
+        _noteController.text.trim() != _lastSavedNote &&
+        mounted) {
+      setState(() => _savedConfirmed = false);
+    }
+  }
+
+  @override
   void dispose() {
+    _noteController.removeListener(_onNoteChanged);
     _noteController.dispose();
+    _tabController.removeListener(_handleTabControllerTick);
     _tabController.dispose();
     super.dispose();
   }
@@ -103,13 +140,15 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
   void _hydrateFromTrace(MindTraceModel? trace, {bool force = false}) {
     if ((!force && _initializedFromTrace) || trace == null) return;
     _initializedFromTrace = true;
+    final hydratedNote = trace.journalText ?? '';
+    _lastSavedNote = hydratedNote.trim();
     setState(() {
       _selectedMood = trace.overallMood;
       _moodIntensity = trace.moodIntensity.toDouble().clamp(1, 10);
       _energyLevel = (trace.energyLevel ?? 5).toDouble().clamp(1, 10);
       _anxietyLevel = (trace.anxietyLevel ?? 3).toDouble().clamp(0, 10);
       _sleepHours = (trace.sleepHours ?? 7.5).clamp(2, 14);
-      _noteController.text = trace.journalText ?? '';
+      _noteController.text = hydratedNote;
 
       _selectedTriggers.clear();
       if (trace.situation != null && trace.situation!.trim().isNotEmpty) {
@@ -135,14 +174,29 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
   }
 
   Future<void> _saveQuickCheckIn() async {
+    final strings = ref.read(appStringsProvider);
+    final tokens = context.tokens;
+
+    if (_selectedMood.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: tokens.surfaceSecondary,
+          content: Text(
+            strings.pickHowYouFeelFirst,
+            style: TextStyle(color: tokens.textPrimary, fontSize: 13),
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
     HapticFeedback.mediumImpact();
     setState(() => _isSaving = true);
 
     try {
       final now = DateTime.now();
       final today = ref.read(todayTraceProvider);
-      final strings = ref.read(appStringsProvider);
-      final tokens = context.tokens;
       final authUser = ref.read(authControllerProvider).user;
       final userId = authUser?.id ?? 'local_user';
 
@@ -193,11 +247,14 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
               updatedAt: now,
             );
 
+      _initializedFromTrace = true;
+      _lastSavedNote = noteText ?? '';
       await ref
           .read(mindTraceControllerProvider.notifier)
           .recordCheckIn(trace, generateAi: false);
 
       if (mounted) {
+        setState(() => _savedConfirmed = true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: tokens.surfaceSecondary,
@@ -276,7 +333,18 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
           EditPastTraceSheet.show(context, trace);
         }
       },
-      onExploreWithAi: () {
+      onExploreWithAi: () async {
+        final moodText = trackMoodLabel(trace.overallMood, strings);
+        final note = trace.journalText?.trim() ?? '';
+        final notePart = note.isNotEmpty ? ' — "$note"' : '';
+        final handoffPrompt =
+            '${strings.exploreMoodContextPrefix} $moodText (${trace.moodIntensity}/10)$notePart';
+
+        await ref.read(activeCaseControllerProvider.notifier).startNewCase(
+              handoffPrompt,
+              mode: ConversationMode.understandEmotion,
+            );
+        if (!mounted) return;
         final router = GoRouter.maybeOf(context);
         if (router != null) {
           router.go(AppRouter.companion);
@@ -308,70 +376,100 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
 
     return Scaffold(
       backgroundColor: tokens.background,
-      appBar: AppBar(
-        backgroundColor: tokens.background,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: Navigator.of(context).canPop()
-            ? IconButton(
-                tooltip: strings.backBtn,
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: tokens.textPrimary,
-                  size: 20,
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            : null,
-        title: Text(
-          strings.trackPageTitle,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            color: tokens.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.calendar_month_outlined,
-              size: 20,
-              color: tokens.textPrimary,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _buildTopHeaderAndSegmented(tokens, strings),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildCheckInTodayTab(tokens, strings, todayTrace),
+                  _buildHistoryAndCalendarTab(tokens, strings),
+                ],
+              ),
             ),
-            tooltip: strings.fullCalendarTooltip,
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              final router = GoRouter.maybeOf(context);
-              if (router != null) {
-                router.push(AppRouter.progress);
-              } else {
-                _tabController.animateTo(1);
-              }
-            },
-          ),
-          const SupportButton(compact: true),
-          const SizedBox(width: 6),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: tokens.accent,
-          unselectedLabelColor: tokens.textSecondary,
-          indicatorColor: tokens.accent,
-          indicatorSize: TabBarIndicatorSize.tab,
-          dividerColor: tokens.border,
-          tabs: [
-            Tab(text: strings.checkInTodayTab),
-            Tab(text: strings.historyAndCalendarTab),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
+    );
+  }
+
+  Widget _buildTopHeaderAndSegmented(MindTokens tokens, AppStrings strings) {
+    final canPop = Navigator.of(context).canPop();
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 10, 12, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildCheckInTodayTab(tokens, strings, todayTrace),
-          _buildHistoryAndCalendarTab(tokens, strings),
+          Row(
+            children: [
+              if (canPop) ...[
+                IconButton(
+                  tooltip: strings.backBtn,
+                  icon: Icon(
+                    isRtl
+                        ? Icons.arrow_forward_rounded
+                        : Icons.arrow_back_rounded,
+                    color: tokens.textPrimary,
+                    size: 20,
+                  ),
+                  constraints:
+                      const BoxConstraints(minWidth: 48, minHeight: 48),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                const SizedBox(width: 4),
+              ],
+              Expanded(
+                child: Text(
+                  strings.trackPageTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    color: tokens.textPrimary,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: strings.isArabic ? 0 : -0.3,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(
+                  Icons.calendar_month_outlined,
+                  size: 20,
+                  color: tokens.textPrimary,
+                ),
+                tooltip: strings.fullCalendarTooltip,
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  final router = GoRouter.maybeOf(context);
+                  if (router != null) {
+                    router.push(AppRouter.progress);
+                  } else {
+                    _tabController.animateTo(1);
+                  }
+                },
+              ),
+              const SupportButton(compact: true),
+            ],
+          ),
+          const SizedBox(height: 10),
+          MindSegmented(
+            index: _activeTab,
+            labels: [
+              strings.checkInTodayTab,
+              strings.historyAndCalendarTab,
+            ],
+            onChanged: (idx) {
+              HapticFeedback.selectionClick();
+              _tabController.animateTo(idx);
+            },
+          ),
         ],
       ),
     );
@@ -384,164 +482,87 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
   ) {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            strings.howFeelingRightNow,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 21,
-              fontWeight: FontWeight.w700,
-              color: tokens.textPrimary,
-              letterSpacing: -0.3,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: Text(
-              strings.todaysCoreState,
-              style: TextStyle(
-                color: tokens.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.0,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: trackCoreMoods.map((opt) {
-              final isSelected = _selectedMood == opt.key;
-              final label = trackMoodLabel(opt.key, strings);
-              return MindPressable(
-                semanticLabel: label,
-                borderRadius: BorderRadius.circular(16),
-                onPressed: () {
-                  setState(() => _selectedMood = opt.key);
-                },
-                child: Container(
-                  constraints:
-                      const BoxConstraints(minWidth: 96, minHeight: 50),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? opt.color.withValues(alpha: 0.16)
-                        : tokens.surface,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected ? opt.color : tokens.border,
-                      width: isSelected ? 1.6 : 1.0,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        opt.icon,
-                        size: 18,
-                        color: isSelected ? opt.color : tokens.textSecondary,
-                      ),
-                      const SizedBox(width: 7),
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: tokens.textPrimary,
-                        ),
-                      ),
-                      if (isSelected) ...[
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.check_circle_rounded,
-                          size: 15,
-                          color: opt.color,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 18),
-          MindCard(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 22),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildSliderRow(
-                  label: strings.moodIntensityLabel,
-                  value: _moodIntensity,
-                  min: 1,
-                  max: 10,
-                  divisions: 9,
-                  unit: '/10',
-                  tokens: tokens,
-                  onChanged: (v) => setState(() => _moodIntensity = v),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        strings.moodCalm,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: tokens.textTertiary,
-                        ),
-                      ),
-                      Text(
-                        strings.intenseAnchorLabel,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          color: tokens.textTertiary,
-                        ),
-                      ),
-                    ],
+                Text(
+                  strings.howFeelingRightNow,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 21,
+                    fontWeight: FontWeight.w700,
+                    color: tokens.textPrimary,
+                    letterSpacing: strings.isArabic ? 0 : -0.3,
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            decoration: BoxDecoration(
-              color: tokens.surface,
-              borderRadius: BorderRadius.circular(tokens.cardRadius),
-              border: Border.all(color: tokens.border),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.edit_outlined, size: 18, color: tokens.textSecondary),
-                const SizedBox(width: 12),
-                Expanded(
+                const SizedBox(height: 14),
+                Center(
+                  child: Text(
+                    strings.todaysCoreState,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: tokens.textSecondary,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: strings.isArabic ? 0 : 0.6,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TrackMoodPicker(
+                  selectedMoodKey: _selectedMood,
+                  strings: strings,
+                  onSelect: (key) {
+                    setState(() {
+                      _selectedMood = key;
+                      _savedConfirmed = false;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                TrackIntensitySlider(
+                  value: _moodIntensity,
+                  strings: strings,
+                  onChanged: (v) {
+                    setState(() {
+                      _moodIntensity = v;
+                      _savedConfirmed = false;
+                    });
+                  },
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsetsDirectional.fromSTEB(14, 10, 14, 10),
+                  decoration: BoxDecoration(
+                    color: tokens.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: tokens.border),
+                  ),
                   child: TextField(
                     controller: _noteController,
-                    maxLines: 2,
-                    minLines: 1,
-                    style: TextStyle(fontSize: 13.5, color: tokens.textPrimary),
+                    maxLines: 5,
+                    minLines: 3,
+                    textInputAction: TextInputAction.newline,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14,
+                      height: 1.45,
+                      color: tokens.textPrimary,
+                    ),
                     decoration: InputDecoration(
                       isDense: true,
                       filled: false,
-                      contentPadding:
-                          const EdgeInsets.symmetric(vertical: 12),
-                      hintText: strings.addNoteOptionalHint,
+                      contentPadding: EdgeInsets.zero,
+                      hintText: strings.whatsOnYourMindHint,
                       hintStyle: TextStyle(
-                        fontSize: 13,
+                        fontFamily: 'Inter',
+                        fontSize: 13.5,
                         color: tokens.textSecondary,
                       ),
                       border: InputBorder.none,
@@ -550,110 +571,189 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          MindCard(
-            padding: EdgeInsets.zero,
-            child: MindPressable(
-              semanticLabel: strings.addContextOptionalTitle,
-              borderRadius: BorderRadius.circular(tokens.cardRadius),
-              onPressed: () {
-                setState(() => _showOptionalContext = !_showOptionalContext);
-              },
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                child: Row(
-                  children: [
-                    Icon(Icons.tune_outlined, size: 18, color: tokens.accent),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 14),
+                MindCard(
+                  padding: EdgeInsets.zero,
+                  child: MindPressable(
+                    semanticLabel: strings.addContextOptionalTitle,
+                    borderRadius: BorderRadius.circular(tokens.cardRadius),
+                    onPressed: () {
+                      setState(
+                        () => _showOptionalContext = !_showOptionalContext,
+                      );
+                    },
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 56),
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        16,
+                        12,
+                        14,
+                        12,
+                      ),
+                      child: Row(
                         children: [
-                          Text(
-                            strings.addContextOptionalTitle,
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w700,
-                              color: tokens.textPrimary,
+                          Icon(
+                            Icons.tune_outlined,
+                            size: 18,
+                            color: tokens.accent,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  strings.addContextOptionalTitle,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: tokens.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  strings.addContextOptionalSub,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12,
+                                    color: tokens.textSecondary,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            strings.addContextOptionalSub,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: tokens.textSecondary,
+                          Icon(
+                            _showOptionalContext
+                                ? Icons.keyboard_arrow_up_rounded
+                                : Icons.keyboard_arrow_down_rounded,
+                            color: tokens.textSecondary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                AnimatedSize(
+                  duration: reduceMotion
+                      ? Duration.zero
+                      : const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
+                  child: _showOptionalContext
+                      ? _buildOptionalContextSection(tokens, strings)
+                      : const SizedBox.shrink(),
+                ),
+                const SizedBox(height: 12),
+                Center(
+                  child: MindPressable(
+                    semanticLabel: strings.preferStepByStepLabel,
+                    borderRadius: BorderRadius.circular(12),
+                    onPressed: () => _openGuidedCheckInSheet(todayTrace),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.layers_outlined,
+                            size: 16,
+                            color: tokens.accent,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              strings.preferStepByStepLabel,
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: tokens.accent,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(
-                      _showOptionalContext
-                          ? Icons.keyboard_arrow_up_rounded
-                          : Icons.keyboard_arrow_down_rounded,
-                      color: tokens.textSecondary,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
-          AnimatedSize(
-            duration: reduceMotion
-                ? Duration.zero
-                : const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            child: _showOptionalContext
-                ? _buildOptionalContextSection(tokens, strings)
-                : const SizedBox.shrink(),
-          ),
-          const SizedBox(height: 22),
-          MindButton(
-            text: todayTrace != null
-                ? strings.updateTodaysEntryAction
-                : strings.saveCheckInAction,
-            isFullWidth: true,
-            isLoading: _isSaving,
-            leadingIcon: Icons.check_circle_outline,
-            onPressed: _saveQuickCheckIn,
-          ),
-          const SizedBox(height: 8),
-          Center(
-            child: MindPressable(
-              semanticLabel: strings.preferStepByStepLabel,
-              borderRadius: BorderRadius.circular(12),
-              onPressed: () => _openGuidedCheckInSheet(todayTrace),
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 48),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.layers_outlined, size: 16, color: tokens.accent),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        strings.preferStepByStepLabel,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: tokens.accent,
-                        ),
+        ),
+        _buildPinnedSaveFooter(tokens, strings, todayTrace, reduceMotion),
+      ],
+    );
+  }
+
+  Widget _buildPinnedSaveFooter(
+    MindTokens tokens,
+    AppStrings strings,
+    MindTraceModel? todayTrace,
+    bool reduceMotion,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.background,
+        border: Border(top: BorderSide(color: tokens.border, width: 1.0)),
+      ),
+      padding: const EdgeInsetsDirectional.fromSTEB(20, 10, 20, 12),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AnimatedSwitcher(
+              duration: reduceMotion
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOutBack,
+              child: _savedConfirmed
+                  ? Padding(
+                      key: const ValueKey('saved-pill'),
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 16,
+                            color: tokens.accent,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            strings.savedBadgeLabel,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w700,
+                              color: tokens.accent,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                    )
+                  : const SizedBox.shrink(key: ValueKey('not-saved-pill')),
             ),
-          ),
-        ],
+            MindButton(
+              text: todayTrace != null
+                  ? strings.updateTodaysEntryAction
+                  : strings.saveCheckInAction,
+              isFullWidth: true,
+              isLoading: _isSaving,
+              leadingIcon: _savedConfirmed
+                  ? Icons.check_rounded
+                  : Icons.check_circle_outline,
+              onPressed: _saveQuickCheckIn,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -670,19 +770,25 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                 child: Text(
                   strings.whatsInfluencingMood,
                   style: TextStyle(
+                    fontFamily: 'Inter',
                     color: tokens.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              Text(
-                strings.triggersContextHeader,
-                style: TextStyle(
-                  color: tokens.textSecondary,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.7,
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  strings.triggersContextHeader,
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    color: tokens.textSecondary,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: strings.isArabic ? 0 : 0.6,
+                  ),
                 ),
               ),
             ],
@@ -699,6 +805,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                 onTap: () {
                   HapticFeedback.selectionClick();
                   setState(() {
+                    _savedConfirmed = false;
                     if (isSel) {
                       _selectedTriggers.remove(trig);
                     } else {
@@ -713,6 +820,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
           Text(
             strings.whatHelpedTodayLabel,
             style: TextStyle(
+              fontFamily: 'Inter',
               color: tokens.textPrimary,
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
@@ -730,6 +838,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                 onTap: () {
                   HapticFeedback.selectionClick();
                   setState(() {
+                    _savedConfirmed = false;
                     if (isSel) {
                       _selectedHelped.remove(item);
                     } else {
@@ -754,7 +863,12 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                   divisions: 14,
                   unit: 'h',
                   tokens: tokens,
-                  onChanged: (v) => setState(() => _sleepHours = v),
+                  onChanged: (v) {
+                    setState(() {
+                      _sleepHours = v;
+                      _savedConfirmed = false;
+                    });
+                  },
                 ),
                 const Divider(height: 20, thickness: 0.5),
                 _buildSliderRow(
@@ -765,7 +879,12 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                   divisions: 9,
                   unit: '/10',
                   tokens: tokens,
-                  onChanged: (v) => setState(() => _energyLevel = v),
+                  onChanged: (v) {
+                    setState(() {
+                      _energyLevel = v;
+                      _savedConfirmed = false;
+                    });
+                  },
                 ),
                 const Divider(height: 20, thickness: 0.5),
                 _buildSliderRow(
@@ -776,7 +895,12 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                   divisions: 10,
                   unit: '/10',
                   tokens: tokens,
-                  onChanged: (v) => setState(() => _anxietyLevel = v),
+                  onChanged: (v) {
+                    setState(() {
+                      _anxietyLevel = v;
+                      _savedConfirmed = false;
+                    });
+                  },
                 ),
               ],
             ),
@@ -810,6 +934,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
+                  fontFamily: 'Inter',
                   color: tokens.textPrimary,
                   fontSize: 13.5,
                   fontWeight: FontWeight.w600,
@@ -820,6 +945,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
             Text(
               '$formatted$unit',
               style: TextStyle(
+                fontFamily: 'Inter',
                 color: tokens.accent,
                 fontSize: 13.5,
                 fontWeight: FontWeight.w700,
@@ -853,6 +979,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
   }
 
   Widget _buildHistoryAndCalendarTab(MindTokens tokens, AppStrings strings) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final traces = ref.watch(mindTraceControllerProvider).value ?? const [];
     final cases = ref.watch(savedCasesProvider).value ?? const [];
     final now = DateTime.now();
@@ -865,92 +992,112 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
             : List<MindTraceModel>.from(traces))
       ..sort((a, b) => b.date.compareTo(a.date));
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-      children: [
-        TrackMonthCalendar(
-          month: _calendarMonth,
-          traces: traces,
-          selectedDateKey: _selectedDateKey,
-          strings: strings,
-          canGoNextMonth: canGoNext,
-          onPreviousMonth: () {
-            setState(() {
-              _calendarMonth =
-                  DateTime(_calendarMonth.year, _calendarMonth.month - 1);
-              _selectedDateKey = null;
-            });
-          },
-          onNextMonth: () {
-            if (!canGoNext) return;
-            setState(() {
-              _calendarMonth = nextMonth;
-              _selectedDateKey = null;
-            });
-          },
-          onSelectDateKey: (dayKey) {
-            setState(() => _selectedDateKey = dayKey);
-          },
-          onInspectTrace: (trace) => _handleInspectTrace(trace, strings),
-        ),
-        const SizedBox(height: 18),
-        if (traces.isEmpty && cases.isEmpty)
-          MindCard(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 34,
-                  color: tokens.accent,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  strings.timelineBuildsTitle,
-                  textAlign: TextAlign.center,
+    return SingleChildScrollView(
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 6, 16, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TrackMonthCalendar(
+            month: _calendarMonth,
+            traces: traces,
+            selectedDateKey: _selectedDateKey,
+            strings: strings,
+            canGoNextMonth: canGoNext,
+            onPreviousMonth: () {
+              setState(() {
+                _calendarMonth =
+                    DateTime(_calendarMonth.year, _calendarMonth.month - 1);
+                _selectedDateKey = null;
+              });
+            },
+            onNextMonth: () {
+              if (!canGoNext) return;
+              setState(() {
+                _calendarMonth = nextMonth;
+                _selectedDateKey = null;
+              });
+            },
+            onSelectDateKey: (dayKey) {
+              setState(() => _selectedDateKey = dayKey);
+            },
+            onInspectTrace: (trace) => _handleInspectTrace(trace, strings),
+          ),
+          const SizedBox(height: 18),
+          if (traces.isEmpty && cases.isEmpty)
+            MindCard(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+              child: Column(
+                children: [
+                  HomeOrganicExerciseArt(size: 72, isDark: isDark),
+                  const SizedBox(height: 14),
+                  Text(
+                    strings.timelineBuildsTitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: tokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  MindButton(
+                    text: strings.logTodayBtn,
+                    leadingIcon: Icons.add_rounded,
+                    onPressed: () => _tabController.animateTo(0),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            if (visibleTraces.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsetsDirectional.only(bottom: 10),
+                child: Text(
+                  strings.timelineOverline,
                   style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: tokens.textPrimary,
+                    fontFamily: 'Inter',
+                    color: tokens.textSecondary,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: strings.isArabic ? 0 : 0.6,
                   ),
                 ),
-                const SizedBox(height: 16),
-                MindButton(
-                  text: strings.logTodayBtn,
-                  leadingIcon: Icons.add_rounded,
-                  onPressed: () => _tabController.animateTo(0),
+              ),
+            ],
+            if (visibleTraces.isEmpty && _selectedDateKey != null)
+              MindCard(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  strings.noEntriesForDayNote,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    color: tokens.textSecondary,
+                  ),
                 ),
-              ],
-            ),
-          )
-        else ...[
-          if (visibleTraces.isEmpty && _selectedDateKey != null)
-            MindCard(
-              padding: const EdgeInsets.all(16),
-              child: Text(
-                strings.noEntriesForDayNote,
-                style: TextStyle(fontSize: 13, color: tokens.textSecondary),
               ),
-            ),
-          ...visibleTraces
-              .take(20)
-              .map((t) => _buildTraceCard(t, tokens, strings)),
-          if (_selectedDateKey == null && cases.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            Text(
-              strings.recentCasesSection,
-              style: TextStyle(
-                color: tokens.textSecondary,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.0,
+            ...visibleTraces
+                .take(20)
+                .map((t) => _buildTraceCard(t, tokens, strings)),
+            if (_selectedDateKey == null && cases.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Text(
+                strings.recentCasesSection,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  color: tokens.textSecondary,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: strings.isArabic ? 0 : 0.6,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            ...cases.take(4).map((c) => _buildCaseCard(c, tokens, strings)),
+              const SizedBox(height: 8),
+              ...cases.take(4).map((c) => _buildCaseCard(c, tokens, strings)),
+            ],
           ],
         ],
-      ],
+      ),
     );
   }
 
@@ -959,6 +1106,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
     MindTokens tokens,
     AppStrings strings,
   ) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     final moodStyle = trackMoodOptionFor(t.overallMood);
     final moodText = trackMoodLabel(t.overallMood, strings);
     final triggers = (t.situation ?? '')
@@ -970,106 +1118,131 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: MindCard(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsetsDirectional.fromSTEB(14, 14, 12, 14),
         onTap: () => _handleInspectTrace(t, strings),
         semanticLabel: '${t.dateKey} $moodText ${t.moodIntensity}/10',
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text(
-                  t.dateKey,
-                  style: TextStyle(
-                    color: tokens.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: moodStyle.color.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: moodStyle.color.withValues(alpha: 0.55),
+            Container(
+              width: 48,
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              decoration: BoxDecoration(
+                color: tokens.surfaceSecondary,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: tokens.border),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '${t.date.day}',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: tokens.textPrimary,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Text(
+                    strings.shortMonthName(t.date.month),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: strings.isArabic ? 0 : 0.3,
+                      color: tokens.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Icon(moodStyle.icon, size: 14, color: moodStyle.color),
-                      const SizedBox(width: 5),
-                      Text(
-                        moodText,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: tokens.textPrimary,
+                      Icon(moodStyle.icon, size: 16, color: moodStyle.color),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          '$moodText · ${t.moodIntensity}/10',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: tokens.textPrimary,
+                            fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${t.moodIntensity}/10',
-                  style: TextStyle(
-                    color: tokens.accent,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
-            ),
-            if (t.journalText != null && t.journalText!.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                t.journalText!.trim(),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: tokens.textPrimary,
-                  fontSize: 13,
-                  height: 1.4,
-                ),
-              ),
-            ],
-            if (triggers.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: triggers
-                    .map(
-                      (trig) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: tokens.surfaceSecondary,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: tokens.border),
-                        ),
-                        child: Text(
-                          strings.trackTriggerDisplay(trig),
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            color: tokens.textSecondary,
-                          ),
-                        ),
+                  if (triggers.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: triggers
+                          .map(
+                            (trig) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: tokens.surfaceSecondary,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: tokens.border),
+                              ),
+                              child: Text(
+                                strings.trackTriggerDisplay(trig),
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 11.5,
+                                  color: tokens.textSecondary,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                  if (t.journalText != null &&
+                      t.journalText!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      t.journalText!.trim(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        color: tokens.textSecondary,
+                        fontSize: 13,
+                        height: 1.4,
                       ),
-                    )
-                    .toList(),
+                    ),
+                  ],
+                ],
               ),
-            ],
+            ),
+            const SizedBox(width: 6),
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Icon(
+                isRtl ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+                size: 18,
+                color: tokens.textTertiary,
+              ),
+            ),
           ],
         ),
       ),
@@ -1077,6 +1250,8 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
   }
 
   Widget _buildCaseCard(CaseModel c, MindTokens tokens, AppStrings strings) {
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: MindCard(
@@ -1090,8 +1265,11 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                 color: tokens.accentSoft,
                 borderRadius: BorderRadius.circular(tokens.chipRadius),
               ),
-              child:
-                  Icon(Icons.psychology_outlined, size: 16, color: tokens.accent),
+              child: Icon(
+                Icons.psychology_outlined,
+                size: 16,
+                color: tokens.accent,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -1105,6 +1283,7 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
+                      fontFamily: 'Inter',
                       color: tokens.textPrimary,
                       fontWeight: FontWeight.w600,
                       fontSize: 13.5,
@@ -1121,12 +1300,20 @@ class _TrackScreenState extends ConsumerState<TrackScreen>
                         : (strings.isArabic
                             ? 'قيد البحث'
                             : (strings.isFrench ? 'En cours' : 'In Progress')),
-                    style: TextStyle(color: tokens.textSecondary, fontSize: 12),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: tokens.textSecondary,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, size: 18, color: tokens.textTertiary),
+            Icon(
+              isRtl ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+              size: 18,
+              color: tokens.textTertiary,
+            ),
           ],
         ),
       ),

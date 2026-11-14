@@ -38,6 +38,7 @@ class TrackMonthCalendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
     final firstDayOffset = DateTime(month.year, month.month, 1).weekday - 1;
     final now = DateTime.now();
@@ -54,7 +55,7 @@ class TrackMonthCalendar extends StatelessWidget {
     final weekdays = strings.weekdayShortLabels;
 
     return MindCard(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -68,6 +69,7 @@ class TrackMonthCalendar extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
+                    fontFamily: 'Inter',
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: tokens.textPrimary,
@@ -77,14 +79,24 @@ class TrackMonthCalendar extends StatelessWidget {
               ),
               IconButton(
                 tooltip: strings.previousMonthTooltip,
-                icon: const Icon(Icons.chevron_left_rounded, size: 22),
+                icon: Icon(
+                  isRtl
+                      ? Icons.chevron_right_rounded
+                      : Icons.chevron_left_rounded,
+                  size: 22,
+                ),
                 color: tokens.textPrimary,
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 onPressed: onPreviousMonth,
               ),
               IconButton(
                 tooltip: strings.nextMonthTooltip,
-                icon: const Icon(Icons.chevron_right_rounded, size: 22),
+                icon: Icon(
+                  isRtl
+                      ? Icons.chevron_left_rounded
+                      : Icons.chevron_right_rounded,
+                  size: 22,
+                ),
                 color: canGoNextMonth ? tokens.textPrimary : tokens.textTertiary,
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 onPressed: canGoNextMonth ? onNextMonth : null,
@@ -95,6 +107,7 @@ class TrackMonthCalendar extends StatelessWidget {
           Text(
             strings.calendarNoBreaksNote,
             style: TextStyle(
+              fontFamily: 'Inter',
               fontSize: 11.5,
               height: 1.35,
               color: tokens.textSecondary,
@@ -109,9 +122,10 @@ class TrackMonthCalendar extends StatelessWidget {
                   child: Text(
                     dayLabel,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontFamily: 'Inter',
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
-                      color: tokens.textTertiary,
+                      color: tokens.textSecondary,
                     ),
                   ),
                 ),
@@ -125,9 +139,9 @@ class TrackMonthCalendar extends StatelessWidget {
             itemCount: daysInMonth + firstDayOffset,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              crossAxisSpacing: 6,
+              crossAxisSpacing: 4,
               mainAxisSpacing: 6,
-              mainAxisExtent: 44,
+              mainAxisExtent: 48,
             ),
             itemBuilder: (context, index) {
               if (index < firstDayOffset) {
@@ -231,7 +245,7 @@ class TrackMonthCalendar extends StatelessWidget {
         trace != null ? trackMoodOptionFor(trace.overallMood) : null;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+      padding: const EdgeInsetsDirectional.fromSTEB(12, 8, 8, 8),
       decoration: BoxDecoration(
         color: tokens.surfaceSecondary,
         borderRadius: BorderRadius.circular(14),
