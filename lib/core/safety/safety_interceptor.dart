@@ -26,11 +26,15 @@ class SafetyInterceptor {
     return layer1Level > aiSafetyLevel ? layer1Level : aiSafetyLevel;
   }
 
-  /// Displays the Level 2 Gentle Pause dialog.
+  /// Displays the Level 2 Gentle Pause dialog, Acute Medical Emergency, or Accidental Ingestion alert.
   ///
   /// Vercel Luxury Dark: 10px radius, hairline borders, outline vector shield icon,
   /// non-dismissible modal barrier for clinical integrity, trilingual copy.
-  static void showCrisisPauseDialog(BuildContext context) {
+  static void showCrisisPauseDialog(
+    BuildContext context, {
+    bool isMedicalEmergency = false,
+    bool isAccidentalIngestion = false,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final strings = AppStrings.of(context);
 
@@ -39,6 +43,14 @@ class SafetyInterceptor {
     final surfaceSubtle = isDark ? const Color(0xFF161616) : LabColors.daylightSurfaceSubtle;
     final textPrimary = isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary;
     final textSecondary = isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
+
+    final isAnyMedical = isMedicalEmergency || isAccidentalIngestion;
+    final title = isAccidentalIngestion
+        ? strings.accidentalOverdoseTitle
+        : (isMedicalEmergency ? strings.medicalEmergencyTitle : strings.crisisPauseTitle);
+    final body = isAccidentalIngestion
+        ? strings.accidentalOverdoseBody
+        : (isMedicalEmergency ? strings.medicalEmergencyBody : strings.crisisPauseBody);
 
     showDialog(
       context: context,
@@ -57,13 +69,16 @@ class SafetyInterceptor {
                 color: isDark ? LabColors.safetySoftBgDark : LabColors.safetySoftBgLight,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.shield_outlined,
-                  color: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth, size: 20),
+              child: Icon(
+                isAnyMedical ? Icons.local_hospital_outlined : Icons.shield_outlined,
+                color: isDark ? LabColors.safetyWarmthDark : LabColors.safetyWarmth,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                strings.crisisPauseTitle,
+                title,
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textPrimary),
               ),
             ),
@@ -74,7 +89,7 @@ class SafetyInterceptor {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              strings.crisisPauseBody,
+              body,
               style: TextStyle(fontSize: 12.5, height: 1.45, color: textSecondary),
             ),
             const SizedBox(height: 16),
@@ -89,12 +104,16 @@ class SafetyInterceptor {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    strings.greenLineTitle,
+                    isAnyMedical
+                        ? (strings.isArabic ? 'الإسعاف الطبي (SAMU 190) والحماية المدنية (198)' : (strings.isFrench ? 'SAMU (190) & Protection Civile (198)' : 'SAMU (190) & Emergency Rescue (198)'))
+                        : strings.greenLineTitle,
                     style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: textPrimary),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    strings.greenLineSubtitle,
+                    isAnyMedical
+                        ? (strings.isArabic ? 'اتصل بـ 190 أو 198 فوراً' : (strings.isFrench ? 'Composer le 190 ou 198 immédiatement' : 'Dial 190 or 198 immediately'))
+                        : strings.greenLineSubtitle,
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -120,9 +139,9 @@ class SafetyInterceptor {
               foregroundColor: isDark ? LabColors.nightBackground : Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            icon: const Icon(Icons.shield_outlined, size: 15),
+            icon: Icon(isAnyMedical ? Icons.phone : Icons.shield_outlined, size: 15),
             label: Text(
-              strings.viewSupportResourcesBtn,
+              isAnyMedical ? strings.callSamu190Btn : strings.viewSupportResourcesBtn,
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
             ),
             onPressed: () {

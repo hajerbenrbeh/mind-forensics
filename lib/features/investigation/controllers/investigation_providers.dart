@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/safety/crisis_keywords.dart';
 import '../../../core/security/secure_key_manager.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../journal/controllers/journal_memory_controller.dart';
@@ -320,11 +322,41 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
       final cases = await repo.getAllCases();
       final activeCases = cases.where((c) => !c.isCompleted).toList();
       if (activeCases.isNotEmpty && (state.value == null || state.value!.isCompleted)) {
-        state = AsyncValue.data(activeCases.first);
-        return activeCases.first;
+        var activeCase = activeCases.first;
+        if (!activeCase.isPausedForSafety && _hasCriticalSafetyStatement(activeCase)) {
+          activeCase = activeCase.copyWith(
+            isPausedForSafety: true,
+            updatedAt: DateTime.now(),
+          );
+          try {
+            await repo.saveCase(activeCase);
+          } catch (e) {
+            debugPrint(
+                'Safety Warning: Failed to heal safety pause to disk on hydration: ${e.runtimeType}');
+          }
+        }
+        state = AsyncValue.data(activeCase);
+        return activeCase;
       }
     } catch (_) {}
     return state.value;
+  }
+
+  /// Determines offline if an active case contains un-paused statements requiring immediate safety interruption.
+  ///
+  /// Only considers: immediateMedicalEmergency, imminentIntentOrCrisis, and accidentalIngestionAlert.
+  /// Never considers ordinary intrusive thoughts, fear of losing control, or general distress.
+  bool _hasCriticalSafetyStatement(CaseModel caseModel) {
+    for (final statement in caseModel.statements) {
+      if (statement.speaker != StatementSpeaker.user) continue;
+      final classification = CrisisKeywords.classifyText(statement.text);
+      if (classification == SafetyClassification.immediateMedicalEmergency ||
+          classification == SafetyClassification.imminentIntentOrCrisis ||
+          classification == SafetyClassification.accidentalIngestionAlert) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Ensures active session hydration is fully resolved before checking if a case exists.
@@ -337,7 +369,14 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
 
   /// Sets or resumes an existing case.
   void resumeCase(CaseModel caseModel) {
-    state = AsyncValue.data(caseModel);
+    var toResume = caseModel;
+    if (!toResume.isPausedForSafety && _hasCriticalSafetyStatement(toResume)) {
+      toResume = toResume.copyWith(
+        isPausedForSafety: true,
+        updatedAt: DateTime.now(),
+      );
+    }
+    state = AsyncValue.data(toResume);
   }
 
   /// Clears the active case from the session.
@@ -538,8 +577,15 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
       updatedAt: DateTime.now(),
     );
 
+    if (isSafetyStatement) {
+      // Ensure in-memory state reflects safety statement immediately (fail-closed in volatile memory)
+      state = AsyncValue.data(updated);
+    }
+
     await ref.read(caseRepositoryProvider).saveCase(updated);
-    state = AsyncValue.data(updated);
+    if (!isSafetyStatement) {
+      state = AsyncValue.data(updated);
+    }
     ref.invalidate(savedCasesProvider);
   }
 
@@ -547,17 +593,19 @@ class ActiveCaseController extends Notifier<AsyncValue<CaseModel?>> {
   Future<bool> pauseCaseForSafety() async {
     final current = state.value;
     if (current == null) return false;
+    final paused = current.copyWith(
+      isPausedForSafety: true,
+      updatedAt: DateTime.now(),
+    );
+    // Fail-closed in memory immediately: ensure runtime never routes subsequent messages to AI
+    state = AsyncValue.data(paused);
     try {
-      final paused = current.copyWith(
-        isPausedForSafety: true,
-        updatedAt: DateTime.now(),
-      );
       await ref.read(caseRepositoryProvider).saveCase(paused);
-      state = AsyncValue.data(paused);
       ref.invalidate(savedCasesProvider);
       return true;
-    } catch (_) {
-      // Fail closed: return false on persistence failure
+    } catch (e) {
+      // Fail closed: return false on persistence failure, logging safe diagnostic info without sensitive content
+      debugPrint('Safety Warning: Failed to persist safety pause to repository: ${e.runtimeType}');
       return false;
     }
   }

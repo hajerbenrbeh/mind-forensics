@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -23,9 +24,16 @@ class MindTraceAiService {
   });
 
   static const String kDevMockKey = 'DEV_MOCK_GEMINI_KEY';
+  static const List<String> fallbackModels = [
+    'gemini-3.5-flash',
+    'gemini-3.1-flash-lite',
+  ];
 
   final String? apiKey;
   final String modelName;
+  bool? lastCallWasLive;
+  String? lastModelUsed;
+  String? lastError;
 
   Future<String> generateDailyReflection({
     required MindTraceModel currentTrace,
@@ -34,6 +42,9 @@ class MindTraceAiService {
     required String languageCode,
     List<JourneyActivity>? availableActivities,
   }) async {
+    lastCallWasLive = null;
+    lastError = null;
+
     final hasConsent = profile != null &&
         profile.shareWithAiCompanion &&
         profile.allowAiPersonalization;
@@ -42,6 +53,7 @@ class MindTraceAiService {
     // NEVER transmit telemetry to external cloud AI APIs (Gemini).
     // Instantly route to the 100% on-device local generator with zero historical linkage.
     if (!hasConsent) {
+      lastCallWasLive = false;
       return _generateLocalReflection(
         currentTrace: currentTrace,
         history: const [], // Strict privacy: do not access past history without consent
@@ -53,18 +65,24 @@ class MindTraceAiService {
     final cleanKey = apiKey?.trim() ?? '';
 
     if (cleanKey.isNotEmpty && cleanKey != kDevMockKey) {
-      final geminiResult = await _callGeminiReflection(
-        apiKey: cleanKey,
-        currentTrace: currentTrace,
-        history: history,
-        profile: profile,
-        languageCode: languageCode,
-      );
-      if (geminiResult != null && geminiResult.trim().isNotEmpty) {
-        return geminiResult.trim();
+      try {
+        final geminiResult = await _callGeminiReflection(
+          apiKey: cleanKey,
+          currentTrace: currentTrace,
+          history: history,
+          profile: profile,
+          languageCode: languageCode,
+        );
+        if (geminiResult != null && geminiResult.trim().isNotEmpty) {
+          lastCallWasLive = true;
+          return geminiResult.trim();
+        }
+      } catch (e) {
+        lastError = 'Connection failed: $e';
       }
     }
 
+    lastCallWasLive = false;
     // Local Clinical Generator (Offline fallback)
     return _generateLocalReflection(
       currentTrace: currentTrace,
@@ -145,56 +163,85 @@ ${languageCode == 'ar' ? '''
       }
     }
 
-    final url = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent',
-    );
+    final modelsToTry = [
+      modelName,
+      ...fallbackModels.where((m) => m != modelName),
+    ];
 
-    final payload = {
-      'system_instruction': {
-        'parts': [
-          {'text': systemInstruction}
-        ]
-      },
-      'contents': [
-        {
-          'role': 'user',
+    for (final currentModel in modelsToTry) {
+      final url = Uri.parse(
+        'https://generativelanguage.googleapis.com/v1beta/models/$currentModel:generateContent?key=$apiKey',
+      );
+
+      final payload = {
+        'system_instruction': {
           'parts': [
-            {'text': promptBuffer.toString()}
+            {'text': systemInstruction}
           ]
-        }
-      ],
-      'generationConfig': {
-        'temperature': 0.6,
-        'maxOutputTokens': 200,
-      },
-    };
-
-    HttpClient? client;
-    try {
-      client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
-      final request = await client.postUrl(url);
-      request.headers.contentType = ContentType.json;
-      request.headers.set('x-goog-api-key', apiKey.trim());
-      request.write(jsonEncode(payload));
-
-      final response = await request.close();
-      final body = await response.transform(utf8.decoder).join();
-
-      if (response.statusCode == 200) {
-        await DailyUsageLimiter.recordRequest();
-        final Map<String, dynamic> decoded = jsonDecode(body) as Map<String, dynamic>;
-        final candidates = decoded['candidates'] as List<dynamic>?;
-        if (candidates != null && candidates.isNotEmpty) {
-          final content = candidates.first['content'] as Map<String, dynamic>?;
-          final parts = content?['parts'] as List<dynamic>?;
-          if (parts != null && parts.isNotEmpty) {
-            return parts.first['text'] as String?;
+        },
+        'contents': [
+          {
+            'role': 'user',
+            'parts': [
+              {'text': promptBuffer.toString()}
+            ]
           }
+        ],
+        'generationConfig': {
+          'temperature': 0.6,
+          'maxOutputTokens': 800,
+        },
+      };
+
+      HttpClient? client;
+      try {
+        client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
+        final request = await client.postUrl(url);
+        request.headers.contentType = ContentType.json;
+        request.write(jsonEncode(payload));
+
+        final response = await request.close().timeout(const Duration(seconds: 15));
+        final body = await response.transform(utf8.decoder).join().timeout(const Duration(seconds: 15));
+
+        if (response.statusCode == 200) {
+          lastModelUsed = currentModel;
+          lastError = null;
+          await DailyUsageLimiter.recordRequest();
+          final Map<String, dynamic> decoded = jsonDecode(body) as Map<String, dynamic>;
+          final candidates = decoded['candidates'] as List<dynamic>?;
+          if (candidates != null && candidates.isNotEmpty) {
+            final content = candidates.first['content'] as Map<String, dynamic>?;
+            final parts = content?['parts'] as List<dynamic>?;
+            if (parts != null && parts.isNotEmpty) {
+              return parts.first['text'] as String?;
+            }
+          }
+        } else if (response.statusCode == 401 || response.statusCode == 403) {
+          lastError = 'Authentication failed (HTTP ${response.statusCode})';
+          break; // Stop retrying on invalid key
+        } else if (response.statusCode == 400) {
+          lastError = 'Invalid request (HTTP 400): $body';
+          break; // Do not retry identical bad request
+        } else if (response.statusCode == 429 || response.statusCode == 503) {
+          lastError = 'HTTP ${response.statusCode} on $currentModel';
+          continue; // Try next fallback model immediately
+        } else {
+          lastError = 'Status ${response.statusCode}: $body';
         }
+      } on SocketException catch (e) {
+        lastError = 'Network unavailable: ${e.message}';
+        break;
+      } on HandshakeException catch (e) {
+        lastError = 'Handshake failed: ${e.message}';
+        break;
+      } on TimeoutException {
+        lastError = 'Timeout on $currentModel';
+        continue;
+      } catch (e) {
+        lastError = 'Error on $currentModel: $e';
+      } finally {
+        client?.close();
       }
-    } catch (_) {
-    } finally {
-      client?.close();
     }
 
     return null;

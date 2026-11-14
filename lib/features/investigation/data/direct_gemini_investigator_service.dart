@@ -45,6 +45,15 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
   /// Counter tracking external network requests attempted.
   int networkRequestsAttempted = 0;
 
+  /// Status of the most recent AI operation: true if live Gemini responded, false if local fallback was used.
+  bool? lastCallWasLive;
+
+  /// Model name that successfully handled the last live call.
+  String? lastModelUsed;
+
+  /// Error message from the last live Gemini attempt, if any.
+  String? lastErrorMessage;
+
   /// Centralized Privacy & Consent Gate for AI operations.
   ///
   /// Enforces:
@@ -135,10 +144,24 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
         final body = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 200) {
+          lastModelUsed = currentModel;
           return (
             success: true,
             message: 'Connected to Gemini ($currentModel) successfully'
           );
+        } else if (response.statusCode == 401 || response.statusCode == 403) {
+          return (
+            success: false,
+            message: 'Authentication failed (HTTP ${response.statusCode}): Invalid or unauthorized API key'
+          );
+        } else if (response.statusCode == 400) {
+          return (
+            success: false,
+            message: 'Invalid request (HTTP 400): $body'
+          );
+        } else if (response.statusCode == 429 || response.statusCode == 503) {
+          lastError = 'HTTP ${response.statusCode} on $currentModel';
+          continue;
         } else {
           lastError = 'Status ${response.statusCode}: $body';
         }
@@ -228,6 +251,9 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
         final body = await response.transform(utf8.decoder).join();
 
         if (response.statusCode == 200) {
+          lastCallWasLive = true;
+          lastModelUsed = currentModel;
+          lastErrorMessage = null;
           await DailyUsageLimiter.recordRequest();
           final Map<String, dynamic> decoded =
               jsonDecode(body) as Map<String, dynamic>;
@@ -240,20 +266,32 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
               return parts.first['text'] as String?;
             }
           }
+        } else if (response.statusCode == 401 || response.statusCode == 403) {
+          lastErrorMessage = 'Authentication failed (HTTP ${response.statusCode})';
+          break; // Stop retrying on invalid key
+        } else if (response.statusCode == 400) {
+          lastErrorMessage = 'Invalid request (HTTP 400): $body';
+          break; // Do not retry identical bad request
+        } else if (response.statusCode == 429 || response.statusCode == 503) {
+          lastErrorMessage = 'HTTP ${response.statusCode} on $currentModel';
+          continue; // Try next fallback model
+        } else {
+          lastErrorMessage = 'Status ${response.statusCode}: $body';
         }
-      } on SocketException {
-        // Network unavailable, break immediately without waiting on remaining models
+      } on SocketException catch (e) {
+        lastErrorMessage = 'Network unavailable: ${e.message}';
         break;
-      } on HandshakeException {
-        // Security handshake failure, break immediately
+      } on HandshakeException catch (e) {
+        lastErrorMessage = 'Handshake failed: ${e.message}';
         break;
-      } catch (_) {
-        // Model-specific error (404/429), try next fallback model
+      } catch (e) {
+        lastErrorMessage = 'Error on $currentModel: $e';
       } finally {
         client?.close();
       }
     }
 
+    lastCallWasLive = false;
     return null;
   }
 
@@ -417,6 +455,9 @@ class DirectGeminiInvestigatorService implements InvestigatorService {
       // Non-destructive preservation: Return original complete response rather than discarding it
       return text;
     }
+
+    lastCallWasLive = false;
+    lastErrorMessage = 'Gemini connection unavailable; offline clinical simulator used.';
 
     return _fallback.getNextQuestion(
       currentCase: currentCase,
