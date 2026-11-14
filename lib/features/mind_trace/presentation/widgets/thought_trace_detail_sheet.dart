@@ -196,7 +196,7 @@ class ThoughtTraceDetailSheet extends ConsumerWidget {
                     Text(
                       '“${trace.thoughtPreview}”',
                       style: TextStyle(
-                        fontFamily: 'serif',
+                        fontFamily: 'Inter',
                         fontSize: 15,
                         fontStyle: FontStyle.italic,
                         height: 1.5,

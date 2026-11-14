@@ -15,7 +15,8 @@ class LabTheme {
     double letterSpacing = -0.2,
   }) {
     return TextStyle(
-      fontFamily: 'monospace',
+      fontFamily: 'Inter',
+      fontFeatures: const [FontFeature.tabularFigures()],
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -23,16 +24,16 @@ class LabTheme {
     );
   }
 
-  /// Warm, thoughtful editorial style for prominent headings and foundational questions.
+  /// Warm, thoughtful heading style built cleanly on bundled Inter.
   static TextStyle serifStyle({
     double fontSize = 20,
-    FontWeight fontWeight = FontWeight.w600,
+    FontWeight fontWeight = FontWeight.w700,
     Color? color,
-    double letterSpacing = -0.2,
-    double height = 1.3,
+    double letterSpacing = -0.3,
+    double height = 1.25,
   }) {
     return TextStyle(
-      fontFamily: 'serif',
+      fontFamily: 'Inter',
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -41,7 +42,7 @@ class LabTheme {
     );
   }
 
-  /// Secondary editorial style with calm pacing for reflective quotes and insights.
+  /// Secondary editorial body style with calm leading for reflective quotes and insights.
   static TextStyle editorialSerif({
     double fontSize = 14,
     FontWeight fontWeight = FontWeight.w400,
@@ -51,7 +52,7 @@ class LabTheme {
     FontStyle fontStyle = FontStyle.normal,
   }) {
     return TextStyle(
-      fontFamily: 'serif',
+      fontFamily: 'Inter',
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -176,8 +177,8 @@ class LabTheme {
         bodyMedium: TextStyle(
           fontFamily: 'Inter',
           color: LabColors.daylightTextSecondary,
-          fontSize: 13.5,
-          height: 1.45,
+          fontSize: 14,
+          height: 1.5,
         ),
       ),
     );
@@ -298,8 +299,8 @@ class LabTheme {
         bodyMedium: TextStyle(
           fontFamily: 'Inter',
           color: LabColors.nightTextSecondary,
-          fontSize: 13.5,
-          height: 1.45,
+          fontSize: 14,
+          height: 1.5,
         ),
       ),
     );

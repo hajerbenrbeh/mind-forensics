@@ -4,36 +4,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_strings.dart';
+import '../../../app/localization/locale_controller.dart';
 import '../../../app/router/app_router.dart';
 import '../../../app/theme/lab_colors.dart';
-import '../../../app/theme/lab_theme.dart';
+import '../../../app/theme/mind_tokens.dart';
 import '../../../core/safety/support_button.dart';
-import '../../../core/widgets/bouncing_widget.dart';
 import '../../../core/widgets/fingerprint_thread_signature.dart';
+import '../../../core/widgets/mind_pressable.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../journey/controllers/journey_controller.dart';
-import '../../observatory/domain/default_symptom_library.dart';
-import '../../observatory/domain/symptom_entry.dart';
+import '../../mind_trace/controllers/mind_trace_controller.dart';
+import '../../mind_trace/domain/mind_trace_model.dart';
 import '../../profile/controllers/profile_controller.dart';
-import '../../profile/domain/condition_type.dart';
-import '../../profile/domain/diagnostic_status.dart';
 import '../../profile/domain/psychological_profile_model.dart';
 
-/// The 1-Question-Per-Screen Adaptive First-Launch Onboarding for Mind Forensics.
+/// Fast 4-step, options-first onboarding for Mind Forensics.
 ///
-/// Focused strictly on understanding the user, their needs, and safety:
-/// 0: Welcome & Privacy Philosophy (honest private on-device storage)
-/// 1: Basic Information (Age range with minor safeguards, optional physiological context)
-/// 2: Mental-Health Background (6 starting points; adaptive branching)
-/// 3: Conditions (Searchable multi-select with Diagnosed vs. Suspected distinction;
-///    adaptively bypassed for non-diagnosed users unless opted in)
-/// 4: Symptoms & Difficulties (6 Inner Observatory domains + non-diagnostic notice)
-/// 5: Personal Goals & Focus (curated goals + custom goal)
-/// 6: Professional Support (Optional, non-clinical complement)
-/// 7: User-Confirmed Review of Priorities (1-tap Edit per section & account completion)
-///
-/// Secondary configuration (biometrics, email credentials, advanced AI tones)
-/// is managed in Settings and Profile.
+/// Steps:
+/// 0: Welcome, live EN/FR/AR switcher, privacy promise & account restore link
+/// 1: Focus priorities (1-3 wrapped cards, optional)
+/// 2: Comfort & safety check (optional age band + minor safeguard + support context)
+/// 3: First check-in (5 core moods + 1-10 intensity) for a zero-blank-screen Home handoff
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -42,33 +33,9 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  int _currentStep = 0;
-  final List<int> _history = [0];
-  bool _editingFromSummary = false;
+  static const int _totalSteps = 4;
 
-  // Step 1: Basic Information
-  String _selectedAgeRange = '';
-  String _selectedBiologicalSex = '';
-
-  // Step 2: Mental-Health Background
-  String _selectedBackground = '';
-
-  // Step 3: Conditions & Diagnostic Status
-  final Map<ConditionType, DiagnosticStatus> _selectedConditions = {};
-  String _conditionSearchQuery = '';
-
-  // Step 4: Current Symptoms across Inner Observatory Domains
-  final Set<String> _selectedSymptoms = {};
-  SymptomDomain? _activeSymptomDomain;
-
-  // Step 5: Personal Goals & Focus
-  final Set<String> _selectedGoals = {};
-  final TextEditingController _customGoalController = TextEditingController();
-
-  // Step 6: Professional Support
-  String _selectedProfessionalSupport = '';
-
-  final List<String> _ageRanges = const [
+  static const List<String> _ageRanges = [
     'under_18',
     '18-24',
     '25-34',
@@ -79,24 +46,71 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     'prefer_not_to_say',
   ];
 
-  final List<String> _biologicalSexOptions = const [
-    'female',
-    'male',
-    'intersex',
-    'other',
-    'prefer_not_to_say',
+  static const List<({String id, String canonicalGoal, IconData icon})>
+      _focusOptions = [
+    (
+      id: 'stress',
+      canonicalGoal: 'Ease stress & anxiety',
+      icon: Icons.air_rounded,
+    ),
+    (
+      id: 'mood',
+      canonicalGoal: 'Understand mood patterns',
+      icon: Icons.insights_rounded,
+    ),
+    (
+      id: 'overthinking',
+      canonicalGoal: 'Untangle overthinking',
+      icon: Icons.psychology_alt_outlined,
+    ),
+    (
+      id: 'sleep',
+      canonicalGoal: 'Sleep & energy rhythm',
+      icon: Icons.bedtime_outlined,
+    ),
+    (
+      id: 'specialist',
+      canonicalGoal: 'Reflect alongside a specialist',
+      icon: Icons.handshake_outlined,
+    ),
   ];
 
-  final List<String> _defaultGoalOptions = const [
-    'Understand recurring thought patterns',
-    'Track and regulate intense emotions',
-    'Manage anxiety and somatic tension',
-    'Improve daily focus and overcome inertia',
-    'Build sustainable coping strategies',
-    'Recognize early triggers before distress spikes',
-    'Reflect alongside professional therapy',
-    'General self-awareness and mindful observation',
+  static const List<({String key, IconData icon, Color color})> _moodOptions = [
+    (key: 'calm', icon: Icons.water_drop_outlined, color: LabColors.moodCalm),
+    (key: 'anxious', icon: Icons.air_rounded, color: LabColors.moodAnxious),
+    (
+      key: 'frustrated',
+      icon: Icons.bolt_rounded,
+      color: LabColors.moodFrustrated,
+    ),
+    (key: 'heavy', icon: Icons.cloud_outlined, color: LabColors.moodHeavy),
+    (
+      key: 'restless',
+      icon: Icons.waves_rounded,
+      color: LabColors.moodRestless,
+    ),
   ];
+
+  int _currentStep = 0;
+  bool _hydrated = false;
+  bool _isFinishing = false;
+  bool _recordedFirstCheckIn = false;
+
+  // Step 2: Focus areas
+  final Set<String> _selectedGoals = {};
+  final TextEditingController _customGoalController = TextEditingController();
+  bool _showCustomGoalField = false;
+
+  // Step 3: Comfort & safety context
+  String _selectedAgeRange = '';
+  String _selectedProfessionalSupport = '';
+
+  // Step 4: First check-in
+  String _selectedMood = 'calm';
+  int _firstIntensity = 5;
+
+  bool get _isMinor =>
+      _selectedAgeRange == 'under_18' || _selectedAgeRange == '<18';
 
   @override
   void initState() {
@@ -113,743 +127,446 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _hydrateFromExistingProfile() {
+    if (_hydrated) return;
     final profile = ref.read(profileControllerProvider).value;
     if (profile == null) return;
+    _hydrated = true;
 
     setState(() {
-      if (profile.ageRange.isNotEmpty) _selectedAgeRange = profile.ageRange;
-      if (profile.biologicalSex.isNotEmpty) {
-        _selectedBiologicalSex = profile.biologicalSex;
-      }
-      if (profile.mentalHealthBackground.isNotEmpty) {
-        _selectedBackground = profile.mentalHealthBackground;
+      if (profile.ageRange.isNotEmpty) {
+        _selectedAgeRange = profile.ageRange;
       }
       if (profile.professionalSupport.isNotEmpty) {
         _selectedProfessionalSupport = profile.professionalSupport;
       }
-
-      if (profile.conditions.isNotEmpty) {
-        _selectedConditions.clear();
-        for (final entry in profile.conditions) {
-          _selectedConditions[entry.condition] = entry.status;
-        }
-      }
-
-      if (profile.selectedSymptoms.isNotEmpty) {
-        _selectedSymptoms.addAll(profile.selectedSymptoms);
-      }
-
       if (profile.selectedGoals.isNotEmpty) {
         _selectedGoals.addAll(profile.selectedGoals);
       }
       if (profile.customGoal.isNotEmpty) {
         _customGoalController.text = profile.customGoal;
+        _showCustomGoalField = true;
       }
-
-      // Resume saved progress if in valid range (1 through 7)
-      if (profile.onboardingStep > 0 && profile.onboardingStep <= 7) {
-        _currentStep = profile.onboardingStep;
-        if (!_history.contains(_currentStep)) {
-          _history.add(_currentStep);
-        }
+      if (profile.onboardingStep > 0) {
+        _currentStep = profile.onboardingStep.clamp(0, _totalSteps - 1);
       }
     });
-  }
-
-  bool _isClinicalBackground(String bg) {
-    return bg == 'diagnosed' || bg == 'suspected' || bg == 'being_assessed';
-  }
-
-  void _nextStep() {
-    HapticFeedback.lightImpact();
-    if (_editingFromSummary) {
-      _returnToSummary();
-      return;
-    }
-
-    int next;
-    switch (_currentStep) {
-      case 0:
-        next = 1;
-        break;
-      case 1:
-        next = 2;
-        break;
-      case 2:
-        // Adaptive branching: if non-clinical background, bypass conditions directly to symptoms
-        if (_isClinicalBackground(_selectedBackground)) {
-          next = 3;
-        } else {
-          next = 4;
-        }
-        break;
-      case 3:
-        next = 4;
-        break;
-      case 4:
-        next = 5;
-        break;
-      case 5:
-        next = 6;
-        break;
-      case 6:
-        next = 7;
-        break;
-      case 7:
-        _finishOnboarding();
-        return;
-      default:
-        next = _currentStep + 1;
-    }
-
-    _goToStep(next);
-  }
-
-  void _previousStep() {
-    HapticFeedback.lightImpact();
-    if (_editingFromSummary) {
-      _returnToSummary();
-      return;
-    }
-
-    if (_history.length > 1) {
-      _history.removeLast();
-      final prev = _history.last;
-      _goToStep(prev, addToHistory: false);
-    } else if (_currentStep > 0) {
-      _goToStep(0, addToHistory: false);
-    }
-  }
-
-  void _goToStep(int step, {bool addToHistory = true}) {
-    if (addToHistory && (_history.isEmpty || _history.last != step)) {
-      _history.add(step);
-    }
-    setState(() {
-      _currentStep = step;
-    });
-    _saveDraftProgress();
-  }
-
-  void _returnToSummary() {
-    setState(() {
-      _editingFromSummary = false;
-      _currentStep = 7;
-    });
-    if (_history.isEmpty || _history.last != 7) {
-      _history.add(7);
-    }
-    _saveDraftProgress();
-  }
-
-  void _editSection(int targetStep) {
-    HapticFeedback.selectionClick();
-    setState(() {
-      _editingFromSummary = true;
-      _currentStep = targetStep;
-    });
-    _history.add(targetStep);
   }
 
   Future<void> _saveDraftProgress() async {
-    final conditionEntries = _selectedConditions.entries.map((e) {
-      return UserConditionEntry(
-        condition: e.key,
-        status: e.value,
-      );
-    }).toList();
-
-    final goalsList = _selectedGoals.toList();
-    final customGoalText = _customGoalController.text.trim();
-    final fullGoals = [
-      ...goalsList,
-      if (customGoalText.isNotEmpty) customGoalText,
-    ].join(', ');
-
     final currentProfile = ref.read(profileControllerProvider).value;
-
-    final profile = (currentProfile ??
-            PsychologicalProfileModel.empty(
-              userId:
-                  ref.read(authControllerProvider).user?.id ?? 'local_user',
-            ))
-        .copyWith(
+    final userId = ref.read(authControllerProvider).user?.id ?? 'local_user';
+    final customGoalText = _customGoalController.text.trim();
+    final goalsList = _selectedGoals.toList();
+    final draft =
+        (currentProfile ?? PsychologicalProfileModel.empty(userId: userId))
+            .copyWith(
       ageRange: _selectedAgeRange,
-      biologicalSex: _selectedBiologicalSex,
-      mentalHealthBackground: _selectedBackground,
-      conditions: conditionEntries,
-      selectedSymptoms: _selectedSymptoms.toList(),
       selectedGoals: goalsList,
       customGoal: customGoalText,
-      personalGoals: fullGoals,
+      personalGoals: [
+        ...goalsList,
+        if (customGoalText.isNotEmpty) customGoalText,
+      ].join(', '),
       professionalSupport: _selectedProfessionalSupport,
       onboardingStep: _currentStep,
       updatedAt: DateTime.now(),
     );
-
-    // Save draft asynchronously without blocking UI thread
-    ref.read(profileControllerProvider.notifier).saveFullProfile(profile);
+    await ref.read(profileControllerProvider.notifier).saveFullProfile(draft);
   }
 
-  Future<void> _finishOnboarding() async {
+  void _nextStep() {
+    if (_currentStep >= _totalSteps - 1) {
+      _finishOnboarding(saveInitialTrace: true);
+      return;
+    }
+    setState(() => _currentStep += 1);
+    _saveDraftProgress();
+  }
+
+  void _previousStep() {
+    if (_currentStep <= 0) return;
+    setState(() => _currentStep -= 1);
+    _saveDraftProgress();
+  }
+
+  void _skipCurrentStep() {
+    if (_currentStep >= _totalSteps - 1) {
+      _finishOnboarding(saveInitialTrace: false);
+      return;
+    }
+    _nextStep();
+  }
+
+  Future<void> _finishOnboarding({required bool saveInitialTrace}) async {
+    if (_isFinishing) return;
+    setState(() => _isFinishing = true);
     HapticFeedback.mediumImpact();
 
-    // 1. Initialize the private on-device account
-    final authCtrl = ref.read(authControllerProvider.notifier);
-    await authCtrl.createAnonymousVault();
-    await authCtrl.completeOnboarding();
+    try {
+      final authCtrl = ref.read(authControllerProvider.notifier);
+      await authCtrl.createAnonymousVault();
+      await authCtrl.completeOnboarding();
 
-    // 2. Build and persist user's psychological profile
-    final conditionEntries = _selectedConditions.entries.map((e) {
-      return UserConditionEntry(
-        condition: e.key,
-        status: e.value,
+      // Wait for post-vault Riverpod rebuilds to finish so neither notifier
+      // overwrites the newly saved final profile or first check-in trace.
+      final currentProfile = await ref.read(profileControllerProvider.future);
+      await ref.read(mindTraceControllerProvider.future);
+
+      final userId = ref.read(authControllerProvider).user?.id ?? 'local_user';
+      final customGoalText = _customGoalController.text.trim();
+      final goalsList = _selectedGoals.toList();
+      final fullGoals = [
+        ...goalsList,
+        if (customGoalText.isNotEmpty) customGoalText,
+      ].join(', ');
+
+      final profile = currentProfile.copyWith(
+        userId: userId,
+        ageRange: _selectedAgeRange,
+        selectedGoals: goalsList,
+        customGoal: customGoalText,
+        personalGoals: fullGoals,
+        professionalSupport: _selectedProfessionalSupport,
+        onboardingStep: _totalSteps,
+        updatedAt: DateTime.now(),
       );
-    }).toList();
 
-    final goalsList = _selectedGoals.toList();
-    final customGoalText = _customGoalController.text.trim();
-    final fullGoals = [
-      ...goalsList,
-      if (customGoalText.isNotEmpty) customGoalText,
-    ].join(', ');
+      await ref
+          .read(profileControllerProvider.notifier)
+          .saveFullProfile(profile);
+      await ref.read(journeyControllerProvider.notifier).resetJourney();
 
-    final currentProfile = ref.read(profileControllerProvider).value;
+      if (saveInitialTrace && !_recordedFirstCheckIn) {
+        _recordedFirstCheckIn = true;
+        final now = DateTime.now();
+        final newTrace = MindTraceModel(
+          id: 'trace_${now.millisecondsSinceEpoch}',
+          userId: userId,
+          date: now,
+          overallMood: _selectedMood,
+          moodIntensity: _firstIntensity,
+          energyLevel: (10 - _firstIntensity).clamp(1, 9),
+          selectedEmotions: [_selectedMood],
+          createdAt: now,
+          updatedAt: now,
+        );
+        await ref
+            .read(mindTraceControllerProvider.notifier)
+            .recordCheckIn(newTrace, generateAi: false);
+      }
 
-    final profile = (currentProfile ??
-            PsychologicalProfileModel.empty(
-              userId:
-                  ref.read(authControllerProvider).user?.id ?? 'local_user',
-            ))
-        .copyWith(
-      ageRange: _selectedAgeRange,
-      biologicalSex: _selectedBiologicalSex,
-      mentalHealthBackground: _selectedBackground,
-      conditions: conditionEntries,
-      selectedSymptoms: _selectedSymptoms.toList(),
-      selectedGoals: goalsList,
-      customGoal: customGoalText,
-      personalGoals: fullGoals,
-      professionalSupport: _selectedProfessionalSupport,
-      onboardingStep: 7,
-      updatedAt: DateTime.now(),
-    );
-
-    await ref.read(profileControllerProvider.notifier).saveFullProfile(profile);
-
-    // 3. Ensure initial journey is hydrated
-    await ref.read(journeyControllerProvider.notifier).resetJourney();
-
-    if (mounted) {
-      context.go(AppRouter.home);
+      if (mounted) {
+        GoRouter.maybeOf(context)?.go(AppRouter.home);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isFinishing = false);
+      }
     }
   }
 
-  bool get _isMinor =>
-      _selectedAgeRange == 'under_18' || _selectedAgeRange == '<18';
+  String _focusLabel(String id, AppStrings strings) {
+    switch (id) {
+      case 'stress':
+        return strings.focusGoalStress;
+      case 'mood':
+        return strings.focusGoalMood;
+      case 'overthinking':
+        return strings.focusGoalOverthinking;
+      case 'sleep':
+        return strings.focusGoalSleepEnergy;
+      case 'specialist':
+      default:
+        return strings.focusGoalSpecialist;
+    }
+  }
+
+  String _moodLabel(String key, AppStrings strings) {
+    switch (key) {
+      case 'calm':
+        return strings.moodCalm;
+      case 'anxious':
+        return strings.moodAnxious;
+      case 'frustrated':
+        return strings.moodFrustrated;
+      case 'heavy':
+        return strings.moodHeavy;
+      case 'restless':
+      default:
+        return strings.moodRestless;
+    }
+  }
+
+  Color _moodColor(String key) {
+    return _moodOptions
+        .firstWhere((m) => m.key == key, orElse: () => _moodOptions.first)
+        .color;
+  }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<AsyncValue<PsychologicalProfileModel?>>(
       profileControllerProvider,
       (previous, next) {
-        if (next.hasValue && next.value != null && _currentStep == 0) {
+        if (next.hasValue && next.value != null && !_hydrated) {
           _hydrateFromExistingProfile();
         }
       },
     );
 
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final tokens = context.tokens;
     final strings = ref.watch(appStringsProvider);
-
-    final bg =
-        isDark ? LabColors.nightBackground : LabColors.daylightBackground;
-    final surfaceColor =
-        isDark ? LabColors.nightSurface : LabColors.daylightSurface;
-    final borderColor =
-        isDark ? LabColors.nightBorder : LabColors.daylightBorder;
-    final textPrimary =
-        isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary;
-    final textSecondary =
-        isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
-
-    final oliveAccent =
-        isDark ? LabColors.nightAccent : LabColors.mutedOlive;
-    final cardSelectedBg =
-        isDark ? LabColors.nightSurfaceElevated : LabColors.mutedOliveSoft;
-    final cardSelectedBorder =
-        isDark ? LabColors.nightAccent : LabColors.mutedOlive;
-    final buttonBg =
-        isDark ? LabColors.nightTextPrimary : LabColors.mutedOlive;
-    final buttonFg =
-        isDark ? LabColors.nightBackground : LabColors.daylightBackground;
-
-    final canGoBack = _currentStep > 0;
-    final isOptionalStep =
-        _currentStep == 1 || _currentStep == 3 || _currentStep == 6;
+    final activeLocale = ref.watch(localeControllerProvider);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
 
     return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: bg,
-        elevation: 0,
-        leading: canGoBack
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back_rounded, size: 20),
-                color: textPrimary,
-                tooltip: strings.backBtn,
-                onPressed: _previousStep,
-              )
-            : null,
-        title: Text(
-          'Mind Forensics',
-          style: LabTheme.serifStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-            color: textPrimary,
-          ),
-        ),
-        actions: [
-          const SupportButton(),
-          if (_editingFromSummary)
-            TextButton(
-              onPressed: _returnToSummary,
-              child: Text(
-                strings.returnToSummaryBtn,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: oliveAccent,
-                ),
-              ),
-            )
-          else if (isOptionalStep)
-            TextButton(
-              onPressed: _nextStep,
-              child: Text(
-                strings.onboardingSkip,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                  color: textSecondary,
-                ),
-              ),
-            ),
-          const SizedBox(width: 8),
-        ],
-      ),
+      backgroundColor: tokens.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Return to Summary Banner if actively editing
-            if (_editingFromSummary)
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: oliveAccent.withValues(alpha: 0.12),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.edit_note_rounded,
-                      size: 16,
-                      color: oliveAccent,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Editing section • Review will reflect changes',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: textPrimary,
-                        ),
-                      ),
-                    ),
-                    InkWell(
-                      onTap: _returnToSummary,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        child: Text(
-                          strings.returnToSummaryBtn,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: oliveAccent,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-            // Step Progress Ticks (7 core steps)
-            if (_currentStep > 0)
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                child: Row(
-                  children: List.generate(7, (index) {
-                    final stepNum = index + 1;
-                    final isCompleted = stepNum < _currentStep;
-                    final isCurrent = stepNum == _currentStep;
-                    return Expanded(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                        height: 3.0,
-                        decoration: BoxDecoration(
-                          color: isCurrent
-                              ? oliveAccent
-                              : (isCompleted
-                                  ? (isDark
-                                      ? const Color(0xFF5A7264)
-                                      : LabColors.daylightAccent)
-                                  : (isDark
-                                      ? LabColors.nightBorderSubtle
-                                      : const Color(0xFFE2E7E3))),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-
-            // Main Adaptive Step Content
+            _buildTopBar(tokens, strings, activeLocale),
             Expanded(
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
+                duration: reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 220),
                 switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                child: _buildCurrentStep(
-                  isDark,
-                  surfaceColor,
-                  borderColor,
-                  textPrimary,
-                  textSecondary,
-                  oliveAccent,
-                  cardSelectedBg,
-                  cardSelectedBorder,
-                  strings,
-                ),
+                switchOutCurve: Curves.easeIn,
+                layoutBuilder: (currentChild, previousChildren) {
+                  return Stack(
+                    alignment: Alignment.topCenter,
+                    children: [
+                      ...previousChildren,
+                      ?currentChild,
+                    ],
+                  );
+                },
+                child: _buildActiveStep(tokens, strings),
               ),
             ),
-
-            // Bottom Action Row
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              decoration: BoxDecoration(
-                color: bg,
-                border: Border(top: BorderSide(color: borderColor, width: 1)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (_currentStep > 0)
-                    Text(
-                      'Step $_currentStep of 7',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.3,
-                        color: textSecondary,
-                      ),
-                    )
-                  else
-                    const SizedBox.shrink(),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: buttonBg,
-                      foregroundColor: buttonFg,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 13),
-                      elevation: 0,
-                    ),
-                    onPressed: _currentStep == 7
-                        ? _finishOnboarding
-                        : _nextStep,
-                    child: Text(
-                      _editingFromSummary
-                          ? strings.returnToSummaryBtn.toUpperCase()
-                          : (_currentStep == 7
-                              ? strings.confirmAndStartBtn.toUpperCase()
-                              : (_currentStep == 0
-                                  ? 'GET STARTED'
-                                  : strings.onboardingNext.toUpperCase())),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 11.5,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            _buildBottomCtaBar(tokens, strings),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCurrentStep(
-    bool isDark,
-    Color surfaceColor,
-    Color borderColor,
-    Color textPrimary,
-    Color textSecondary,
-    Color oliveAccent,
-    Color cardSelectedBg,
-    Color cardSelectedBorder,
+  Widget _buildTopBar(
+    MindTokens tokens,
     AppStrings strings,
+    Locale activeLocale,
   ) {
-    switch (_currentStep) {
-      case 0:
-        return _buildWelcomeStep(
-          isDark,
-          surfaceColor,
-          borderColor,
-          textPrimary,
-          textSecondary,
-          oliveAccent,
-          strings,
-        );
-      case 1:
-        return _buildBasicInfoStep(
-          isDark,
-          surfaceColor,
-          borderColor,
-          textPrimary,
-          textSecondary,
-          oliveAccent,
-          cardSelectedBg,
-          cardSelectedBorder,
-          strings,
-        );
-      case 2:
-        return _buildBackgroundStep(
-          isDark,
-          surfaceColor,
-          borderColor,
-          textPrimary,
-          textSecondary,
-          oliveAccent,
-          cardSelectedBg,
-          cardSelectedBorder,
-          strings,
-        );
-      case 3:
-        return _buildConditionsStep(
-          isDark,
-          surfaceColor,
-          borderColor,
-          textPrimary,
-          textSecondary,
-          oliveAccent,
-          cardSelectedBg,
-          cardSelectedBorder,
-          strings,
-        );
-      case 4:
-        return _buildSymptomsStep(
-          isDark,
-          surfaceColor,
-          borderColor,
-          textPrimary,
-          textSecondary,
-          oliveAccent,
-          cardSelectedBg,
-          cardSelectedBorder,
-          strings,
-        );
-      case 5:
-        return _buildGoalsStep(
-          isDark,
-          surfaceColor,
-          borderColor,
-          textPrimary,
-          textSecondary,
-          oliveAccent,
-          cardSelectedBg,
-          cardSelectedBorder,
-          strings,
-        );
-      case 6:
-        return _buildProfessionalSupportStep(
-          isDark,
-          surfaceColor,
-          borderColor,
-          textPrimary,
-          textSecondary,
-          oliveAccent,
-          cardSelectedBg,
-          cardSelectedBorder,
-          strings,
-        );
-      case 7:
-        return _buildSummaryStep(
-          isDark,
-          surfaceColor,
-          borderColor,
-          textPrimary,
-          textSecondary,
-          oliveAccent,
-          cardSelectedBg,
-          cardSelectedBorder,
-          strings,
-        );
-      default:
-        return const SizedBox.shrink();
+    if (_currentStep == 0) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 12, 6),
+        child: Row(
+          children: [
+            Expanded(
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: AppLanguage.values.map((lang) {
+                  final selected = activeLocale.languageCode == lang.code;
+                  return MindPressable(
+                    semanticLabel: lang.displayName,
+                    borderRadius: BorderRadius.circular(12),
+                    onPressed: () {
+                      ref
+                          .read(localeControllerProvider.notifier)
+                          .setLanguage(lang);
+                    },
+                    child: Container(
+                      constraints:
+                          const BoxConstraints(minWidth: 48, minHeight: 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: selected ? tokens.accentSoft : tokens.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: selected ? tokens.accent : tokens.border,
+                          width: selected ? 1.4 : 1.0,
+                        ),
+                      ),
+                      child: Center(
+                        widthFactor: 1.0,
+                        heightFactor: 1.0,
+                        child: Text(
+                          lang.shortCode,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight:
+                                selected ? FontWeight.w700 : FontWeight.w500,
+                            color: selected
+                                ? tokens.accent
+                                : tokens.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+            const SupportButton(compact: true),
+          ],
+        ),
+      );
     }
-  }
 
-  Widget _buildStepBadge(
-      String step, String label, bool isDark, Color textPrimary) {
-    final badgeBg =
-        isDark ? LabColors.nightSurface : LabColors.mutedOliveBadgeBg;
-    final badgeBorder =
-        isDark ? LabColors.nightBorder : const Color(0xFFD3DDD5);
-    final badgeText =
-        isDark ? LabColors.nightAccent : LabColors.mutedOlive;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: badgeBg,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: badgeBorder),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            step,
-            style: TextStyle(
-              color: badgeText.withValues(alpha: 0.7),
-              fontSize: 9.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+            color: tokens.textPrimary,
+            tooltip: strings.backBtn,
+            onPressed: _previousStep,
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Row(
+              children: List.generate(_totalSteps, (index) {
+                final active = index <= _currentStep;
+                return Expanded(
+                  child: Container(
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: BoxDecoration(
+                      color: active ? tokens.accent : tokens.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                );
+              }),
             ),
           ),
-          Text(
-            '  •  ',
-            style: TextStyle(
-              color: badgeText.withValues(alpha: 0.4),
-              fontSize: 9.5,
+          const SizedBox(width: 6),
+          MindPressable(
+            semanticLabel: strings.onboardingSkip,
+            borderRadius: BorderRadius.circular(10),
+            onPressed: _skipCurrentStep,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              alignment: Alignment.center,
+              child: Text(
+                strings.onboardingSkip,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: tokens.textSecondary,
+                ),
+              ),
             ),
           ),
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              color: badgeText,
-              fontSize: 9.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-            ),
-          ),
+          const SupportButton(compact: true),
         ],
       ),
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Step 0: Welcome & Philosophy (Accurate, honest privacy guarantees)
-  // ---------------------------------------------------------------------------
-  Widget _buildWelcomeStep(
-    bool isDark,
-    Color surfaceColor,
-    Color borderColor,
-    Color textPrimary,
-    Color textSecondary,
-    Color oliveAccent,
-    AppStrings strings,
-  ) {
+  Widget _buildActiveStep(MindTokens tokens, AppStrings strings) {
+    switch (_currentStep) {
+      case 0:
+        return _buildWelcomeStep(tokens, strings);
+      case 1:
+        return _buildFocusStep(tokens, strings);
+      case 2:
+        return _buildComfortSafetyStep(tokens, strings);
+      case 3:
+      default:
+        return _buildFirstCheckInStep(tokens, strings);
+    }
+  }
+
+  Widget _buildWelcomeStep(MindTokens tokens, AppStrings strings) {
     return SingleChildScrollView(
-      key: const ValueKey('step_0_welcome'),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      key: const ValueKey('onboarding_step_0'),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildStepBadge('00', 'PHILOSOPHY', isDark, textPrimary),
-          const SizedBox(height: 28),
-          const Center(
-            child: FingerprintThreadSignature(size: 88),
+          _buildStepCounter(tokens, strings.onboardingStepOf(1, _totalSteps)),
+          const SizedBox(height: 24),
+          Center(
+            child: Container(
+              width: 108,
+              height: 108,
+              decoration: BoxDecoration(
+                color: tokens.accentSoft,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: tokens.accent.withValues(alpha: 0.25),
+                ),
+              ),
+              alignment: Alignment.center,
+              child: FingerprintThreadSignature(
+                size: 70,
+                primaryColor: tokens.accent,
+                accentColor: LabColors.secondaryOlive,
+              ),
+            ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
           Text(
-            'Every thought leaves a trace.',
-            style: LabTheme.serifStyle(
-              fontSize: 25,
+            strings.onboardingWelcomeHeadline,
+            style: TextStyle(
+              fontSize: 26,
               fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
-              color: textPrimary,
+              height: 1.2,
+              letterSpacing: -0.5,
+              color: tokens.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
           Text(
-            'Mind Forensics is a quiet, personal space dedicated to observing the human mind. Here, you can examine your thoughts, emotions, and behavioral patterns at your own pace without judgment.',
-            style: LabTheme.editorialSerif(
+            strings.onboardingWelcomeBody,
+            style: TextStyle(
               fontSize: 14.5,
-              height: 1.6,
-              color: textSecondary,
+              height: 1.55,
+              color: tokens.textSecondary,
             ),
           ),
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark
-                  ? LabColors.nightSurface
-                  : LabColors.warmIvorySurface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isDark
-                    ? LabColors.nightBorder
-                    : LabColors.warmIvoryBorder,
-              ),
+              color: tokens.surface,
+              borderRadius: BorderRadius.circular(tokens.cardRadius),
+              border: Border.all(color: tokens.border),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.shield_outlined,
-                  size: 20,
-                  color: oliveAccent,
-                ),
+                Icon(Icons.shield_outlined, size: 20, color: tokens.accent),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Private on-device storage. No advertising trackers, no data brokers, and no recovery scores. Your entries remain strictly confidential on this device.',
+                    strings.onboardingPrivacyPromise,
                     style: TextStyle(
-                      fontSize: 12,
-                      height: 1.45,
-                      color: textPrimary,
+                      fontSize: 13,
+                      height: 1.48,
+                      color: tokens.textPrimary,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
           Center(
-            child: InkWell(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                context.push(AppRouter.auth);
+            child: MindPressable(
+              semanticLabel: strings.signInPromptBtn,
+              borderRadius: BorderRadius.circular(12),
+              onPressed: () {
+                GoRouter.maybeOf(context)?.push(AppRouter.auth);
               },
-              borderRadius: BorderRadius.circular(6),
-              child: Padding(
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 48),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                alignment: Alignment.center,
                 child: Wrap(
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
@@ -859,14 +576,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     Text(
                       strings.alreadyHaveVaultPrompt,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 12, color: textSecondary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: tokens.textSecondary,
+                      ),
                     ),
                     Text(
                       strings.signInPromptBtn,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: oliveAccent,
+                        color: tokens.accent,
                         decoration: TextDecoration.underline,
                       ),
                     ),
@@ -880,47 +600,224 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Step 1: Basic Information (Age Range, Optional Sex, Under-18 Safeguards)
-  // ---------------------------------------------------------------------------
-  Widget _buildBasicInfoStep(
-    bool isDark,
-    Color surfaceColor,
-    Color borderColor,
-    Color textPrimary,
-    Color textSecondary,
-    Color oliveAccent,
-    Color cardSelectedBg,
-    Color cardSelectedBorder,
-    AppStrings strings,
-  ) {
+  Widget _buildFocusStep(MindTokens tokens, AppStrings strings) {
     return SingleChildScrollView(
-      key: const ValueKey('step_1_basic_info'),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      key: const ValueKey('onboarding_step_1'),
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildStepBadge('01', 'BASIC INFORMATION', isDark, textPrimary),
-          const SizedBox(height: 16),
+          _buildStepCounter(tokens, strings.onboardingStepOf(2, _totalSteps)),
+          const SizedBox(height: 12),
           Text(
-            strings.onboardingBasicInfoTitle,
-            style: LabTheme.serifStyle(fontSize: 22, color: textPrimary),
+            strings.onboardingFocusTitle,
+            style: TextStyle(
+              fontSize: 23,
+              fontWeight: FontWeight.w700,
+              height: 1.25,
+              letterSpacing: -0.4,
+              color: tokens.textPrimary,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            strings.onboardingBasicInfoSubtitle,
-            style: TextStyle(fontSize: 12.5, height: 1.4, color: textSecondary),
+            strings.onboardingFocusSubtitle,
+            style: TextStyle(
+              fontSize: 13.5,
+              height: 1.48,
+              color: tokens.textSecondary,
+            ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
+          ..._focusOptions.map((option) {
+            final isSelected = _selectedGoals.contains(option.canonicalGoal);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: MindPressable(
+                semanticLabel: _focusLabel(option.id, strings),
+                borderRadius: BorderRadius.circular(16),
+                onPressed: () {
+                  setState(() {
+                    if (isSelected) {
+                      _selectedGoals.remove(option.canonicalGoal);
+                    } else {
+                      _selectedGoals.add(option.canonicalGoal);
+                    }
+                  });
+                  _saveDraftProgress();
+                },
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 54),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                  decoration: BoxDecoration(
+                    color: isSelected ? tokens.accentSoft : tokens.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected ? tokens.accent : tokens.border,
+                      width: isSelected ? 1.5 : 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        option.icon,
+                        size: 20,
+                        color:
+                            isSelected ? tokens.accent : tokens.textSecondary,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          _focusLabel(option.id, strings),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight:
+                                isSelected ? FontWeight.w600 : FontWeight.w500,
+                            color: tokens.textPrimary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Icon(
+                        isSelected
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked_rounded,
+                        size: 20,
+                        color: isSelected ? tokens.accent : tokens.border,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+          const SizedBox(height: 6),
+          MindPressable(
+            semanticLabel: strings.addCustomGoalToggle,
+            borderRadius: BorderRadius.circular(12),
+            onPressed: () {
+              setState(() => _showCustomGoalField = !_showCustomGoalField);
+            },
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 48),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              alignment: AlignmentDirectional.centerStart,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _showCustomGoalField
+                        ? Icons.expand_less_rounded
+                        : Icons.add_circle_outline_rounded,
+                    size: 18,
+                    color: tokens.accent,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      strings.addCustomGoalToggle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: tokens.accent,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_showCustomGoalField) ...[
+            const SizedBox(height: 6),
+            TextField(
+              controller: _customGoalController,
+              onChanged: (_) => _saveDraftProgress(),
+              maxLines: 2,
+              style: TextStyle(fontSize: 14, color: tokens.textPrimary),
+              decoration: InputDecoration(
+                hintText: strings.customGoalHint,
+                hintStyle: TextStyle(color: tokens.textTertiary, fontSize: 13),
+                filled: true,
+                fillColor: tokens.surface,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: tokens.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: tokens.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: tokens.accent, width: 1.4),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
-          // Age Range
+  Widget _buildComfortSafetyStep(MindTokens tokens, AppStrings strings) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final supportOptions = [
+      (
+        key: 'therapist',
+        label: strings.supportOptionSpecialist,
+        icon: Icons.psychology_outlined,
+      ),
+      (
+        key: 'self_guided',
+        label: strings.supportOptionSelfGuided,
+        icon: Icons.self_improvement_rounded,
+      ),
+      (
+        key: 'prefer_not_to_say',
+        label: strings.supportOptionPreferNotToSay,
+        icon: Icons.visibility_off_outlined,
+      ),
+    ];
+
+    return SingleChildScrollView(
+      key: const ValueKey('onboarding_step_2'),
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStepCounter(tokens, strings.onboardingStepOf(3, _totalSteps)),
+          const SizedBox(height: 12),
+          Text(
+            strings.onboardingComfortTitle,
+            style: TextStyle(
+              fontSize: 23,
+              fontWeight: FontWeight.w700,
+              height: 1.25,
+              letterSpacing: -0.4,
+              color: tokens.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            strings.onboardingComfortSubtitle,
+            style: TextStyle(
+              fontSize: 13.5,
+              height: 1.48,
+              color: tokens.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 20),
           Text(
             strings.ageRangeLabel.toUpperCase(),
             style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.6,
-              color: textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.7,
+              color: tokens.textSecondary,
             ),
           ),
           const SizedBox(height: 10),
@@ -928,1017 +825,148 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             spacing: 8,
             runSpacing: 8,
             children: _ageRanges.map((range) {
-              final isSelected = _selectedAgeRange == range;
-              return BouncingWidget(
-                onTap: () {
-                  HapticFeedback.selectionClick();
+              final selected = _selectedAgeRange == range;
+              final display = strings.ageRangeDisplayName(range);
+              return MindPressable(
+                semanticLabel: display,
+                borderRadius: BorderRadius.circular(14),
+                onPressed: () {
                   setState(() => _selectedAgeRange = range);
                   _saveDraftProgress();
                 },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 140),
+                child: Container(
+                  constraints:
+                      const BoxConstraints(minWidth: 48, minHeight: 48),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isSelected ? cardSelectedBg : surfaceColor,
-                    borderRadius: BorderRadius.circular(8),
+                    color: selected ? tokens.accentSoft : tokens.surface,
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: isSelected ? cardSelectedBorder : borderColor,
-                      width: isSelected ? 1.4 : 1.0,
+                      color: selected ? tokens.accent : tokens.border,
+                      width: selected ? 1.5 : 1.0,
                     ),
                   ),
-                  child: Text(
-                    strings.ageRangeDisplayName(range),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected
-                          ? (isDark ? textPrimary : LabColors.mutedOlive)
-                          : textSecondary,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-
-          // Minor Safeguard Notice if under 18
-          if (_isMinor) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? LabColors.safetySoftBgDark
-                    : LabColors.safetySoftBgLight,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isDark
-                      ? LabColors.safetyBorderDark
-                      : LabColors.safetyBorderLight,
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.info_outline_rounded,
-                    size: 18,
-                    color: isDark
-                        ? LabColors.safetyWarmthDark
-                        : LabColors.safetyWarmth,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
+                  child: Center(
+                    widthFactor: 1.0,
+                    heightFactor: 1.0,
                     child: Text(
-                      strings.minorSupportNotice,
+                      display,
                       style: TextStyle(
-                        fontSize: 11.5,
-                        height: 1.45,
-                        color: textPrimary,
+                        fontSize: 13,
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w500,
+                        color: selected ? tokens.accent : tokens.textPrimary,
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 24),
-
-          // Physiological Context / Sex (Optional)
-          Text(
-            strings.biologicalSexLabel.toUpperCase(),
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.6,
-              color: textSecondary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            strings.biologicalSexHelperNote,
-            style: TextStyle(
-              fontSize: 11.5,
-              height: 1.35,
-              color: textSecondary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _biologicalSexOptions.map((opt) {
-              final isSelected = _selectedBiologicalSex == opt;
-              return BouncingWidget(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _selectedBiologicalSex = opt);
-                  _saveDraftProgress();
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 140),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? cardSelectedBg : surfaceColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected ? cardSelectedBorder : borderColor,
-                      width: isSelected ? 1.4 : 1.0,
-                    ),
-                  ),
-                  child: Text(
-                    strings.biologicalSexDisplayName(opt),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected
-                          ? (isDark ? textPrimary : LabColors.mutedOlive)
-                          : textSecondary,
                     ),
                   ),
                 ),
               );
             }).toList(),
           ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Step 2: Mental-Health Background (6 starting points)
-  // ---------------------------------------------------------------------------
-  Widget _buildBackgroundStep(
-    bool isDark,
-    Color surfaceColor,
-    Color borderColor,
-    Color textPrimary,
-    Color textSecondary,
-    Color oliveAccent,
-    Color cardSelectedBg,
-    Color cardSelectedBorder,
-    AppStrings strings,
-  ) {
-    final backgrounds = [
-      (
-        key: 'diagnosed',
-        title: strings.bgDiagnosedTitle,
-        desc: strings.bgDiagnosedDesc,
-        icon: Icons.verified_outlined,
-      ),
-      (
-        key: 'suspected',
-        title: strings.bgSuspectedTitle,
-        desc: strings.bgSuspectedDesc,
-        icon: Icons.lightbulb_outline_rounded,
-      ),
-      (
-        key: 'being_assessed',
-        title: strings.bgAssessedTitle,
-        desc: strings.bgAssessedDesc,
-        icon: Icons.hourglass_top_rounded,
-      ),
-      (
-        key: 'difficulties_no_diagnosis',
-        title: strings.bgDifficultiesTitle,
-        desc: strings.bgDifficultiesDesc,
-        icon: Icons.spa_outlined,
-      ),
-      (
-        key: 'wellbeing_tracking',
-        title: strings.bgWellbeingTitle,
-        desc: strings.bgWellbeingDesc,
-        icon: Icons.self_improvement_outlined,
-      ),
-      (
-        key: 'unsure',
-        title: strings.bgUnsureTitle,
-        desc: strings.bgUnsureDesc,
-        icon: Icons.help_outline_rounded,
-      ),
-    ];
-
-    return SingleChildScrollView(
-      key: const ValueKey('step_2_background'),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStepBadge('02', 'STARTING POINT', isDark, textPrimary),
-          const SizedBox(height: 16),
-          Text(
-            strings.onboardingBackgroundTitle,
-            style: LabTheme.serifStyle(fontSize: 22, color: textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            strings.onboardingBackgroundSubtitle,
-            style: TextStyle(fontSize: 12.5, height: 1.4, color: textSecondary),
-          ),
-          const SizedBox(height: 18),
-          ...backgrounds.map((bg) {
-            final isSelected = _selectedBackground == bg.key;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: BouncingWidget(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _selectedBackground = bg.key);
-                  _saveDraftProgress();
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 140),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: isSelected ? cardSelectedBg : surfaceColor,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: isSelected ? cardSelectedBorder : borderColor,
-                      width: isSelected ? 1.5 : 1.0,
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? oliveAccent.withValues(
-                                  alpha: isDark ? 0.20 : 0.12)
-                              : (isDark
-                                  ? LabColors.nightSurfaceSubtle
-                                  : LabColors.mutedOliveBadgeBg),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          bg.icon,
-                          size: 18,
-                          color: isSelected ? oliveAccent : textSecondary,
+          AnimatedSize(
+            duration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            child: _isMinor
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: tokens.safetyWarmthSoft,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark
+                              ? LabColors.safetyBorderDark
+                              : LabColors.safetyBorderLight,
                         ),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              bg.title,
-                              style: TextStyle(
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
-                                color: textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              bg.desc,
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                height: 1.35,
-                                color: textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        isSelected
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked_rounded,
-                        size: 18,
-                        color: isSelected
-                            ? oliveAccent
-                            : textSecondary.withValues(alpha: 0.35),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Step 3: Searchable Conditions with Diagnosed vs Suspected Toggles
-  // ---------------------------------------------------------------------------
-  Widget _buildConditionsStep(
-    bool isDark,
-    Color surfaceColor,
-    Color borderColor,
-    Color textPrimary,
-    Color textSecondary,
-    Color oliveAccent,
-    Color cardSelectedBg,
-    Color cardSelectedBorder,
-    AppStrings strings,
-  ) {
-    final query = _conditionSearchQuery.trim().toLowerCase();
-    final allConditions = ConditionType.values.where((c) {
-      if (c == ConditionType.other ||
-          c == ConditionType.stillExploring ||
-          c == ConditionType.preferNotToSpecify) {
-        return false;
-      }
-      if (query.isEmpty) return true;
-      final name = strings.conditionName(c).toLowerCase();
-      final defaultName = c.defaultDisplayName().toLowerCase();
-      return name.contains(query) || defaultName.contains(query);
-    }).toList();
-
-    return SingleChildScrollView(
-      key: const ValueKey('step_3_conditions'),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStepBadge('03', 'CONDITIONS', isDark, textPrimary),
-          const SizedBox(height: 16),
-          Text(
-            strings.conditionsSectionTitle,
-            style: LabTheme.serifStyle(fontSize: 22, color: textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            strings.conditionsSectionSubtitle,
-            style: TextStyle(fontSize: 12.5, height: 1.4, color: textSecondary),
-          ),
-          const SizedBox(height: 14),
-
-          // Non-diagnostic note
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? LabColors.nightSurface
-                  : LabColors.warmIvorySurface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isDark
-                    ? LabColors.nightBorder
-                    : LabColors.warmIvoryBorder,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 16,
-                  color: oliveAccent,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    strings.conditionNonDiagnosticNote,
-                    style: TextStyle(
-                      fontSize: 11,
-                      height: 1.35,
-                      color: textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Live Search Bar
-          TextField(
-            onChanged: (q) => setState(() => _conditionSearchQuery = q),
-            style: TextStyle(color: textPrimary, fontSize: 13),
-            decoration: InputDecoration(
-              hintText: strings.conditionSearchHint,
-              hintStyle: TextStyle(
-                color: textSecondary.withValues(alpha: 0.6),
-                fontSize: 12,
-              ),
-              prefixIcon:
-                  Icon(Icons.search_rounded, size: 18, color: textSecondary),
-              filled: true,
-              fillColor: surfaceColor,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: borderColor),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: borderColor),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: cardSelectedBorder,
-                  width: 1.4,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Condition List
-          ...allConditions.map((condition) {
-            final isSelected = _selectedConditions.containsKey(condition);
-            final currentStatus = _selectedConditions[condition] ??
-                (_selectedBackground == 'diagnosed'
-                    ? DiagnosticStatus.professionallyDiagnosed
-                    : DiagnosticStatus.selfIdentifiedExploring);
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isSelected ? cardSelectedBg : surfaceColor,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isSelected ? cardSelectedBorder : borderColor,
-                    width: isSelected ? 1.3 : 1.0,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() {
-                          if (isSelected) {
-                            _selectedConditions.remove(condition);
-                          } else {
-                            _selectedConditions[condition] =
-                                _selectedBackground == 'diagnosed'
-                                    ? DiagnosticStatus.professionallyDiagnosed
-                                    : DiagnosticStatus.selfIdentifiedExploring;
-                          }
-                        });
-                        _saveDraftProgress();
-                      },
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Icon(
-                            isSelected
-                                ? Icons.check_circle_rounded
-                                : Icons.add_circle_outline_rounded,
-                            size: 16,
-                            color: isSelected ? oliveAccent : textSecondary,
+                            Icons.info_outline_rounded,
+                            size: 18,
+                            color: tokens.safetyWarmth,
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              strings.conditionName(condition),
+                              strings.minorSupportNotice,
                               style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: isSelected
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: textPrimary,
+                                fontSize: 12.5,
+                                height: 1.48,
+                                color: tokens.textPrimary,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    if (isSelected) ...[
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          _buildStatusToggleChip(
-                            label: strings.statusDiagnosedTag,
-                            isActive: currentStatus ==
-                                DiagnosticStatus.professionallyDiagnosed,
-                            onTap: () {
-                              setState(() {
-                                _selectedConditions[condition] =
-                                    DiagnosticStatus.professionallyDiagnosed;
-                              });
-                              _saveDraftProgress();
-                            },
-                            isDark: isDark,
-                            oliveAccent: oliveAccent,
-                            textPrimary: textPrimary,
-                            textSecondary: textSecondary,
-                            borderColor: borderColor,
-                          ),
-                          const SizedBox(width: 8),
-                          _buildStatusToggleChip(
-                            label: strings.statusSuspectedTag,
-                            isActive: currentStatus ==
-                                DiagnosticStatus.selfIdentifiedExploring,
-                            onTap: () {
-                              setState(() {
-                                _selectedConditions[condition] =
-                                    DiagnosticStatus.selfIdentifiedExploring;
-                              });
-                              _saveDraftProgress();
-                            },
-                            isDark: isDark,
-                            oliveAccent: oliveAccent,
-                            textPrimary: textPrimary,
-                            textSecondary: textSecondary,
-                            borderColor: borderColor,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusToggleChip({
-    required String label,
-    required bool isActive,
-    required VoidCallback onTap,
-    required bool isDark,
-    required Color oliveAccent,
-    required Color textPrimary,
-    required Color textSecondary,
-    required Color borderColor,
-  }) {
-    return InkWell(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-        decoration: BoxDecoration(
-          color: isActive
-              ? (isDark
-                  ? oliveAccent.withValues(alpha: 0.25)
-                  : LabColors.mutedOlive)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: isActive ? oliveAccent : borderColor,
+                  )
+                : const SizedBox.shrink(),
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 10.5,
-            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-            color: isActive
-                ? (isDark ? oliveAccent : LabColors.daylightBackground)
-                : textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Step 4: Symptoms & Difficulties across Inner Observatory Domains
-  // ---------------------------------------------------------------------------
-  Widget _buildSymptomsStep(
-    bool isDark,
-    Color surfaceColor,
-    Color borderColor,
-    Color textPrimary,
-    Color textSecondary,
-    Color oliveAccent,
-    Color cardSelectedBg,
-    Color cardSelectedBorder,
-    AppStrings strings,
-  ) {
-    final allEntries = DefaultSymptomLibrary.entries.where((s) {
-      if (_activeSymptomDomain != null && s.domain != _activeSymptomDomain) {
-        return false;
-      }
-      return true;
-    }).toList();
-
-    return SingleChildScrollView(
-      key: const ValueKey('step_4_symptoms'),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStepBadge('04', 'SYMPTOMS & DIFFICULTIES', isDark, textPrimary),
-          const SizedBox(height: 16),
+          const SizedBox(height: 22),
           Text(
-            strings.symptomsSelectionTitle,
-            style: LabTheme.serifStyle(fontSize: 22, color: textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            strings.symptomsSelectionSubtitle,
-            style: TextStyle(fontSize: 12.5, height: 1.4, color: textSecondary),
-          ),
-          const SizedBox(height: 16),
-
-          // Domain Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                ChoiceChip(
-                  label: Text(
-                    strings.isArabic
-                        ? 'الكل'
-                        : (strings.isFrench ? 'Tout' : 'All'),
-                  ),
-                  selected: _activeSymptomDomain == null,
-                  onSelected: (_) =>
-                      setState(() => _activeSymptomDomain = null),
-                  labelStyle: TextStyle(
-                    fontSize: 11,
-                    fontWeight: _activeSymptomDomain == null
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                    color: _activeSymptomDomain == null
-                        ? (isDark ? oliveAccent : LabColors.daylightBackground)
-                        : textSecondary,
-                  ),
-                  backgroundColor: surfaceColor,
-                  selectedColor: isDark
-                      ? oliveAccent.withValues(alpha: 0.25)
-                      : LabColors.mutedOlive,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                    side: BorderSide(
-                      color: _activeSymptomDomain == null
-                          ? oliveAccent
-                          : borderColor,
-                    ),
-                  ),
-                  showCheckmark: false,
-                  visualDensity: VisualDensity.compact,
-                ),
-                const SizedBox(width: 6),
-                ...SymptomDomain.values.map((d) {
-                  final isSelected = _activeSymptomDomain == d;
-                  return Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 6),
-                    child: ChoiceChip(
-                      label: Text(d.localized(strings)),
-                      selected: isSelected,
-                      onSelected: (_) => setState(() =>
-                          _activeSymptomDomain = isSelected ? null : d),
-                      labelStyle: TextStyle(
-                        fontSize: 11,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected
-                            ? (isDark
-                                ? oliveAccent
-                                : LabColors.daylightBackground)
-                            : textSecondary,
-                      ),
-                      backgroundColor: surfaceColor,
-                      selectedColor: isDark
-                          ? oliveAccent.withValues(alpha: 0.25)
-                          : LabColors.mutedOlive,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        side: BorderSide(
-                          color: isSelected ? oliveAccent : borderColor,
-                        ),
-                      ),
-                      showCheckmark: false,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  );
-                }),
-              ],
+            strings.supportSystemTitle.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.7,
+              color: tokens.textSecondary,
             ),
           ),
-          const SizedBox(height: 16),
-
-          // Symptom Cards
-          ...allEntries.map((entry) {
-            final isSelected = _selectedSymptoms.contains(entry.id);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: BouncingWidget(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() {
-                    if (isSelected) {
-                      _selectedSymptoms.remove(entry.id);
-                    } else {
-                      _selectedSymptoms.add(entry.id);
-                    }
-                  });
-                  _saveDraftProgress();
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isSelected ? cardSelectedBg : surfaceColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected ? cardSelectedBorder : borderColor,
-                      width: isSelected ? 1.3 : 1.0,
-                    ),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        isSelected
-                            ? Icons.check_circle_rounded
-                            : Icons.circle_outlined,
-                        size: 16,
-                        color: isSelected ? oliveAccent : textSecondary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              entry.localizedTitle(strings),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: isSelected
-                                    ? FontWeight.w700
-                                    : FontWeight.w600,
-                                color: textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              entry.localizedDescription(strings),
-                              style: TextStyle(
-                                fontSize: 11.5,
-                                height: 1.35,
-                                color: textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Step 5: Personal Goals & Exploration Focus
-  // ---------------------------------------------------------------------------
-  Widget _buildGoalsStep(
-    bool isDark,
-    Color surfaceColor,
-    Color borderColor,
-    Color textPrimary,
-    Color textSecondary,
-    Color oliveAccent,
-    Color cardSelectedBg,
-    Color cardSelectedBorder,
-    AppStrings strings,
-  ) {
-    return SingleChildScrollView(
-      key: const ValueKey('step_5_goals'),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStepBadge('05', 'EXPLORATION GOALS', isDark, textPrimary),
-          const SizedBox(height: 16),
-          Text(
-            'What do you hope to explore?',
-            style: LabTheme.serifStyle(fontSize: 22, color: textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Choose the areas of your inner world you would like to observe and understand.',
-            style: TextStyle(fontSize: 12.5, height: 1.4, color: textSecondary),
-          ),
-          const SizedBox(height: 18),
-          ..._defaultGoalOptions.map((goal) {
-            final isSelected = _selectedGoals.contains(goal);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: BouncingWidget(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() {
-                    if (isSelected) {
-                      _selectedGoals.remove(goal);
-                    } else {
-                      _selectedGoals.add(goal);
-                    }
-                  });
-                  _saveDraftProgress();
-                },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected ? cardSelectedBg : surfaceColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected ? cardSelectedBorder : borderColor,
-                      width: isSelected ? 1.3 : 1.0,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isSelected
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked_rounded,
-                        size: 16,
-                        color: isSelected ? oliveAccent : textSecondary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          goal,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _customGoalController,
-            onChanged: (_) => _saveDraftProgress(),
-            style: TextStyle(fontSize: 12.5, color: textPrimary),
-            decoration: InputDecoration(
-              hintText: 'Or add a custom personal goal...',
-              hintStyle: TextStyle(
-                fontSize: 12,
-                color: textSecondary.withValues(alpha: 0.6),
-              ),
-              prefixIcon: Icon(Icons.edit_outlined,
-                  size: 16, color: textSecondary),
-              filled: true,
-              fillColor: surfaceColor,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: borderColor),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: borderColor),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: cardSelectedBorder, width: 1.4),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Step 6: Professional Support (Optional, Complementary)
-  // ---------------------------------------------------------------------------
-  Widget _buildProfessionalSupportStep(
-    bool isDark,
-    Color surfaceColor,
-    Color borderColor,
-    Color textPrimary,
-    Color textSecondary,
-    Color oliveAccent,
-    Color cardSelectedBg,
-    Color cardSelectedBorder,
-    AppStrings strings,
-  ) {
-    final supportOptions = [
-      (
-        key: 'therapist',
-        title: strings.supportSystemOptionTitle('therapist'),
-        icon: Icons.psychology_outlined,
-      ),
-      (
-        key: 'psychiatrist',
-        title: strings.supportSystemOptionTitle('psychiatrist'),
-        icon: Icons.medical_services_outlined,
-      ),
-      (
-        key: 'assessment',
-        title: strings.supportSystemOptionTitle('assessment'),
-        icon: Icons.pending_actions_rounded,
-      ),
-      (
-        key: 'primary_care',
-        title: strings.supportSystemOptionTitle('primary_care'),
-        icon: Icons.health_and_safety_outlined,
-      ),
-      (
-        key: 'coach',
-        title: strings.supportSystemOptionTitle('coach'),
-        icon: Icons.support_agent_rounded,
-      ),
-      (
-        key: 'self_guided',
-        title: strings.supportSystemOptionTitle('self_guided'),
-        icon: Icons.self_improvement_rounded,
-      ),
-      (
-        key: 'prefer_not_to_say',
-        title: strings.supportSystemOptionTitle('prefer_not_to_say'),
-        icon: Icons.visibility_off_outlined,
-      ),
-    ];
-
-    return SingleChildScrollView(
-      key: const ValueKey('step_6_support'),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStepBadge('06', 'PROFESSIONAL CARE', isDark, textPrimary),
-          const SizedBox(height: 16),
-          Text(
-            strings.supportSystemTitle,
-            style: LabTheme.serifStyle(fontSize: 22, color: textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            strings.supportSystemSubtitle,
-            style: TextStyle(fontSize: 12.5, height: 1.4, color: textSecondary),
-          ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
           ...supportOptions.map((opt) {
-            final isSelected = _selectedProfessionalSupport == opt.key;
+            final selected = _selectedProfessionalSupport == opt.key;
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: BouncingWidget(
-                onTap: () {
-                  HapticFeedback.selectionClick();
+              child: MindPressable(
+                semanticLabel: opt.label,
+                borderRadius: BorderRadius.circular(16),
+                onPressed: () {
                   setState(() => _selectedProfessionalSupport = opt.key);
                   _saveDraftProgress();
                 },
                 child: Container(
+                  constraints: const BoxConstraints(minHeight: 50),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isSelected ? cardSelectedBg : surfaceColor,
-                    borderRadius: BorderRadius.circular(8),
+                    color: selected ? tokens.accentSoft : tokens.surface,
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isSelected ? cardSelectedBorder : borderColor,
-                      width: isSelected ? 1.4 : 1.0,
+                      color: selected ? tokens.accent : tokens.border,
+                      width: selected ? 1.5 : 1.0,
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         opt.icon,
-                        size: 18,
-                        color: isSelected ? oliveAccent : textSecondary,
+                        size: 19,
+                        color: selected ? tokens.accent : tokens.textSecondary,
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          opt.title,
+                          opt.label,
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: textPrimary,
+                            fontSize: 13.5,
+                            fontWeight:
+                                selected ? FontWeight.w600 : FontWeight.w500,
+                            color: tokens.textPrimary,
                           ),
                         ),
                       ),
                       Icon(
-                        isSelected
+                        selected
                             ? Icons.radio_button_checked_rounded
                             : Icons.radio_button_unchecked_rounded,
-                        size: 16,
-                        color: isSelected
-                            ? oliveAccent
-                            : textSecondary.withValues(alpha: 0.35),
+                        size: 18,
+                        color: selected ? tokens.accent : tokens.border,
                       ),
                     ],
                   ),
@@ -1946,331 +974,339 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
             );
           }),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Step 7: User-Confirmed Review of Priorities
-  // ---------------------------------------------------------------------------
-  Widget _buildSummaryStep(
-    bool isDark,
-    Color surfaceColor,
-    Color borderColor,
-    Color textPrimary,
-    Color textSecondary,
-    Color oliveAccent,
-    Color cardSelectedBg,
-    Color cardSelectedBorder,
-    AppStrings strings,
-  ) {
-    return SingleChildScrollView(
-      key: const ValueKey('step_7_summary'),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStepBadge('07', 'CONFIRMATION', isDark, textPrimary),
-          const SizedBox(height: 16),
-          Text(
-            strings.summaryPrioritiesTitle,
-            style: LabTheme.serifStyle(fontSize: 22, color: textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            strings.summaryPrioritiesSubtitle,
-            style: TextStyle(fontSize: 12.5, height: 1.4, color: textSecondary),
-          ),
-          const SizedBox(height: 20),
-
-          // 1. Basic Info Review Card
-          _buildSummarySectionCard(
-            title: strings.onboardingBasicInfoTitle,
-            onEdit: () => _editSection(1),
-            surfaceColor: surfaceColor,
-            borderColor: borderColor,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            oliveAccent: oliveAccent,
-            strings: strings,
-            content: Column(
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: tokens.safetyWarmthSoft,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark
+                    ? LabColors.safetyBorderDark
+                    : LabColors.safetyBorderLight,
+              ),
+            ),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Age: ${_selectedAgeRange.isNotEmpty ? strings.ageRangeDisplayName(_selectedAgeRange) : "Not specified"}  •  Sex: ${_selectedBiologicalSex.isNotEmpty ? strings.biologicalSexDisplayName(_selectedBiologicalSex) : "Not specified"}',
-                  style: TextStyle(fontSize: 12, color: textPrimary),
-                ),
-                if (_isMinor) ...[
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2.5),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? LabColors.safetySoftBgDark
-                          : LabColors.safetySoftBgLight,
-                      borderRadius: BorderRadius.circular(4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.health_and_safety_outlined,
+                      size: 18,
+                      color: tokens.safetyWarmth,
                     ),
-                    child: Text(
-                      'Under-18 Safeguards Active',
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        color: isDark
-                            ? LabColors.safetyWarmthDark
-                            : LabColors.safetyWarmth,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        strings.onboardingCrisisSafetyNote,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.48,
+                          color: tokens.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: MindPressable(
+                    semanticLabel: strings.openCrisisResourcesLabel,
+                    borderRadius: BorderRadius.circular(10),
+                    onPressed: () => SupportModalSheet.show(context),
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        strings.openCrisisResourcesLabel,
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.safetyWarmth,
+                        ),
                       ),
                     ),
                   ),
-                ],
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 10),
-
-          // 2. Mental-Health Background Review Card
-          _buildSummarySectionCard(
-            title: strings.onboardingBackgroundTitle,
-            onEdit: () => _editSection(2),
-            surfaceColor: surfaceColor,
-            borderColor: borderColor,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            oliveAccent: oliveAccent,
-            strings: strings,
-            content: Text(
-              _selectedBackground.isNotEmpty
-                  ? strings.backgroundDisplayName(_selectedBackground)
-                  : 'Not specified',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: textPrimary,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // 3. Conditions Review Card
-          _buildSummarySectionCard(
-            title: strings.conditionsSectionTitle,
-            onEdit: () => _editSection(3),
-            surfaceColor: surfaceColor,
-            borderColor: borderColor,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            oliveAccent: oliveAccent,
-            strings: strings,
-            content: _selectedConditions.isEmpty
-                ? Text(
-                    'No conditions specified (Self-guided exploration)',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                      color: textSecondary,
-                    ),
-                  )
-                : Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: _selectedConditions.entries.map((e) {
-                      final isDiagnosed = e.value ==
-                          DiagnosticStatus.professionallyDiagnosed;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isDiagnosed
-                              ? (isDark
-                                  ? LabColors.nightSurfaceElevated
-                                  : LabColors.mutedOliveBadgeBg)
-                              : (isDark
-                                  ? LabColors.nightSurface
-                                  : const Color(0xFFF2F5F3)),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                            color: isDiagnosed ? oliveAccent : borderColor,
-                          ),
-                        ),
-                        child: Text(
-                          '${strings.conditionName(e.key)} (${isDiagnosed ? "Diagnosed" : "Exploring"})',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: isDiagnosed
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: isDiagnosed ? oliveAccent : textPrimary,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-          ),
-          const SizedBox(height: 10),
-
-          // 4. Symptoms Review Card
-          _buildSummarySectionCard(
-            title: strings.symptomsSelectionTitle,
-            onEdit: () => _editSection(4),
-            surfaceColor: surfaceColor,
-            borderColor: borderColor,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            oliveAccent: oliveAccent,
-            strings: strings,
-            content: _selectedSymptoms.isEmpty
-                ? Text(
-                    'None selected for intake',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                      color: textSecondary,
-                    ),
-                  )
-                : Text(
-                    '${_selectedSymptoms.length} symptom(s) marked for Inner Observatory focus',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 10),
-
-          // 5. Goals Review Card
-          _buildSummarySectionCard(
-            title: strings.sectionGoals,
-            onEdit: () => _editSection(5),
-            surfaceColor: surfaceColor,
-            borderColor: borderColor,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            oliveAccent: oliveAccent,
-            strings: strings,
-            content: (_selectedGoals.isEmpty &&
-                    _customGoalController.text.trim().isEmpty)
-                ? Text(
-                    'General mindful observation',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                      color: textSecondary,
-                    ),
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ..._selectedGoals.map((g) => Padding(
-                            padding: const EdgeInsets.only(bottom: 2),
-                            child: Text(
-                              '• $g',
-                              style: TextStyle(
-                                  fontSize: 11.5, color: textPrimary),
-                            ),
-                          )),
-                      if (_customGoalController.text.trim().isNotEmpty)
-                        Text(
-                          '• ${_customGoalController.text.trim()}',
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: oliveAccent,
-                          ),
-                        ),
-                    ],
-                  ),
-          ),
-          const SizedBox(height: 10),
-
-          // 6. Professional Support Review Card
-          _buildSummarySectionCard(
-            title: strings.supportSystemTitle,
-            onEdit: () => _editSection(6),
-            surfaceColor: surfaceColor,
-            borderColor: borderColor,
-            textPrimary: textPrimary,
-            textSecondary: textSecondary,
-            oliveAccent: oliveAccent,
-            strings: strings,
-            content: Text(
-              _selectedProfessionalSupport.isNotEmpty
-                  ? strings.supportSystemOptionTitle(
-                      _selectedProfessionalSupport)
-                  : 'Self-guided (No current care)',
-              style: TextStyle(fontSize: 12, color: textPrimary),
-            ),
-          ),
-          const SizedBox(height: 24),
         ],
       ),
     );
   }
 
-  Widget _buildSummarySectionCard({
-    required String title,
-    required VoidCallback onEdit,
-    required Widget content,
-    required Color surfaceColor,
-    required Color borderColor,
-    required Color textPrimary,
-    required Color textSecondary,
-    required Color oliveAccent,
-    required AppStrings strings,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor),
-      ),
+  Widget _buildFirstCheckInStep(MindTokens tokens, AppStrings strings) {
+    final activeMoodColor = _moodColor(_selectedMood);
+
+    return SingleChildScrollView(
+      key: const ValueKey('onboarding_step_3'),
+      padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.5,
-                  color: textSecondary,
-                ),
-              ),
-              InkWell(
-                onTap: onEdit,
-                borderRadius: BorderRadius.circular(4),
-                child: Padding(
+          _buildStepCounter(tokens, strings.onboardingStepOf(4, _totalSteps)),
+          const SizedBox(height: 12),
+          Text(
+            strings.howFeelingRightNow,
+            style: TextStyle(
+              fontSize: 23,
+              fontWeight: FontWeight.w700,
+              height: 1.25,
+              letterSpacing: -0.4,
+              color: tokens.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            strings.onboardingFirstCheckInSubtitle,
+            style: TextStyle(
+              fontSize: 13.5,
+              height: 1.48,
+              color: tokens.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 22),
+          Text(
+            strings.todaysCoreState,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.7,
+              color: tokens.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: _moodOptions.map((mood) {
+              final selected = _selectedMood == mood.key;
+              final label = _moodLabel(mood.key, strings);
+              return MindPressable(
+                semanticLabel: label,
+                borderRadius: BorderRadius.circular(16),
+                onPressed: () {
+                  setState(() => _selectedMood = mood.key);
+                },
+                child: Container(
+                  constraints:
+                      const BoxConstraints(minWidth: 96, minHeight: 48),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? mood.color.withValues(alpha: 0.16)
+                        : tokens.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: selected ? mood.color : tokens.border,
+                      width: selected ? 1.6 : 1.0,
+                    ),
+                  ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.edit_outlined,
-                        size: 13,
-                        color: oliveAccent,
+                        mood.icon,
+                        size: 18,
+                        color: selected ? mood.color : tokens.textSecondary,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 8),
                       Text(
-                        strings.editSectionBtn,
+                        label,
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: oliveAccent,
+                          fontSize: 13.5,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w500,
+                          color: tokens.textPrimary,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+              );
+            }).toList(),
           ),
-          const SizedBox(height: 8),
-          content,
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            decoration: BoxDecoration(
+              color: tokens.surface,
+              borderRadius: BorderRadius.circular(tokens.cardRadius),
+              border: Border.all(color: tokens.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        strings.moodIntensityLabel,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: tokens.textPrimary,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: activeMoodColor.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$_firstIntensity / 10',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: tokens.textPrimary,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: activeMoodColor,
+                    inactiveTrackColor: tokens.surfaceSecondary,
+                    thumbColor: activeMoodColor,
+                    overlayColor: activeMoodColor.withValues(alpha: 0.14),
+                  ),
+                  child: Slider(
+                    value: _firstIntensity.toDouble(),
+                    min: 1,
+                    max: 10,
+                    divisions: 9,
+                    label: '$_firstIntensity',
+                    onChanged: (val) {
+                      final rounded = val.round();
+                      if (rounded != _firstIntensity) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _firstIntensity = rounded);
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepCounter(MindTokens tokens, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: tokens.surfaceSecondary,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+          color: tokens.textSecondary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomCtaBar(MindTokens tokens, AppStrings strings) {
+    final String primaryLabel;
+    switch (_currentStep) {
+      case 0:
+        primaryLabel = strings.onboardingGetStarted;
+        break;
+      case 3:
+        primaryLabel = strings.saveAndEnterAppBtn;
+        break;
+      default:
+        primaryLabel = strings.onboardingContinue;
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        border: Border(top: BorderSide(color: tokens.border)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          MindPressable(
+            semanticLabel: primaryLabel,
+            enabled: !_isFinishing,
+            borderRadius: BorderRadius.circular(tokens.buttonRadius),
+            onPressed: _nextStep,
+            child: Container(
+              width: double.infinity,
+              constraints: const BoxConstraints(minHeight: 54),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: BoxDecoration(
+                color: tokens.accent,
+                borderRadius: BorderRadius.circular(tokens.buttonRadius),
+              ),
+              alignment: Alignment.center,
+              child: _isFinishing
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: tokens.background,
+                      ),
+                    )
+                  : Text(
+                      primaryLabel,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: tokens.background,
+                      ),
+                    ),
+            ),
+          ),
+          if (_currentStep == _totalSteps - 1) ...[
+            const SizedBox(height: 6),
+            MindPressable(
+              semanticLabel: strings.skipAndEnterAppBtn,
+              enabled: !_isFinishing,
+              borderRadius: BorderRadius.circular(12),
+              onPressed: () => _finishOnboarding(saveInitialTrace: false),
+              child: Container(
+                width: double.infinity,
+                constraints: const BoxConstraints(minHeight: 48),
+                alignment: Alignment.center,
+                child: Text(
+                  strings.skipAndEnterAppBtn,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: tokens.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -231,7 +231,7 @@ class _TraceInvestigationSheetState
                       Text(
                         '“${widget.trace.thoughtPreview}”',
                         style: TextStyle(
-                          fontFamily: 'serif',
+                          fontFamily: 'Inter',
                           fontSize: 14,
                           fontStyle: FontStyle.italic,
                           color: tokens.textPrimary,

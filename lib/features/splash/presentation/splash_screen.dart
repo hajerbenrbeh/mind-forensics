@@ -78,17 +78,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
               const SizedBox(height: 36),
 
-              // Title: "Mind Forensics" (Serif Typography)
+              // Title: "Mind Forensics" (Clean Inter Display Typography)
               const Text(
                 'Mind\nForensics',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'serif',
+                  fontFamily: 'Inter',
                   fontSize: 38,
-                  fontWeight: FontWeight.w400,
+                  fontWeight: FontWeight.w600,
                   color: LabColors.warmIvory,
                   height: 1.15,
-                  letterSpacing: 0.5,
+                  letterSpacing: -0.4,
                 ),
               ),
 

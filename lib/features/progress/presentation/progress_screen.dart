@@ -497,7 +497,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isDark ? LabColors.surface0 : const Color(0xFFFAFAFA),
+                          color: context.tokens.surfaceSecondary,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: borderColor, width: 0.8),
                         ),
@@ -539,7 +539,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                fontFamily: 'serif',
+                                fontFamily: 'Inter',
                                 fontSize: 12.5,
                                 fontStyle: FontStyle.italic,
                                 color: textPrimary,

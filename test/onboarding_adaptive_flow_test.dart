@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:mind_forensics/app/localization/app_strings.dart';
+import 'package:mind_forensics/app/localization/locale_controller.dart';
+import 'package:mind_forensics/app/router/app_router.dart';
+import 'package:mind_forensics/app/theme/lab_theme.dart';
+import 'package:mind_forensics/core/widgets/mind_pressable.dart';
+import 'package:mind_forensics/features/auth/controllers/auth_controller.dart';
+import 'package:mind_forensics/features/home/presentation/home_screen.dart';
+import 'package:mind_forensics/features/mind_trace/controllers/mind_trace_controller.dart';
 import 'package:mind_forensics/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:mind_forensics/features/profile/controllers/profile_controller.dart';
 import 'package:mind_forensics/features/profile/domain/condition_type.dart';
@@ -9,23 +19,45 @@ import 'package:mind_forensics/features/profile/domain/diagnostic_status.dart';
 import 'package:mind_forensics/features/profile/domain/psychological_profile_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-Widget createTestWidget({
+Widget createLocalizedTestApp({
   required Widget child,
+  ProviderContainer? container,
 }) {
-  return ProviderScope(
-    child: MaterialApp(
-      home: child,
-    ),
+  Widget app = Consumer(
+    builder: (context, ref, _) {
+      final locale = ref.watch(localeControllerProvider);
+      return MaterialApp(
+        theme: LabTheme.daylightTheme,
+        locale: locale,
+        supportedLocales: const [
+          Locale('en'),
+          Locale('fr'),
+          Locale('ar'),
+        ],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: child,
+      );
+    },
   );
+
+  if (container != null) {
+    return UncontrolledProviderScope(container: container, child: app);
+  }
+  return ProviderScope(child: app);
 }
 
 void main() {
   setUp(() {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
+    GoogleFonts.config.allowRuntimeFetching = false;
   });
 
-  group('Personalized First-Launch Onboarding Adaptive Flow Tests', () {
+  group('Step 5: Fast 4-Step Onboarding & Zero-Blank-Screen Handoff', () {
     test(
         '1. PsychologicalProfileModel serialization preserves all onboarding fields',
         () {
@@ -51,17 +83,17 @@ void main() {
           'sym_constant_apprehension',
         ],
         selectedGoals: const [
-          'Understand recurring thought patterns',
-          'Manage anxiety and somatic tension',
+          'Ease stress & anxiety',
+          'Understand mood patterns',
         ],
         customGoal: 'Learn emotional regulation during exams',
         personalGoals:
-            'Understand recurring thought patterns, Manage anxiety and somatic tension, Learn emotional regulation during exams',
+            'Ease stress & anxiety, Understand mood patterns, Learn emotional regulation during exams',
         professionalSupport: 'therapist',
         communicationPreference: 'analytical_reflective',
         shareWithAiCompanion: true,
         allowAiPersonalization: true,
-        onboardingStep: 7,
+        onboardingStep: 4,
         updatedAt: now,
       );
 
@@ -89,7 +121,7 @@ void main() {
       expect(roundtrip.professionalSupport, 'therapist');
       expect(roundtrip.communicationPreference, 'analytical_reflective');
       expect(roundtrip.shareWithAiCompanion, isTrue);
-      expect(roundtrip.onboardingStep, 7);
+      expect(roundtrip.onboardingStep, 4);
     });
 
     test(
@@ -114,279 +146,268 @@ void main() {
       expect(adultProfile.isMinor, isFalse);
     });
 
-    testWidgets('3. Step 0 Welcome renders and advances to Step 1 Basic Info',
+    testWidgets(
+        '3. Step 1 renders Welcome, privacy guarantee, Sign In link, and live EN/FR/AR RTL switching',
         (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.reset);
 
-      await tester
-          .pumpWidget(createTestWidget(child: const OnboardingScreen()));
+      await tester.pumpWidget(
+        createLocalizedTestApp(child: const OnboardingScreen()),
+      );
       await tester.pumpAndSettle();
 
-      // Verify Step 0 Welcome elements
+      expect(find.text('Step 1 of 4'), findsOneWidget);
       expect(find.text('Every thought leaves a trace.'), findsOneWidget);
-      expect(find.text('GET STARTED'), findsOneWidget);
+      expect(find.text('Sign In'), findsOneWidget);
+      expect(find.text('Get Started'), findsOneWidget);
 
-      // Advance to Step 1
-      await tester.tap(find.text('GET STARTED'));
+      // Verify >= 48dp minimum touch targets on primary interactive controls
+      final getStartedPressable = find.ancestor(
+        of: find.text('Get Started'),
+        matching: find.byType(MindPressable),
+      );
+      expect(tester.getSize(getStartedPressable).height,
+          greaterThanOrEqualTo(48));
+      final enPill = find.ancestor(
+        of: find.text('EN'),
+        matching: find.byType(MindPressable),
+      );
+      expect(tester.getSize(enPill).height, greaterThanOrEqualTo(48));
+      expect(tester.getSize(enPill).width, greaterThanOrEqualTo(48));
+
+      // Switch live to French
+      await tester.tap(find.text('FR'));
       await tester.pumpAndSettle();
+      expect(find.text('Chaque pensée laisse une trace.'), findsOneWidget);
+      expect(find.text('Commencer'), findsOneWidget);
 
-      // Step 1: Basic Information should be displayed
-      expect(find.text('BASIC INFORMATION'), findsOneWidget);
-      expect(find.text('Basic Information'), findsOneWidget);
-      expect(find.text('AGE RANGE'), findsOneWidget);
+      // Switch live to Tunisian Arabic (RTL)
+      await tester.tap(find.text('AR'));
+      await tester.pumpAndSettle();
+      expect(find.text('كل فكرة تترك أثراً.'), findsOneWidget);
+      expect(
+        Directionality.of(tester.element(find.text('كل فكرة تترك أثراً.'))),
+        TextDirection.rtl,
+      );
+
+      // Switch back to EN
+      await tester.tap(find.text('EN'));
+      await tester.pumpAndSettle();
+      expect(find.text('Every thought leaves a trace.'), findsOneWidget);
     });
 
     testWidgets(
-        '4. Step 1 Basic Info: selecting under_18 displays minor safeguard notice',
+        '4. Step 2 uses Options-First focus cards and keeps text input collapsed by default',
         (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.reset);
 
-      await tester
-          .pumpWidget(createTestWidget(child: const OnboardingScreen()));
+      await tester.pumpWidget(
+        createLocalizedTestApp(child: const OnboardingScreen()),
+      );
       await tester.pumpAndSettle();
 
-      // Navigate to Step 1
-      await tester.tap(find.text('GET STARTED'));
+      await tester.tap(find.text('Get Started'));
       await tester.pumpAndSettle();
 
-      // Safeguard notice should NOT be present initially
-      final strings = AppStrings('en');
-      expect(find.text(strings.minorSupportNotice), findsNothing);
+      expect(find.text('Step 2 of 4'), findsOneWidget);
+      expect(find.byType(TextField), findsNothing);
 
-      // Tap 'Under 18'
+      await tester.tap(find.text('Ease stress & anxiety'));
+      await tester.tap(find.text('Understand mood patterns'));
+      await tester.pumpAndSettle();
+
+      // Expand optional custom goal only when explicitly tapped
+      await tester.tap(find.text('Or add your own focus (optional)'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets(
+        '5. Step 3 shows Under 18 safeguard immediately and preserves crisis lines',
+        (tester) async {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        createLocalizedTestApp(child: const OnboardingScreen()),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Get Started'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Step 3 of 4'), findsOneWidget);
+      final enStrings = AppStrings('en');
+      expect(find.text(enStrings.minorSupportNotice), findsNothing);
+
+      // Tapping Under 18 reveals safeguard notice
       await tester.tap(find.text('Under 18'));
       await tester.pumpAndSettle();
+      expect(find.text(enStrings.minorSupportNotice), findsOneWidget);
 
-      // Safeguard notice MUST appear immediately
-      expect(find.text(strings.minorSupportNotice), findsOneWidget);
-    });
-
-    testWidgets(
-        '5. Adaptive Branching: Diagnosed background routes to Step 3 Conditions',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester
-          .pumpWidget(createTestWidget(child: const OnboardingScreen()));
-      await tester.pumpAndSettle();
-
-      // Step 0 -> Step 1
-      await tester.tap(find.text('GET STARTED'));
-      await tester.pumpAndSettle();
-
-      // Select age 18-24 in Step 1
-      await tester.tap(find.text('18-24'));
-      await tester.pumpAndSettle();
-
-      // Step 1 -> Step 2 (Starting Point)
-      await tester.tap(find.text('NEXT'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('STARTING POINT'), findsOneWidget);
-
-      // Select 'Diagnosed Condition'
-      await tester.tap(find.text('Diagnosed Condition'));
-      await tester.pumpAndSettle();
-
-      // Step 2 -> Next: Should branch to Step 3 Conditions
-      await tester.tap(find.text('NEXT'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('CONDITIONS'), findsOneWidget);
-      expect(find.text('Conditions & Experiences'), findsOneWidget);
-      expect(find.text('Search conditions or lived experiences...'),
-          findsOneWidget);
-    });
-
-    testWidgets(
-        '6. Adaptive Branching: Difficulties Without Diagnosis bypasses Conditions to Symptoms',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester
-          .pumpWidget(createTestWidget(child: const OnboardingScreen()));
-      await tester.pumpAndSettle();
-
-      // Step 0 -> Step 1
-      await tester.tap(find.text('GET STARTED'));
-      await tester.pumpAndSettle();
-
-      // Step 1 -> Step 2
-      await tester.tap(find.text('NEXT'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('STARTING POINT'), findsOneWidget);
-
-      // Select non-clinical starting point: 'Difficulties Without Diagnosis'
-      await tester.tap(find.text('Difficulties Without Diagnosis'));
-      await tester.pumpAndSettle();
-
-      // Step 2 -> Next: Should adaptively BYPASS Step 3 Conditions directly to Step 4 Symptoms!
-      await tester.tap(find.text('NEXT'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('CONDITIONS'), findsNothing);
-      expect(find.text('SYMPTOMS & DIFFICULTIES'), findsOneWidget);
-      expect(find.text('Current Symptoms & Difficulties'), findsOneWidget);
-    });
-
-    testWidgets(
-        '7. Step 7 Summary of Priorities allows 1-tap editing and returning to summary',
-        (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester
-          .pumpWidget(createTestWidget(child: const OnboardingScreen()));
-      await tester.pumpAndSettle();
-
-      // Advance through flow with non-diagnosed background
-      await tester.tap(find.text('GET STARTED')); // to Step 1
-      await tester.pumpAndSettle();
-
+      // Selecting adult range hides minor notice
       await tester.tap(find.text('25-34'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('NEXT')); // to Step 2
-      await tester.pumpAndSettle();
+      expect(find.text(enStrings.minorSupportNotice), findsNothing);
 
-      await tester.tap(find.text('Wellbeing & Habit Tracking'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('NEXT')); // to Step 4 (bypasses 3)
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('NEXT')); // to Step 5 (Goals)
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('NEXT')); // to Step 6 (Support)
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('NEXT')); // to Step 7 (Summary)
-      await tester.pumpAndSettle();
-
-      expect(find.text('CONFIRMATION'), findsOneWidget);
-      expect(find.text('Review Your Priorities'), findsOneWidget);
-      expect(find.text('CONFIRM & GET STARTED'), findsOneWidget);
-
-      // Verify that all 6 sections have Edit buttons
-      expect(find.text('Edit'), findsNWidgets(6));
-
-      // Tap the first Edit button (Basic Information)
-      await tester.tap(find.text('Edit').first);
-      await tester.pumpAndSettle();
-
-      // Should now be on Step 1 in Edit mode
-      expect(find.text('BASIC INFORMATION'), findsOneWidget);
-      expect(find.text('Editing section • Review will reflect changes'),
-          findsOneWidget);
-      expect(find.text('RETURN TO SUMMARY'), findsWidgets);
-
-      // Tap 'RETURN TO SUMMARY'
-      await tester.tap(find.text('RETURN TO SUMMARY').first);
-      await tester.pumpAndSettle();
-
-      // Immediately back to Step 7 Confirmation
-      expect(find.text('CONFIRMATION'), findsOneWidget);
-      expect(find.text('CONFIRM & GET STARTED'), findsOneWidget);
+      // Verify crisis resources reminder stays clearly visible
+      expect(find.text(enStrings.onboardingCrisisSafetyNote), findsOneWidget);
+      expect(find.text(enStrings.openCrisisResourcesLabel), findsOneWidget);
     });
 
     testWidgets(
-        '8. Optional questions can be skipped without blocking onboarding completion',
+        '6. Skip flows through Steps 2-4 cleanly without creating forced check-in',
         (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.physicalSize = const Size(412, 915);
       tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.reset);
 
-      await tester
-          .pumpWidget(createTestWidget(child: const OnboardingScreen()));
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        createLocalizedTestApp(
+          container: container,
+          child: const OnboardingScreen(),
+        ),
+      );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('GET STARTED')); // Step 1
+      await tester.tap(find.text('Get Started'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 2 of 4'), findsOneWidget);
+
+      await tester.tap(find.text('Skip'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 3 of 4'), findsOneWidget);
+
+      await tester.tap(find.text('Skip'));
+      await tester.pumpAndSettle();
+      expect(find.text('Step 4 of 4'), findsOneWidget);
+
+      await tester.tap(find.text('Skip & Enter App'));
       await tester.pumpAndSettle();
 
-      // In Step 1, tap SKIP in the AppBar without entering age or sex
-      await tester.tap(find.text('SKIP'));
-      await tester.pumpAndSettle();
-
-      // Should advance to Step 2
-      expect(find.text('STARTING POINT'), findsOneWidget);
-
-      // Select 'Still Figuring It Out'
-      await tester.tap(find.text('Still Figuring It Out'));
-      await tester.pumpAndSettle();
-
-      // Step 2 -> Next bypasses conditions to Step 4 Symptoms
-      await tester.tap(find.text('NEXT'));
-      await tester.pumpAndSettle();
-      expect(find.text('SYMPTOMS & DIFFICULTIES'), findsOneWidget);
-
-      // Advance through remaining steps without selecting any mandatory items
-      await tester.tap(find.text('NEXT')); // Step 5 Goals
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('NEXT')); // Step 6 Support
-      await tester.pumpAndSettle();
-
-      // In Step 6, tap SKIP
-      await tester.tap(find.text('SKIP'));
-      await tester.pumpAndSettle();
-
-      // Should arrive at Step 7 Confirmation cleanly
-      expect(find.text('CONFIRMATION'), findsOneWidget);
-      expect(find.text('CONFIRM & GET STARTED'), findsOneWidget);
+      expect(
+        container.read(authControllerProvider).hasCompletedOnboarding,
+        isTrue,
+      );
+      expect(
+        container.read(profileControllerProvider).value?.onboardingStep,
+        4,
+      );
+      expect(
+        container.read(mindTraceControllerProvider).value ?? [],
+        isEmpty,
+      );
     });
 
-    testWidgets('9. Interrupted onboarding recovery: hydrates from draft profile',
+    testWidgets(
+        '7. Step 4 Save & Enter App records Trace #1 and hands off to populated HomeScreen',
         (tester) async {
-      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.physicalSize = const Size(430, 932);
       tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.reset);
 
-      // Pre-seed an interrupted draft profile at step 4
-      final draftProfile = PsychologicalProfileModel(
-        userId: 'local_user',
-        ageRange: '35-44',
-        biologicalSex: 'female',
-        mentalHealthBackground: 'difficulties_no_diagnosis',
-        selectedSymptoms: const ['sym_persistent_heaviness'],
-        onboardingStep: 4,
-        updatedAt: DateTime.now(),
-      );
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
 
-      final container = ProviderContainer(
-        overrides: [
-          profileControllerProvider.overrideWith(() => _MockProfileNotifier(draftProfile)),
+      final testRouter = GoRouter(
+        initialLocation: AppRouter.onboarding,
+        routes: [
+          GoRoute(
+            path: AppRouter.onboarding,
+            builder: (context, state) => const OnboardingScreen(),
+          ),
+          GoRoute(
+            path: AppRouter.home,
+            builder: (context, state) => const HomeScreen(),
+          ),
         ],
       );
+      addTearDown(testRouter.dispose);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(
-            home: OnboardingScreen(),
+          child: MaterialApp.router(
+            theme: LabTheme.daylightTheme,
+            routerConfig: testRouter,
           ),
         ),
       );
       await tester.pumpAndSettle();
 
-      // Should have resumed directly at Step 4 Symptoms & Difficulties
-      expect(find.text('SYMPTOMS & DIFFICULTIES'), findsOneWidget);
-      expect(find.text('Step 4 of 7'), findsOneWidget);
+      // Step 1 -> Step 2
+      await tester.tap(find.text('Get Started'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Understand mood patterns'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+
+      // Step 3 -> Step 4
+      await tester.tap(find.text('Seeing a specialist'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Continue'));
+      await tester.pumpAndSettle();
+
+      // Step 4 First Check-In
+      expect(find.text('Step 4 of 4'), findsOneWidget);
+      await tester.tap(find.text('Anxious'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Save & Enter App'));
+      await tester.pumpAndSettle();
+
+      // Verify HomeScreen reached with Trace #1 hydrated
+      expect(find.byType(HomeScreen), findsOneWidget);
+      final traces = container.read(mindTraceControllerProvider).value ?? [];
+      expect(traces.length, 1);
+      expect(traces.first.overallMood, 'anxious');
+      expect(traces.first.moodIntensity, 5);
+      expect(container.read(todayTraceProvider)?.overallMood, 'anxious');
+    });
+
+    testWidgets('8. Interrupted onboarding recovery hydrates saved step draft',
+        (tester) async {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final draftProfile = PsychologicalProfileModel(
+        userId: 'local_user',
+        ageRange: '35-44',
+        selectedGoals: const ['Understand mood patterns'],
+        onboardingStep: 2,
+        updatedAt: DateTime.now(),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          profileControllerProvider
+              .overrideWith(() => _MockProfileNotifier(draftProfile)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        createLocalizedTestApp(
+          container: container,
+          child: const OnboardingScreen(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Step 3 of 4'), findsOneWidget);
+      expect(find.text('Comfort & safety check'), findsOneWidget);
     });
   });
 }

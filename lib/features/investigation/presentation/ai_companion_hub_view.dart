@@ -3,14 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/localization/app_strings.dart';
-import '../../../app/theme/lab_colors.dart';
 import '../../../app/theme/lab_theme.dart';
 import '../../../app/theme/mind_tokens.dart';
-import '../../../core/widgets/bouncing_widget.dart';
 import '../../../core/widgets/fingerprint_thread_signature.dart';
+import '../../../core/widgets/mind_pressable.dart';
 import '../controllers/investigation_providers.dart';
 import '../domain/case_model.dart';
 import '../domain/conversation_mode.dart';
+import 'widgets/mode_chooser_sheet.dart';
 
 /// The Landing Screen and Hub for the AI Companion.
 ///
@@ -30,23 +30,6 @@ class AiCompanionHubView extends ConsumerStatefulWidget {
 }
 
 class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
-  IconData _getModeIcon(ConversationMode mode) {
-    switch (mode) {
-      case ConversationMode.exploreThought:
-        return Icons.psychology_outlined;
-      case ConversationMode.understandEmotion:
-        return Icons.favorite_border_rounded;
-      case ConversationMode.psychologicalAnalysis:
-        return Icons.hub_outlined;
-      case ConversationMode.guidedReflection:
-        return Icons.auto_stories_outlined;
-      case ConversationMode.justTalk:
-        return Icons.chat_bubble_outline_rounded;
-      case ConversationMode.grounding:
-        return Icons.spa_outlined;
-    }
-  }
-
   void _showRenameDialog(BuildContext context, CaseModel caseModel) {
     final controller = TextEditingController(text: caseModel.title);
     final strings = ref.read(appStringsProvider);
@@ -123,31 +106,31 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
 
   void _showDeleteDialog(BuildContext context, CaseModel caseModel) {
     final strings = ref.read(appStringsProvider);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     showDialog<void>(
       context: context,
       builder: (dialogCtx) {
+        final dialogTokens = dialogCtx.tokens;
         return AlertDialog(
-          backgroundColor: isDark ? LabColors.nightSurface : LabColors.daylightSurface,
+          backgroundColor: dialogTokens.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: isDark ? LabColors.nightBorder : LabColors.daylightBorder),
+            borderRadius: BorderRadius.circular(dialogTokens.cardRadius),
+            side: BorderSide(color: dialogTokens.border),
           ),
           title: Text(
             strings.deleteConversationTitle,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: dialogCtx.tokens.textPrimary,
+              color: dialogTokens.textPrimary,
             ),
           ),
           content: Text(
             strings.deleteConversationConfirm,
             style: TextStyle(
-              fontSize: 12.5,
-              color: isDark ? LabColors.softBeige : Colors.black87,
+              fontSize: 13,
+              height: 1.45,
+              color: dialogTokens.textSecondary,
             ),
           ),
           actions: [
@@ -155,15 +138,15 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
               onPressed: () => Navigator.of(dialogCtx).pop(),
               child: Text(
                 strings.cancelBtn,
-                style: TextStyle(color: dialogCtx.tokens.textSecondary),
+                style: TextStyle(color: dialogTokens.textSecondary),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: dialogCtx.tokens.safetyWarmth,
+                backgroundColor: dialogTokens.safetyWarmth,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(dialogCtx.tokens.buttonRadius),
+                  borderRadius: BorderRadius.circular(dialogTokens.buttonRadius),
                 ),
               ),
               onPressed: () async {
@@ -182,31 +165,31 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
 
   void _showClearAllDialog(BuildContext context) {
     final strings = ref.read(appStringsProvider);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     showDialog<void>(
       context: context,
       builder: (dialogCtx) {
+        final dialogTokens = dialogCtx.tokens;
         return AlertDialog(
-          backgroundColor: isDark ? LabColors.nightSurface : LabColors.daylightSurface,
+          backgroundColor: dialogTokens.surface,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: isDark ? LabColors.nightBorder : LabColors.daylightBorder),
+            borderRadius: BorderRadius.circular(dialogTokens.cardRadius),
+            side: BorderSide(color: dialogTokens.border),
           ),
           title: Text(
             strings.clearAllConversationsBtn,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: dialogCtx.tokens.textPrimary,
+              color: dialogTokens.textPrimary,
             ),
           ),
           content: Text(
             strings.clearAllConversationsConfirm,
             style: TextStyle(
-              fontSize: 12.5,
-              color: isDark ? LabColors.softBeige : Colors.black87,
+              fontSize: 13,
+              height: 1.45,
+              color: dialogTokens.textSecondary,
             ),
           ),
           actions: [
@@ -214,15 +197,15 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
               onPressed: () => Navigator.of(dialogCtx).pop(),
               child: Text(
                 strings.cancelBtn,
-                style: TextStyle(color: dialogCtx.tokens.textSecondary),
+                style: TextStyle(color: dialogTokens.textSecondary),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: dialogCtx.tokens.safetyWarmth,
+                backgroundColor: dialogTokens.safetyWarmth,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(dialogCtx.tokens.buttonRadius),
+                  borderRadius: BorderRadius.circular(dialogTokens.buttonRadius),
                 ),
               ),
               onPressed: () async {
@@ -249,16 +232,16 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final tokens = context.tokens;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final strings = ref.watch(appStringsProvider);
     final selectedMode = ref.watch(currentConversationModeProvider);
     final savedCasesAsync = ref.watch(savedCasesProvider);
 
-    final surfaceColor = isDark ? LabColors.nightSurface : LabColors.daylightSurface;
-    final borderColor = isDark ? LabColors.nightBorder : LabColors.daylightBorder;
-    final textPrimary = isDark ? LabColors.nightTextPrimary : LabColors.daylightTextPrimary;
-    final textSecondary = isDark ? LabColors.nightTextSecondary : LabColors.daylightTextSecondary;
+    final surfaceColor = tokens.surface;
+    final borderColor = tokens.border;
+    final textPrimary = tokens.textPrimary;
+    final textSecondary = tokens.textSecondary;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -307,17 +290,15 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
           // Mode Cards Grid
           ...ConversationMode.values.map((mode) {
             final isSelected = mode == selectedMode;
-            final modeTitle = strings.isArabic
-                ? mode.localizedArabicName
-                : (strings.isFrench ? mode.localizedFrenchName : mode.displayName);
-            final modeDesc = strings.isArabic
-                ? mode.localizedArabicDescription
-                : (strings.isFrench ? mode.localizedFrenchDescription : mode.description);
+            final modeTitle = localizedModeName(mode, strings);
+            final modeDesc = localizedModeDesc(mode, strings);
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: BouncingWidget(
-                onTap: () {
+              child: MindPressable(
+                semanticLabel: modeTitle,
+                borderRadius: BorderRadius.circular(tokens.cardRadius),
+                onPressed: () {
                   HapticFeedback.lightImpact();
                   ref
                       .read(currentConversationModeProvider.notifier)
@@ -327,12 +308,12 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? context.tokens.accentSoft
+                        ? tokens.accentSoft
                         : surfaceColor,
-                    borderRadius: BorderRadius.circular(context.tokens.cardRadius),
+                    borderRadius: BorderRadius.circular(tokens.cardRadius),
                     border: Border.all(
                       color: isSelected
-                          ? context.tokens.accent
+                          ? tokens.accent
                           : borderColor,
                       width: isSelected ? 1.5 : 1.0,
                     ),
@@ -344,19 +325,19 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                         padding: const EdgeInsets.all(9),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? context.tokens.accent.withValues(alpha: 0.16)
-                              : context.tokens.surfaceSecondary,
+                              ? tokens.accent.withValues(alpha: 0.16)
+                              : tokens.surfaceSecondary,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isSelected
-                                ? context.tokens.accent.withValues(alpha: 0.35)
+                                ? tokens.accent.withValues(alpha: 0.35)
                                 : borderColor,
                           ),
                         ),
                         child: Icon(
-                          _getModeIcon(mode),
+                          iconForConversationMode(mode),
                           size: 18,
-                          color: isSelected ? context.tokens.accent : textSecondary,
+                          color: isSelected ? tokens.accent : textSecondary,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -366,32 +347,33 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  modeTitle,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: isSelected
-                                        ? context.tokens.accent
-                                        : textPrimary,
+                                Expanded(
+                                  child: Text(
+                                    modeTitle,
+                                    style: TextStyle(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: isSelected
+                                          ? tokens.accent
+                                          : textPrimary,
+                                    ),
                                   ),
                                 ),
-                                const Spacer(),
                                 if (isSelected)
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 2),
+                                        horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: context.tokens.accent.withValues(alpha: 0.16),
+                                      color: tokens.accent.withValues(alpha: 0.16),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
                                       'ACTIVE',
                                       style: TextStyle(
-                                        fontSize: 8.5,
+                                        fontSize: 10,
                                         fontWeight: FontWeight.w800,
-                                        letterSpacing: 0.6,
-                                        color: context.tokens.accent,
+                                        letterSpacing: 0.5,
+                                        color: tokens.accent,
                                       ),
                                     ),
                                   ),
@@ -401,10 +383,10 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                             Text(
                               modeDesc,
                               style: TextStyle(
-                                fontSize: 11.5,
-                                height: 1.35,
+                                fontSize: 12.5,
+                                height: 1.4,
                                 color: isSelected
-                                    ? textPrimary.withValues(alpha: 0.85)
+                                    ? textPrimary.withValues(alpha: 0.88)
                                     : textSecondary,
                               ),
                             ),
@@ -424,37 +406,40 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
           Text(
             strings.suggestedStartersTitle.toUpperCase(),
             style: TextStyle(
-              fontSize: 10.5,
+              fontSize: 11.5,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.8,
-              color: context.tokens.accent,
+              color: tokens.accent,
             ),
           ),
           const SizedBox(height: 8),
 
           Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: selectedMode.suggestedStarters.map((starter) {
-              return BouncingWidget(
-                onTap: () => _startConversation(starter),
+            spacing: 8,
+            runSpacing: 8,
+            children: strings.localizedStartersForMode(selectedMode.name).map((starter) {
+              return MindPressable(
+                semanticLabel: starter,
+                borderRadius: BorderRadius.circular(tokens.chipRadius),
+                onPressed: () => _startConversation(starter),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  constraints: const BoxConstraints(minHeight: 42),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
                   decoration: BoxDecoration(
-                    color: context.tokens.surfaceSecondary,
-                    borderRadius: BorderRadius.circular(context.tokens.chipRadius),
-                    border: Border.all(color: context.tokens.border),
+                    color: tokens.surfaceSecondary,
+                    borderRadius: BorderRadius.circular(tokens.chipRadius),
+                    border: Border.all(color: tokens.border),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.arrow_forward_rounded, size: 12, color: context.tokens.accent),
+                      Icon(Icons.arrow_forward_rounded, size: 14, color: tokens.accent),
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
                           starter,
                           style: TextStyle(
-                            fontSize: 11.5,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w600,
                             color: textPrimary,
                           ),
@@ -470,14 +455,16 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
           const SizedBox(height: 20),
 
           // 4. Primary CTA: Start New Conversation
-          BouncingWidget(
-            onTap: () => _startConversation(),
+          MindPressable(
+            semanticLabel: strings.newConversationBtn,
+            borderRadius: BorderRadius.circular(tokens.buttonRadius),
+            onPressed: () => _startConversation(),
             child: Container(
               width: double.infinity,
               height: 50,
               decoration: BoxDecoration(
-                color: context.tokens.accent,
-                borderRadius: BorderRadius.circular(context.tokens.buttonRadius),
+                color: tokens.accent,
+                borderRadius: BorderRadius.circular(tokens.buttonRadius),
               ),
               alignment: Alignment.center,
               child: Row(
@@ -486,16 +473,16 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                   Icon(
                     Icons.add_rounded,
                     size: 18,
-                    color: (isDark ? context.tokens.background : Colors.white),
+                    color: (isDark ? tokens.background : Colors.white),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     strings.newConversationBtn.toUpperCase(),
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.6,
-                      color: (isDark ? context.tokens.background : Colors.white),
+                      color: (isDark ? tokens.background : Colors.white),
                     ),
                   ),
                 ],
@@ -511,10 +498,10 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
               Text(
                 strings.recentConversationsTitle.toUpperCase(),
                 style: TextStyle(
-                  fontSize: 10.5,
+                  fontSize: 11.5,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.8,
-                  color: context.tokens.accent,
+                  color: tokens.accent,
                 ),
               ),
               const Spacer(),
@@ -529,10 +516,10 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                         ),
                         child: Text(
                           strings.clearAllConversationsBtn,
-                          style: const TextStyle(
-                            fontSize: 10,
+                          style: TextStyle(
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w700,
-                            color: LabColors.cherryRed,
+                            color: tokens.safetyWarmth,
                           ),
                         ),
                       )
@@ -614,9 +601,9 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                             ),
                           ),
                           child: Icon(
-                            _getModeIcon(c.conversationMode),
+                            iconForConversationMode(c.conversationMode),
                             size: 16,
-                            color: context.tokens.accent,
+                            color: tokens.accent,
                           ),
                         ),
                         title: Row(
@@ -624,13 +611,13 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: context.tokens.surfaceSecondary,
+                                color: tokens.surfaceSecondary,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 strings.formatSessionNumber(c.caseNumber),
                                 style: TextStyle(
-                                  fontSize: 8.5,
+                                  fontSize: 10.5,
                                   fontWeight: FontWeight.w700,
                                   color: textSecondary,
                                 ),
@@ -643,7 +630,7 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
-                                  fontSize: 13,
+                                  fontSize: 13.5,
                                   fontWeight: FontWeight.w700,
                                   color: textPrimary,
                                 ),
@@ -655,30 +642,34 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                           padding: const EdgeInsets.only(top: 4),
                           child: Row(
                             children: [
-                              Text(
-                                c.conversationMode.displayName,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: context.tokens.accent,
+                              Flexible(
+                                child: Text(
+                                  localizedModeName(c.conversationMode, strings),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: tokens.accent,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              Text('•', style: TextStyle(fontSize: 10, color: textSecondary)),
+                              Text('•', style: TextStyle(fontSize: 11.5, color: textSecondary)),
                               const SizedBox(width: 6),
                               Text(
                                 '${c.statements.length} exchanges',
-                                style: TextStyle(fontSize: 10, color: textSecondary),
+                                style: TextStyle(fontSize: 11.5, color: textSecondary),
                               ),
                             ],
                           ),
                         ),
                         trailing: PopupMenuButton<String>(
-                          icon: Icon(Icons.more_vert_rounded, size: 16, color: textSecondary),
-                          color: context.tokens.surface,
+                          icon: Icon(Icons.more_vert_rounded, size: 18, color: textSecondary),
+                          color: tokens.surface,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
-                            side: BorderSide(color: context.tokens.border),
+                            side: BorderSide(color: tokens.border),
                           ),
                           onSelected: (val) {
                             if (val == 'resume') {
@@ -694,17 +685,17 @@ class _AiCompanionHubViewState extends ConsumerState<AiCompanionHubView> {
                           itemBuilder: (ctx) => [
                             PopupMenuItem(
                               value: 'resume',
-                              child: Text(strings.resumeConversationBtn, style: const TextStyle(fontSize: 12)),
+                              child: Text(strings.resumeConversationBtn, style: const TextStyle(fontSize: 13)),
                             ),
                             PopupMenuItem(
                               value: 'rename',
-                              child: Text(strings.renameConversationTitle, style: const TextStyle(fontSize: 12)),
+                              child: Text(strings.renameConversationTitle, style: const TextStyle(fontSize: 13)),
                             ),
                             PopupMenuItem(
                               value: 'delete',
                               child: Text(
                                 strings.deleteConversationTitle,
-                                style: const TextStyle(fontSize: 12, color: LabColors.cherryRed),
+                                style: TextStyle(fontSize: 13, color: tokens.safetyWarmth),
                               ),
                             ),
                           ],

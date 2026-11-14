@@ -190,8 +190,8 @@ class _ExerciseBreathingModalSheetState extends State<ExerciseBreathingModalShee
                   icon: Icon(_isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded),
                   label: Text(_isRunning ? 'PAUSE' : 'RESUME'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: isDark ? tokens.accent : const Color(0xFF34443B),
-                    foregroundColor: isDark ? const Color(0xFF151B19) : Colors.white,
+                    backgroundColor: tokens.accent,
+                    foregroundColor: isDark ? tokens.background : Colors.white,
                     minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(tokens.buttonRadius),

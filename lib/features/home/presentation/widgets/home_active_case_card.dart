@@ -78,10 +78,11 @@ class HomeActiveCaseCard extends StatelessWidget {
                 onResume();
               },
               style: FilledButton.styleFrom(
-                backgroundColor: isDark ? tokens.accent : const Color(0xFF34443B),
-                foregroundColor: isDark ? const Color(0xFF151B19) : Colors.white,
+                backgroundColor: tokens.accent,
+                foregroundColor: isDark ? tokens.background : Colors.white,
+                minimumSize: const Size(48, 48),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(tokens.buttonRadius),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),

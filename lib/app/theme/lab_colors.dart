@@ -50,7 +50,8 @@ class LabColors {
   static const Color secondaryIvory = Color(0xFFEDE9E0); // Subtle inset well
   static const Color cardIvory = Color(0xFFFFFFFF); // Crisp lifted card surface
   static const Color primaryText = Color(0xFF1F2420); // Deep slate botanical text
-  static const Color secondaryText = Color(0xFF646D66); // Muted mineral slate
+  static const Color secondaryText = Color(0xFF535C55); // Muted mineral slate (>= 5.7:1 AA across wells)
+  static const Color daylightTextTertiary = Color(0xFF5D665F); // Tertiary helper copy (>= 4.9:1 AA)
   static const Color borderIvory = Color(0xFFE5E0D6); // Soft linen 1px border
 
   // ===========================================================================
@@ -113,7 +114,7 @@ class LabColors {
   // SAFETY & CRISIS WARMTH (Restrained Terracotta / Warm Clay)
   // Highly visible emergency support without harsh neon red or decorative pink
   // ===========================================================================
-  static const Color safetyWarmth = Color(0xFFC4512D); // Rich Terracotta (Light)
+  static const Color safetyWarmth = Color(0xFFB34624); // Rich Terracotta (>= 5.0:1 AA on soft safety tint)
   static const Color safetyWarmthDark = Color(0xFFE58363); // Terracotta Ember (Dark)
   static const Color safetySoftBgLight = Color(0xFFFDF3EE);
   static const Color safetySoftBgDark = Color(0xFF2B1C17);
@@ -155,7 +156,7 @@ class LabColors {
   static const Color borderSubtle = nightBorder;
   static const Color textPrimary = nightTextPrimary;
   static const Color textSecondary = nightTextSecondary;
-  static const Color textTertiary = Color(0xFF738178);
+  static const Color textTertiary = Color(0xFF8D9B91); // Dark tertiary muted sage (>= 4.9:1 AA)
   static const Color deepBurgundy = Color(0xFF2B3D31);
   static const Color darkWine = nightSurface;
   static const Color almostBlackBurgundy = nightBackground;

@@ -167,19 +167,23 @@ class AppStrings {
       ? 'استكشاف هادئ للأفكار التلقائية والتشنج الجسدي في دقائق معدودة' 
       : (isFrench ? 'Prenez du recul sur vos pensées automatiques et sensations corporelles' : 'Gently examine automatic thoughts and physical tension in a few calm minutes');
   String get resumeInvestigation => isArabic ? 'مواصلة الجلسة' : (isFrench ? 'Reprendre la session' : 'Resume Session');
-  String get noCasesOnFile => isArabic ? 'لا توجد جلسات مسجلة. اضغط + للبدء.' : (isFrench ? 'AUCUNE SESSION. APPUYEZ SUR + POUR COMMENCER.' : 'NO SESSIONS ON FILE. TAP + TO BEGIN.');
+  String get noCasesOnFile => isArabic
+      ? 'مازال ما فماش جلسات — اختار موضوع والا ابدأ جلسة جديدة الفوق.'
+      : (isFrench
+          ? 'Aucune session pour le moment — commencez une réflexion ci-dessus.'
+          : 'No sessions yet — pick a topic or start a reflection above.');
   String stageNumberLabel(int step) => isArabic ? 'المرحلة $step/6' : (isFrench ? 'PHASE $step/6' : 'PHASE $step/6');
   String get inProgressLabel => isArabic ? 'قيد المعالجة' : (isFrench ? 'EN COURS' : 'IN PROGRESS');
   String get quickTriageLabel => isArabic ? 'فرز سريع 60 ثانية' : (isFrench ? 'TRIAGE RAPIDE 60s' : '60s QUICK TRIAGE');
   String get groundedAnchorTag => isArabic ? 'مرسى التعافي' : (isFrench ? 'ANCRAGE RECADRÉ' : 'GROUNDED ANCHOR');
 
-  // Moods & Somatic States
-  String get moodCalm => isArabic ? 'متزن (Parasympathique)' : (isFrench ? 'Régulé' : 'Regulated');
-  String get moodAnxious => isArabic ? 'استثارة قلقة' : (isFrench ? 'Anxieux' : 'Hyperaroused');
-  String get moodFrustrated => isArabic ? 'احتقان / غضب' : (isFrench ? 'Réactif' : 'Reactive');
-  String get moodHeavy => isArabic ? 'هبوط طاقي / تثبيط' : (isFrench ? 'Inhibé' : 'Dorsal Vagal');
-  String get moodRestless => isArabic ? 'تشتت ذهني' : (isFrench ? 'Agité' : 'Restless');
-  String get moodIntensityLabel => isArabic ? 'شدة التوتر العصبي' : (isFrench ? 'Intensité d’activation' : 'Nervous Activation');
+  // Moods & States (Plain 1-Word Human Affect Labeling — Zero Clinical Jargon)
+  String get moodCalm => isArabic ? 'هادئ' : (isFrench ? 'Calme' : 'Calm');
+  String get moodAnxious => isArabic ? 'قلق' : (isFrench ? 'Anxieux' : 'Anxious');
+  String get moodFrustrated => isArabic ? 'متضايق' : (isFrench ? 'Frustré' : 'Frustrated');
+  String get moodHeavy => isArabic ? 'ثقيل' : (isFrench ? 'Lourd' : 'Heavy');
+  String get moodRestless => isArabic ? 'متشتّت' : (isFrench ? 'Agité' : 'Restless');
+  String get moodIntensityLabel => isArabic ? 'شدة الشعور' : (isFrench ? 'Intensité' : 'Intensity');
 
   // Daily Cognitive Insight
   String get dailyInsightTitle => isArabic ? 'ملاحظة علم الأعصاب الإدراكي' : (isFrench ? 'Éclairage Neuro-Cognitif' : 'Neuro-Cognitive Insight');
@@ -205,14 +209,14 @@ class AppStrings {
     }
   }
 
-  // Interactive Catalysts (1-Tap Triggers)
-  String get catalystUnanswered => isArabic ? 'رسالة بدون رد' : (isFrench ? 'Message sans réponse' : 'Unanswered Message');
-  String get catalystCritique => isArabic ? 'ملاحظة / تقييم مهني' : (isFrench ? 'Critique ou évaluation' : 'Work Evaluation / Critique');
+  // Interactive Catalysts (1-Tap Concise Triggers — Zero Clipping)
+  String get catalystUnanswered => isArabic ? 'رسالة بلا رد' : (isFrench ? 'Message sans réponse' : 'Unanswered text');
+  String get catalystCritique => isArabic ? 'ملاحظة في العمل' : (isFrench ? 'Remarque au travail' : 'Work feedback');
   String get catalystComparison => isArabic ? 'مقارنة اجتماعية' : (isFrench ? 'Comparaison sociale' : 'Social Comparison');
-  String get catalystImposter => isArabic ? 'شك في الكفاءة (Imposteur)' : (isFrench ? 'Syndrome de l’imposteur' : 'Imposter Doubt');
+  String get catalystImposter => isArabic ? 'شك في الكفاءة' : (isFrench ? 'Doute de soi' : 'Imposter Doubt');
   String get catalystConflict => isArabic ? 'توتر في العلاقة' : (isFrench ? 'Tension relationnelle' : 'Interpersonal Friction');
   String get catalystExclusion => isArabic ? 'إحساس بالإقصاء' : (isFrench ? 'Sentiment d’exclusion' : 'Excluded / Left Out');
-  String get catalystOverload => isArabic ? 'تراكم المسؤوليات' : (isFrench ? 'Surcharge mentale' : 'Cognitive Overload');
+  String get catalystOverload => isArabic ? 'ضغط وتشتّت ذهني' : (isFrench ? 'Trop en tête' : 'Mental overload');
   String get catalystUncertainty => isArabic ? 'مستقبل غامض' : (isFrench ? 'Incertitude future' : 'Ambiguous Future');
 
   // Somatic Sensations (Body State Radar)
@@ -459,10 +463,101 @@ class AppStrings {
   String get returnToCaseBtn => isArabic ? 'الرجوع للجلسة' : (isFrench ? 'Revenir à la session' : 'Return to Session');
   String get viewSupportResourcesBtn => isArabic ? 'أرقام النجدة والمساعدة' : (isFrench ? 'Voir les ressources d’urgence' : 'View Crisis Resources');
 
-  // Onboarding
-  String get onboardingSkip => isArabic ? 'تخطي' : (isFrench ? 'PASSER' : 'SKIP');
-  String get onboardingEnterLab => isArabic ? 'دخول مخبر التنظيم المعرفي' : (isFrench ? 'ENTRER AU LAB' : 'ENTER NEURO LAB');
-  String get onboardingNext => isArabic ? 'الموالي' : (isFrench ? 'SUIVANT' : 'NEXT');
+  // Onboarding (4-Step Fast Flow)
+  String get onboardingSkip => isArabic ? 'تخطي' : (isFrench ? 'Passer' : 'Skip');
+  String get onboardingEnterLab => isArabic ? 'دخول المساحة' : (isFrench ? 'Entrer dans l’espace' : 'Enter Space');
+  String get onboardingNext => isArabic ? 'الموالي' : (isFrench ? 'Suivant' : 'Continue');
+  String get onboardingGetStarted => isArabic ? 'ابدأ الآن' : (isFrench ? 'Commencer' : 'Get Started');
+  String get onboardingContinue => isArabic ? 'متابعة' : (isFrench ? 'Continuer' : 'Continue');
+  String onboardingStepOf(int step, int total) => isArabic
+      ? 'الخطوة $step من $total'
+      : (isFrench ? 'Étape $step sur $total' : 'Step $step of $total');
+
+  // Step 1: Welcome & Privacy
+  String get onboardingWelcomeHeadline => isArabic
+      ? 'كل فكرة تترك أثراً.'
+      : (isFrench ? 'Chaque pensée laisse une trace.' : 'Every thought leaves a trace.');
+  String get onboardingWelcomeBody => isArabic
+      ? 'مساحة شخصية هادئة لملاحظة أفكارك ومشاعرك اليومية وفهم أنماطك بهدوء وبدون أحكام.'
+      : (isFrench
+          ? 'Un espace personnel et apaisé pour observer vos pensées, émotions et rythmes quotidiens sans jugement.'
+          : 'A quiet, personal space to notice your thoughts, emotions, and daily patterns at your own pace without judgment.');
+  String get onboardingPrivacyPromise => isArabic
+      ? 'تُحفظ بياناتك بخصوصية تامة على جهازك افتراضياً. مستوحى من الوعي المعرفي — وليس علاجاً طبياً أو بديلاً عن المختص.'
+      : (isFrench
+          ? 'Stocké en privé sur votre appareil par défaut. Inspiré de la conscience cognitive — ceci n’est ni une thérapie ni un traitement médical.'
+          : 'Stored privately on your device by default. Inspired by cognitive reflection — not medical treatment or therapy.');
+
+  // Step 2: Focus (1–3 Options)
+  String get onboardingFocusTitle => isArabic
+      ? 'شنوّة أكثر حاجة تحب تركّز عليها؟'
+      : (isFrench ? 'Sur quoi souhaitez-vous porter votre attention ?' : 'What would help most right now?');
+  String get onboardingFocusSubtitle => isArabic
+      ? 'اختار من خيار لـ 3 (اختياري). باش نرتبولك المساحة حسب حاجتك.'
+      : (isFrench
+          ? 'Choisissez 1 à 3 axes (facultatif) pour adapter vos repères dès l’accueil.'
+          : 'Pick 1 to 3 focus areas (optional) so your home space starts tailored to you.');
+  String get focusGoalStress => isArabic
+      ? 'تهدئة التوتر والقلق'
+      : (isFrench ? 'Apaiser le stress et l’anxiété' : 'Ease stress & anxiety');
+  String get focusGoalMood => isArabic
+      ? 'فهم تقلبات المزاج'
+      : (isFrench ? 'Comprendre les variations d’humeur' : 'Understand mood patterns');
+  String get focusGoalOverthinking => isArabic
+      ? 'فك تشابك كثرة التفكير'
+      : (isFrench ? 'Démêler la rumination mentale' : 'Untangle overthinking');
+  String get focusGoalSleepEnergy => isArabic
+      ? 'توازن النوم والطاقة'
+      : (isFrench ? 'Équilibrer sommeil et énergie' : 'Sleep & energy rhythm');
+  String get focusGoalSpecialist => isArabic
+      ? 'تنظيم الملاحظات مع مختص'
+      : (isFrench ? 'Préparer le suivi avec un spécialiste' : 'Reflect alongside a specialist');
+  String get addCustomGoalToggle => isArabic
+      ? 'أو أضف هدفاً خاصاً (اختياري)'
+      : (isFrench ? 'Ou ajouter un objectif personnel (facultatif)' : 'Or add your own focus (optional)');
+  String get customGoalHint => isArabic
+      ? 'مثال: لاحظت إني نتقلق الصباح...'
+      : (isFrench ? 'Ex : mieux repérer mes déclencheurs...' : 'e.g. notice morning tension...');
+
+  // Step 3: Comfort & Safety Check
+  String get onboardingComfortTitle => isArabic
+      ? 'إطار الراحة والأمان'
+      : (isFrench ? 'Confort & repères de sécurité' : 'Comfort & safety check');
+  String get onboardingComfortSubtitle => isArabic
+      ? 'اختياري بالكامل — يساعدنا على ضبط الإيقاع وتوفير خطوط الدعم بوضوح.'
+      : (isFrench
+          ? 'Entièrement facultatif — aide à ajuster le rythme et garder l’aide à portée.'
+          : 'Completely optional — helps calibrate pacing and keep support resources clear.');
+  String get supportOptionSpecialist => isArabic
+      ? 'نتابع مع مختص حالياً'
+      : (isFrench ? 'Suivi par un spécialiste' : 'Seeing a specialist');
+  String get supportOptionSelfGuided => isArabic
+      ? 'نستكشف وحدي'
+      : (isFrench ? 'Exploration autonome' : 'Exploring on my own');
+  String get supportOptionPreferNotToSay => isArabic
+      ? 'أفضل عدم التحديد'
+      : (isFrench ? 'Préfère ne pas préciser' : 'Prefer not to say');
+  String get onboardingCrisisSafetyNote => isArabic
+      ? 'للحالات الطارئة: خطوط المساعدة التونسية (الرقم الأخضر 80 10 50 50، 190، 198) متوفرة دائماً بلمسة واحدة.'
+      : (isFrench
+          ? 'Ressources d’urgence : les lignes d’écoute (80 10 50 50 / 190 / 198) restent accessibles à tout moment en haut de l’écran.'
+          : 'Immediate support: Tunisian crisis & emergency lines (80 10 50 50 / 190 / 198) stay 1 tap away in the top bar.');
+  String get openCrisisResourcesLabel => isArabic
+      ? 'عرض أرقام الطوارئ'
+      : (isFrench ? 'Voir les numéros d’aide' : 'View emergency numbers');
+
+  // Step 4: First Check-In & Zero-Blank-Screen Handoff
+  String get onboardingFirstCheckInSubtitle => isArabic
+      ? 'سجّل أول شعور ليك في لمستين باش تكون صفحتك الرئيسية حاضرة.'
+      : (isFrench
+          ? 'Enregistrez votre premier ressenti en deux gestes pour démarrer avec un accueil vivant.'
+          : 'Log your first trace in two taps so your Home space greets you with today’s baseline.');
+  String get saveAndEnterAppBtn => isArabic
+      ? 'حفظ والدخول للتطبيق'
+      : (isFrench ? 'Enregistrer & entrer' : 'Save & Enter App');
+  String get skipAndEnterAppBtn => isArabic
+      ? 'تخطي التسجيل والدخول'
+      : (isFrench ? 'Passer et entrer' : 'Skip & Enter App');
 
   // Clinical Session Brief & Privacy Shield (Section 12 - Step 12)
   String get casePrivateBadge => isArabic ? 'سري: خاص — غير قابل للمشاركة' : (isFrench ? 'CONFIDENTIEL : PRIVÉ — NON PARTAGEABLE' : 'CONFIDENTIAL: PRIVATE — NEVER SHAREABLE');
@@ -1212,16 +1307,138 @@ class AppStrings {
   String get nextStepThoughtPrompt => isArabic ? 'تحبّ نفرقو بين الحقيقة والافتراض في اللي صار؟' : (isFrench ? 'Séparer les faits des hypothèses ?' : 'Separate facts from what your mind assumed?');
   String get nextStepAnchorPrompt => isArabic ? 'لحظة هادئة — تحبّ تحفظ مرساة لليوم؟' : (isFrench ? 'Un moment calme — enregistrer un repère ?' : 'A calm moment — want to save one anchor for today?');
 
-  String get trackPageTitle => isArabic ? 'تتبّع وملاحظة' : (isFrench ? 'Suivi & Observation' : 'Track & Observe');
+  String get trackPageTitle => isArabic ? 'تتبّع وملاحظة' : (isFrench ? 'Suivi & Observation' : 'Track');
+  String get checkInTodayTab => isArabic ? 'تسجيل اليوم' : (isFrench ? 'Bilan du jour' : 'Check-In Today');
+  String get historyAndCalendarTab => isArabic ? 'السجل والتقويم' : (isFrench ? 'Historique & Calendrier' : 'History & Calendar');
+  String get fullCalendarTooltip => isArabic ? 'التقويم الكامل والتحليلات' : (isFrench ? 'Calendrier complet & Analyses' : 'Full Calendar & Analytics');
   String get fullTraceTab => isArabic ? 'رصد معمّق' : (isFrench ? 'Trace complète' : 'Full Trace');
   String get howFeelingRightNow => isArabic ? 'كيفاش حاسس روحك توّا؟' : (isFrench ? 'Comment vous sentez-vous en ce moment ?' : 'How are you feeling right now?');
   String get todaysCoreState => isArabic ? 'الحالة الأساسية لليوم' : (isFrench ? 'ÉTAT PRINCIPAL DU JOUR' : "TODAY'S CORE STATE");
+  String get intenseAnchorLabel => isArabic ? 'شديد' : (isFrench ? 'Intense' : 'Intense');
   String get addNoteOptionalHint => isArabic ? 'زيد ملاحظة صغيرة (اختياري)...' : (isFrench ? 'Ajouter une note (optionnel)...' : 'Add a note (optional)...');
+  String get addContextOptionalTitle => isArabic ? 'إضافة تفاصيل اختيارية' : (isFrench ? 'Ajouter du contexte (optionnel)' : 'Add context (optional)');
+  String get addContextOptionalSub => isArabic ? 'المحفزات، النوم، والطاقة' : (isFrench ? 'Déclencheurs, sommeil et énergie' : 'Triggers, sleep, and energy');
+  String get whatHelpedTodayLabel => isArabic ? 'شنوّة اللي ساعدك اليوم؟ (اختياري)' : (isFrench ? 'Qu’est-ce qui vous a aidé ? (optionnel)' : 'What helped today? (optional)');
   String get whatsInfluencingMood => isArabic ? 'شنوّة اللي مأثّر على مزاجك؟' : (isFrench ? 'Qu’est-ce qui influence votre humeur ?' : "What's influencing your mood?");
   String get triggersContextHeader => isArabic ? 'المحفّزات والسياق' : (isFrench ? 'DÉCLENCHEURS & CONTEXTE' : 'TRIGGERS & CONTEXT');
-  String get saveEntryBtn => isArabic ? 'حفظ التسجيل' : (isFrench ? 'Enregistrer' : 'Save Entry');
-  String get deepenReflectionCta => isArabic ? 'تعميق الملاحظة (5 خطوات)' : (isFrench ? 'Approfondir (5 étapes)' : 'Deepen Observation (5 steps)');
+  String get saveCheckInAction => isArabic ? 'حفظ التسجيل' : (isFrench ? 'Enregistrer le bilan' : 'Save Check-In');
+  String get updateTodaysEntryAction => isArabic ? 'تحديث تسجيل اليوم' : (isFrench ? 'Mettre à jour aujourd’hui' : "Update Today's Entry");
+  String get preferStepByStepLabel => isArabic ? 'تحبّ تسجيل مفصّل خطوة بخطوة؟' : (isFrench ? 'Préférez-vous un bilan étape par étape ?' : 'Prefer step-by-step check-in?');
+  String get saveEntryBtn => saveCheckInAction;
+  String get deepenReflectionCta => preferStepByStepLabel;
   String get calendarTitle => isArabic ? 'تقويم الملاحظات' : (isFrench ? 'Calendrier d’observation' : 'Observation Calendar');
+  String get timelineBuildsTitle => isArabic ? 'سجلك الزمني يتبنى مع كل ملاحظة تسجلها' : (isFrench ? 'Votre historique se construit au fil des bilans' : 'Your timeline builds as you log');
+  String get logTodayBtn => isArabic ? 'سجّل اليوم' : (isFrench ? 'Noter aujourd’hui' : 'Log Today');
+  String get showAllEntriesBtn => isArabic ? 'عرض الكل' : (isFrench ? 'Tout voir' : 'Show all');
+  String filteredByDateLabel(String dateKey) => isArabic
+      ? 'التاريخ المحدد: $dateKey'
+      : (isFrench ? 'Filtre : $dateKey' : 'Selected: $dateKey');
+  String get noEntriesForDayNote => isArabic
+      ? 'ما فماش تسجيل في النهار هذا.'
+      : (isFrench ? 'Aucun bilan enregistré ce jour-là.' : 'No check-in logged on this day.');
+  String get exploreWithAiGuideBtn => isArabic ? 'استكشاف مع المساعد' : (isFrench ? 'Explorer avec l’Assistant IA' : 'Explore with AI Guide');
+  String get editEntryTitle => isArabic ? 'تعديل التسجيل' : (isFrench ? 'Modifier le bilan' : 'Edit Check-In Entry');
+  String get saveChangesBtn => isArabic ? 'حفظ التعديلات' : (isFrench ? 'Enregistrer' : 'Save Changes');
+  String get cancelActionLabel => isArabic ? 'إلغاء' : (isFrench ? 'Annuler' : 'Cancel');
+  String get calmScaleAnchor => isArabic ? 'هادي 1' : (isFrench ? 'Calme 1' : 'Calm 1');
+  String get overwhelmedScaleAnchor => isArabic ? 'مضغوط 10' : (isFrench ? 'Débordé 10' : 'Overwhelmed 10');
+  String get whatsOnYourMindHint => isArabic
+      ? 'شنوّة اللي في بالك توّا؟ (اختياري)'
+      : (isFrench
+          ? 'Qu’avez-vous en tête ? (optionnel)'
+          : 'What is on your mind? (optional)');
+  String get pickHowYouFeelFirst => isArabic
+      ? 'اختار شعورك قبل الحفظ.'
+      : (isFrench
+          ? 'Choisissez d’abord votre ressenti.'
+          : 'Pick how you feel first.');
+  String get savedBadgeLabel => isArabic ? 'تم الحفظ' : (isFrench ? 'Enregistré' : 'Saved');
+  String get timelineOverline => isArabic ? 'السجل الزمني' : (isFrench ? 'CHRONOLOGIE' : 'TIMELINE');
+  String get exploreMoodContextPrefix => isArabic
+      ? 'استكشاف حالة مزاجية مسجّلة:'
+      : (isFrench
+          ? 'Explorer ce bilan d’humeur :'
+          : 'Explore mood check-in:');
+
+  String trackTriggerDisplay(String key) {
+    switch (key) {
+      case 'Work / Demands':
+        return isArabic ? 'ضغط العمل' : (isFrench ? 'Travail / Charge' : 'Work / Demands');
+      case 'Sleep Disruption':
+        return isArabic ? 'اضطراب النوم' : (isFrench ? 'Sommeil perturbé' : 'Sleep Disruption');
+      case 'Studies':
+        return isArabic ? 'الدراسة' : (isFrench ? 'Études' : 'Studies');
+      case 'Social':
+        return isArabic ? 'علاقات اجتماعية' : (isFrench ? 'Social' : 'Social');
+      case 'Health':
+        return isArabic ? 'الصحة' : (isFrench ? 'Santé' : 'Health');
+      case 'Overload':
+        return isArabic ? 'إرهاق ذهني' : (isFrench ? 'Surcharge' : 'Overload');
+      default:
+        return key;
+    }
+  }
+
+  String trackHelpedDisplay(String key) {
+    switch (key) {
+      case 'Walk':
+        return isArabic ? 'مشي هادئ' : (isFrench ? 'Marche' : 'Walk');
+      case 'Quiet time':
+        return isArabic ? 'وقت هادئ' : (isFrench ? 'Moment calme' : 'Quiet time');
+      case 'Breathing':
+        return isArabic ? 'تنفّس' : (isFrench ? 'Respiration' : 'Breathing');
+      case 'Talked':
+        return isArabic ? 'فضفضة مع قريب' : (isFrench ? 'Échange' : 'Talked');
+      case 'Rest':
+        return isArabic ? 'راحة' : (isFrench ? 'Repos' : 'Rest');
+      default:
+        return key;
+    }
+  }
+
+  List<String> get weekdayShortLabels {
+    if (isArabic) return const ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح'];
+    if (isFrench) return const ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    return const ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  }
+
+  String monthName(int month) {
+    const en = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    const fr = [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+    ];
+    const ar = [
+      'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
+      'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+    ];
+    final idx = (month - 1).clamp(0, 11);
+    if (isArabic) return ar[idx];
+    if (isFrench) return fr[idx];
+    return en[idx];
+  }
+
+  String shortMonthName(int month) {
+    const en = [
+      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+    ];
+    const fr = [
+      'JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUIN',
+      'JUIL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC',
+    ];
+    const ar = [
+      'جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان',
+      'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+    ];
+    final idx = (month - 1).clamp(0, 11);
+    if (isArabic) return ar[idx];
+    if (isFrench) return fr[idx];
+    return en[idx];
+  }
 
   String get observatoryHeroSubtitle => isArabic ? 'نظرة هادئة وأعمق على أفكارك' : (isFrench ? 'Un regard calme et lucide sur votre esprit' : 'A deeper, calmer look into your mind');
   String get thoughtPatternsLabel => isArabic ? 'أنماط الأفكار' : (isFrench ? 'Schémas de pensée' : 'Thought Patterns');
@@ -1270,6 +1487,179 @@ class AppStrings {
   String get toggleVisibilityTooltip => isArabic ? 'إظهار أو إخفاء' : (isFrench ? 'Afficher ou masquer' : 'Toggle visibility');
   String get addItemTooltip => isArabic ? 'إضافة' : (isFrench ? 'Ajouter' : 'Add');
   String get viewDetailsTooltip => isArabic ? 'عرض التفاصيل' : (isFrench ? 'Voir les détails' : 'View details');
+
+  // Step 7 — AI Guide Header Clarity, Mode Chooser & Welcome Starters
+  String get engineBadgeOffline => isArabic ? 'محلي' : (isFrench ? 'Local' : 'Local');
+  String get engineBadgeGroq => 'Groq';
+  String get engineBadgeGemini => 'Gemini';
+  String get aiEngineTooltip => isArabic
+      ? 'إعدادات محرّك الذكاء الاصطناعي'
+      : (isFrench ? 'Réglages du moteur IA' : 'AI engine settings');
+  String get modesAndHistoryTooltip => isArabic
+      ? 'الأساليب والجلسات السابقة'
+      : (isFrench ? 'Modes & historique' : 'Modes & History');
+  String get changeModeTooltip => isArabic ? 'تغيير الأسلوب' : (isFrench ? 'Changer de mode' : 'Switch mode');
+  String get chooseModeSheetTitle => isArabic
+      ? 'اختار أسلوب الحديث'
+      : (isFrench ? 'Choisir un style d’échange' : 'Choose a conversation style');
+  String get chooseModeSheetSub => isArabic
+      ? 'تنجم تبدّل الأسلوب في أي وقت وحوارك يقعد محفوظ.'
+      : (isFrench
+          ? 'Changez de style à tout moment sans perdre votre fil.'
+          : 'Switch anytime — your current conversation stays intact.');
+  String get welcomeQuestionHeadline => isArabic
+      ? 'شنوة اللي شاغل بالك توّا؟'
+      : (isFrench ? 'Qu’avez-vous en tête ?' : "What's on your mind?");
+  String get welcomePickOrTypeSub => isArabic
+      ? 'اختار نقطة بداية من الأسفل أو اكتب سطر كي تحس روحك حاضر.'
+      : (isFrench
+          ? 'Choisissez un point de départ ou écrivez une ligne quand vous voulez.'
+          : 'Pick a starting point below or type a line whenever you feel ready.');
+  String get privacyLocalTag => isArabic
+      ? 'محلي على جهازك'
+      : (isFrench ? 'Local sur l’appareil' : 'Local On-Device');
+  String get privacyCloudConsentedTag => isArabic
+      ? 'سحابي مشفّر بموافقتك'
+      : (isFrench ? 'Cloud chiffré autorisé' : 'Encrypted Cloud Consented');
+  String get privacyPrivateSessionTag => isArabic
+      ? 'جلسة خاصة (محلية فقط)'
+      : (isFrench ? 'Session privée (Locale)' : 'Private Session (Local Only)');
+  String get saveTakeawayReportBtn => isArabic
+      ? 'حفظ تقرير الجلسة'
+      : (isFrench ? 'Créer le bilan' : 'Save Takeaway Report');
+  String get openSelfCareToolsShort => isArabic
+      ? 'أدوات التهدئة'
+      : (isFrench ? 'Outils bien-être' : 'Self-Care Tools');
+  String get userSpeakerYou => isArabic ? 'أنت' : (isFrench ? 'Vous' : 'You');
+  String get tagFactGuessStoryHint => isArabic
+      ? '+ تصنيف (حقيقة / تخمين / تأويل)'
+      : (isFrench ? '+ Fait / Hypothèse / Récit' : '+ Fact / Guess / Story');
+  String get labelFactHuman => isArabic ? 'حقيقة' : (isFrench ? 'Fait' : 'Fact');
+  String get labelGuessHuman => isArabic ? 'تخمين' : (isFrench ? 'Hypothèse' : 'Guess');
+  String get labelStoryHuman => isArabic ? 'تأويل' : (isFrench ? 'Récit' : 'Story');
+  String get suggestedReplyFactsVsGuesses => isArabic
+      ? 'نفرّق بين الحقيقة والتخمين'
+      : (isFrench ? 'Distinguer faits et hypothèses' : 'Separate facts vs guesses');
+  String get suggestedReplyGroundingFirst => isArabic
+      ? 'نحتاج تثبيت وتنفّس قبل'
+      : (isFrench ? 'Besoin d’ancrage d’abord' : 'I need grounding first');
+  String get suggestedReplySaveTakeaway => isArabic
+      ? 'نحفظ الخلاصة المهمة'
+      : (isFrench ? 'Sauvegarder l’essentiel' : 'Save key takeaway');
+
+  List<String> localizedStartersForMode(String modeName) {
+    switch (modeName) {
+      case 'understandEmotion':
+        return isArabic
+            ? const [
+                'حاسس بثقل وضغط في صدري اليوم.',
+                'نحب نفهم علاش حاسس بالطريقة هذي.',
+                'مزاجي تبدّل فجأة وحاسس بعدم ارتياح.',
+              ]
+            : (isFrench
+                ? const [
+                    'Je sens une lourdeur dans ma poitrine.',
+                    'Je veux comprendre ce que je ressens.',
+                    'Mon humeur a changé d’un coup aujourd’hui.',
+                  ]
+                : const [
+                    'I feel a heavy tightness in my chest today.',
+                    'I want to understand why I feel this way.',
+                    'My emotions shifted suddenly and feel unsettled.',
+                  ]);
+      case 'psychologicalAnalysis':
+        return isArabic
+            ? const [
+                'نجمو نفهمو نمط متكرر في ردود فعلي؟',
+                'لاحظت ديما نهرب مالضغط كي نتحاصر.',
+                'عاوني نشوف العلاقة بين أفكاري ومزاجي.',
+              ]
+            : (isFrench
+                ? const [
+                    'Explorer un schéma récurrent dans mes réactions ?',
+                    'J’ai remarqué que j’évite souvent la pression.',
+                    'Quel lien entre mes pensées et mon humeur ?',
+                  ]
+                : const [
+                    'Can we explore a recurring pattern in my reactions?',
+                    'I noticed I pull away whenever things feel tense.',
+                    'Help me see the link between my mood and thoughts.',
+                  ]);
+      case 'guidedReflection':
+        return isArabic
+            ? const [
+                'عاوني نرتّب الأفكار اللي في بالي خطوة بخطوة.',
+                'صار نقاش صعيب اليوم ونحب نفهمو.',
+                'نحب نراجع كيفاش تفاعلت مع موقف مقلق.',
+              ]
+            : (isFrench
+                ? const [
+                    'Aidez-moi à organiser mes pensées pas à pas.',
+                    'Une discussion difficile m’a marqué aujourd’hui.',
+                    'Je veux revoir ma réaction face à un imprévu.',
+                  ]
+                : const [
+                    'Help me organize what is happening step by step.',
+                    'A difficult conversation weighed on me today.',
+                    'I want to review how I reacted to a challenge.',
+                  ]);
+      case 'justTalk':
+        return isArabic
+            ? const [
+                'نحتاج نحكي بهدوء من غير ما نحكم على روحي.',
+                'اليوم كان طويل وتعبني برشا.',
+                'في بالي برشا حاجات وما نعرفش منين نبدا.',
+              ]
+            : (isFrench
+                ? const [
+                    'J’ai simplement besoin qu’on m’écoute sans juger.',
+                    'La journée a été longue et épuisante.',
+                    'Beaucoup de choses me pèsent sans savoir par où commencer.',
+                  ]
+                : const [
+                    'I need a calm space to talk without judgment.',
+                    'Today felt long and exhausting.',
+                    'I have a lot on my mind and do not know where to start.',
+                  ]);
+      case 'grounding':
+        return isArabic
+            ? const [
+                'عاوني نعمل تثبيت حسي 5-4-3-2-1.',
+                'حاسس بإرهاق ونحتاج نهبط التوتر شوية.',
+                'عاوني ننظم تنفّسي توا.',
+              ]
+            : (isFrench
+                ? const [
+                    'Guidez-moi pour un ancrage 5-4-3-2-1.',
+                    'Je me sens débordé et j’ai besoin de ralentir.',
+                    'Aidez-moi à calmer ma respiration.',
+                  ]
+                : const [
+                    'Guide me through a 5-4-3-2-1 sensory grounding.',
+                    'I feel overwhelmed and need to slow down.',
+                    'Help me settle my breathing right now.',
+                  ]);
+      case 'exploreThought':
+      default:
+        return isArabic
+            ? const [
+                'فمّا فكرة مش راضية تخرج من بالي.',
+                'حاسس روحي غلطت غلطة كبيرة اليوم.',
+                'عاوني نفرّق بين الحقيقة والافتراض لهنا.',
+              ]
+            : (isFrench
+                ? const [
+                    'Une pensée tourne en boucle dans ma tête.',
+                    'J’ai l’impression d’avoir fait une grosse erreur.',
+                    'Aidez-moi à séparer les faits de mes suppositions.',
+                  ]
+                : const [
+                    'There is a thought I cannot stop replaying.',
+                    'I keep doubting myself even when things go well.',
+                    'Help me separate facts from what my mind guessed.',
+                  ]);
+    }
+  }
 
   // Helper factory
   static AppStrings of(BuildContext context) {

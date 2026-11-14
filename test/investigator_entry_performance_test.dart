@@ -36,12 +36,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Dialogue is smoothly active
-      expect(find.text('AI GUIDE'), findsAtLeastNWidgets(1));
+      expect(find.text('AI Guide'), findsAtLeastNWidgets(1));
       expect(find.text('Talk with your companion...'), findsOneWidget);
       expect(find.text('AI HUB'), findsNothing);
     });
 
-    testWidgets('2. No layout overflow near Session label on narrow viewport (320px)',
+    testWidgets('2. No layout overflow in clean Step 7 header on narrow viewport (320px)',
         (WidgetTester tester) async {
       tester.view.physicalSize = const Size(320, 640);
       tester.view.devicePixelRatio = 1.0;
@@ -66,9 +66,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(caughtError, isNull, reason: 'Expected zero layout overflows near Session label');
-      expect(find.text('AI GUIDE'), findsAtLeastNWidgets(1));
-      expect(find.text('SESSION 01'), findsOneWidget);
+      expect(caughtError, isNull, reason: 'Expected zero layout overflows in AI Guide header');
+      expect(find.text('AI Guide'), findsAtLeastNWidgets(1));
+      expect(find.text('Local'), findsOneWidget);
+      expect(find.text('Explore a Thought'), findsOneWidget);
     });
 
     testWidgets('3. Repeated navigation preserves active investigation without duplicate sessions',
@@ -235,9 +236,9 @@ void main() {
       expect(active.statements.length, equals(2));
       expect(active.statements.first.text, equals('I felt overwhelmed during the review.'));
 
-      // Verify the screen displays the historical statement
+      // Verify the screen displays the historical statement and hydrated mode
       expect(find.text('I felt overwhelmed during the review.'), findsOneWidget);
-      expect(find.text('SESSION 07'), findsOneWidget);
+      expect(find.text('Psychological Analysis'), findsOneWidget);
 
       // Verify no duplicate cases were written to repository
       final allCases = await repo.getAllCases();

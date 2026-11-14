@@ -202,7 +202,7 @@ class _AiEngineConfigSheetState extends ConsumerState<AiEngineConfigSheet> {
                   child: Text(
                     'MIND ASSISTANT ENGINE',
                     style: TextStyle(
-                      fontFamily: 'serif',
+                      fontFamily: 'Inter',
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: textPrimary,

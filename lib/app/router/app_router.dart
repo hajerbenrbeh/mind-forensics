@@ -8,7 +8,6 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/insights/presentation/insights_screen.dart';
 import '../../features/investigation/presentation/flash_case_screen.dart';
 import '../../features/observatory/presentation/inner_observatory_screen.dart';
-import '../../features/mind_trace/presentation/mind_trace_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/profile/presentation/psychological_profile_screen.dart';
 import '../../features/progress/presentation/progress_screen.dart';
@@ -112,15 +111,15 @@ class AppRouter {
         builder: (context, state) => const PsychologicalProfileScreen(),
       ),
       GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
         path: mindTrace,
         name: 'mindTrace',
-        builder: (context, state) {
+        redirect: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          return MindTraceScreen(
-            initialTabIndex: extra?['initialTabIndex'] as int? ?? 0,
-            startInEditMode: extra?['startInEditMode'] as bool? ?? false,
-          );
+          final initialTab = extra?['initialTabIndex'];
+          if (initialTab == 1) {
+            return '$track?tab=1';
+          }
+          return track;
         },
       ),
       GoRoute(
@@ -143,7 +142,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/check-in',
-        redirect: (context, state) => mindTrace,
+        redirect: (context, state) => track,
       ),
       GoRoute(
         path: '/investigation',
@@ -186,7 +185,11 @@ class AppRouter {
               GoRoute(
                 path: track,
                 name: 'track_nav',
-                builder: (context, state) => const TrackScreen(),
+                builder: (context, state) {
+                  final tabIndex =
+                      int.tryParse(state.uri.queryParameters['tab'] ?? '') ?? 0;
+                  return TrackScreen(initialTab: tabIndex.clamp(0, 1));
+                },
               ),
             ],
           ),

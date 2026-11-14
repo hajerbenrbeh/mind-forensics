@@ -312,7 +312,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   Text(
                     strings.sharePacketTitle,
                     style: TextStyle(
-                      fontFamily: 'serif',
+                      fontFamily: 'Inter',
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: tokens.textPrimary,
@@ -541,7 +541,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           Text(
                             displayName,
                             style: TextStyle(
-                              fontFamily: 'serif',
+                              fontFamily: 'Inter',
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
                               color: textPrimary,
@@ -599,7 +599,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Text(
                           strings.myAccountTitle,
                           style: TextStyle(
-                            fontFamily: 'serif',
+                            fontFamily: 'Inter',
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: textPrimary,
@@ -655,7 +655,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         Text(
                           strings.mindAssistantEngineTitle,
                           style: TextStyle(
-                            fontFamily: 'serif',
+                            fontFamily: 'Inter',
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: textPrimary,

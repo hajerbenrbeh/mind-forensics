@@ -45,8 +45,10 @@ void main() {
       expect(find.byType(HomeMetricSparkline), findsNothing);
       expect(find.byType(HomeStressBarChart), findsNothing);
 
-      // 3. Step 6 Daily check-in card
-      expect(find.textContaining('NERVOUS ACTIVATION'), findsOneWidget);
+      // 3. Step 6 Daily check-in card (plain human affect labels + intensity, zero telemetry waveform)
+      expect(find.textContaining('INTENSITY'), findsOneWidget);
+      expect(find.text('Calm'), findsOneWidget);
+      expect(find.text('Anxious'), findsOneWidget);
       expect(find.text('Log Daily Check-in'), findsOneWidget);
 
       // 4. Investigation CTA & Recent Investigations
@@ -93,7 +95,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Regulated (7/10)'), findsOneWidget);
+      expect(find.textContaining('Calm (7/10)'), findsOneWidget);
     });
 
     testWidgets('Logging a check-in on Home saves to MindTraceController and updates todayTraceProvider', (tester) async {

@@ -24,9 +24,9 @@ class HomeTimeSegmentedSwitcher extends StatelessWidget {
     final tokens = context.tokens;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final trackBg = isDark ? tokens.surfaceSecondary : const Color(0xFFE5ECE6);
-    final activePillBg = isDark ? const Color(0xFF303E37) : const Color(0xFF34443B);
-    final activeTextColor = isDark ? const Color(0xFFF0F2EC) : Colors.white;
+    final trackBg = isDark ? tokens.surfaceSecondary : tokens.accentSoft;
+    final activePillBg = isDark ? tokens.surface : tokens.accent;
+    final activeTextColor = isDark ? tokens.textPrimary : Colors.white;
     final inactiveTextColor = tokens.textSecondary;
 
     final reduceMotion = MediaQuery.disableAnimationsOf(context);

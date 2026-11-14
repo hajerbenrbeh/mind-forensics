@@ -43,7 +43,7 @@ class MindTokens extends ThemeExtension<MindTokens> {
     border: LabColors.daylightBorder,
     textPrimary: LabColors.daylightTextPrimary,
     textSecondary: LabColors.daylightTextSecondary,
-    textTertiary: Color(0xFF8A948D),
+    textTertiary: LabColors.daylightTextTertiary,
     accent: LabColors.daylightAccent,
     accentSoft: LabColors.daylightAccentSoft,
     safetyWarmth: LabColors.safetyWarmth,

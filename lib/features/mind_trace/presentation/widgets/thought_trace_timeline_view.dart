@@ -132,7 +132,7 @@ class _ThoughtTraceTimelineViewState
           Text(
             strings.thoughtTraceQuote,
             style: TextStyle(
-              fontFamily: 'serif',
+              fontFamily: 'Inter',
               fontSize: 13,
               fontStyle: FontStyle.italic,
               color: tokens.textPrimary,
@@ -549,7 +549,7 @@ class _ThoughtTraceTimelineViewState
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontFamily: 'serif',
+                          fontFamily: 'Inter',
                           fontSize: 13.5,
                           fontStyle: FontStyle.italic,
                           color: tokens.textPrimary,

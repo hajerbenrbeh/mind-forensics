@@ -188,7 +188,8 @@ class _ClinicalSharingHistorySheetState extends ConsumerState<ClinicalSharingHis
                                         style: TextStyle(
                                           fontSize: 11,
                                           fontWeight: FontWeight.w700,
-                                          fontFamily: 'monospace',
+                                          fontFamily: 'Inter',
+                                          fontFeatures: const [FontFeature.tabularFigures()],
                                           color: textPrimary,
                                         ),
                                       ),
